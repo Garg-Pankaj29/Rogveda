@@ -1,0 +1,15 @@
+You are given a step-by-step record of how a molecule was modified during a drug-design optimization campaign. Each step shows the SMILES structure, the computed property changes, and the ML prediction changes relative to the previous step.
+
+Your task: Write a single, concise paragraph (4-8 sentences) that narrates the full modification journey from the original molecule to the final version. For each modification step, mention:
+1. What structurally changed (if apparent from the SMILES)
+2. Which properties shifted and by how much (use exact numbers from the data)
+3. Whether any prediction labels changed (e.g. "hERG risk shifted from High Risk to Low Risk")
+4. The overall trend — did the modifications improve or worsen the drug-likeness profile?
+
+RULES:
+- Use ONLY the numbers and labels provided below. Do NOT invent, estimate, or hallucinate any values.
+- Keep the tone professional but readable — like a medicinal chemistry journal summary.
+- If a property or prediction did not change, you may skip it or briefly note it was retained.
+
+Modification Chain Data:
+{{STEPS}}
