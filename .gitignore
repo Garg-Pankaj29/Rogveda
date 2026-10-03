@@ -1,0 +1,170 @@
+# ==============================================================================
+# ROGVEDA — Git Ignore Configuration
+# ==============================================================================
+
+# ── Secrets & Environment Files (NEVER COMMIT SENSITIVE KEYS) ────────────────
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Certificates & Private Keys
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials.json
+
+# Tokens & Session artifacts
+*token*.json
+*.token
+*token*.txt
+token.txt
+session.json
+
+# Test outputs & temporary root scripts
+/test_*.py
+/test_*.svg
+/test_jwt.py
+/test_rdkit.py
+backend/*.svg
+out*.svg
+run_all_training.sh
+/run_*.sh
+temp_*.csv
+*.tmp
+*.mjs
+test_*.js
+test_*.mjs
+test*.html
+check_*.mjs
+verify_*.mjs
+screenshot*.png
+ss_*.png
+*_test.png
+!backend/tests/
+!backend/tests/**
+
+# ── Databases & Runtime State (Contains user credentials / local data) ───────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+backend/rogveda.db
+models/
+models
+*.pkl
+*.bak
+data/raw/
+data/processed/*
+!data/processed/.gitkeep
+data/models/*.pkl
+data/models/*.pt
+data/models/*.onnx
+data/models/*.bin
+!data/models/.gitkeep
+
+# ── Virtual Environments ────────────────────────────────────────────────────
+.venv/
+*/.venv/
+venv/
+*/venv/
+ENV/
+env/
+*/env/
+
+# ── Python Cache & Build Artifacts ──────────────────────────────────────────
+__pycache__/
+*/__pycache__/
+*/**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+/build/
+develop-eggs/
+/dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Testing & Linters
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# ── Node / Frontend Artifacts ───────────────────────────────────────────────
+node_modules/
+*/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── OS & IDE Artifacts ──────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Antigravity IDE internal runtime data
+.antigravity/
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# ── Logs & Heavy Scratch Directories ────────────────────────────────────────
+*.log
+logs/
+ui_images/
+scratch/
+
+# Project Memory
+brain.md
+# Antigravity agents custom rules
+.agents/
+qna.md
+numerical.md
