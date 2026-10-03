@@ -1,0 +1,8 @@
+name,smiles
+Aspirin,CC(=O)Oc1ccccc1C(O)=O
+Caffeine,Cn1c(=O)c2c(ncn2C)n(C)c1=O
+Paracetamol,CC(=O)Nc1ccc(O)cc1
+Ibuprofen,CC(C)Cc1ccc(cc1)C(C)C(O)=O
+InvalidMol,INVALID_NOT_A_MOLECULE
+Aspirin_Duplicate,CC(=O)Oc1ccccc1C(O)=O
+,
