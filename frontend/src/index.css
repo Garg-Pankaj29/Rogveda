@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/* ── ROGVEDA Custom Theme ──────────────────────────────────── */
+@theme {
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-playfair: "Playfair Display", Georgia, serif;
+}
+
+/* ── Global Base ───────────────────────────────────────────── */
+@layer base {
+  html, body, #root {
+    min-height: 100%;
+    width: 100%;
+  }
+
+  body {
+    font-family: var(--font-inter);
+    background: #071211;
+    color: #e8f0f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+::selection {
+  background: rgba(45, 212, 191, 0.3);
+  color: white;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a1010; }
+::-webkit-scrollbar-thumb {
+  background: #1a3a3a;
+  border-radius: 3px;
+}
+
+/* ── HomePage Animations ───────────────────────────────────── */
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(45, 212, 212, 0.25), 0 0 40px rgba(45, 212, 212, 0.08); }
+  50% { box-shadow: 0 0 25px rgba(45, 212, 212, 0.45), 0 0 60px rgba(45, 212, 212, 0.15); }
+}
+
+@keyframes glow-pulse-strong {
+  0%, 100% { box-shadow: 0 0 25px rgba(45, 212, 212, 0.35), 0 0 60px rgba(45, 212, 212, 0.12), inset 0 0 30px rgba(45, 212, 212, 0.06); }
+  50% { box-shadow: 0 0 40px rgba(45, 212, 212, 0.55), 0 0 90px rgba(45, 212, 212, 0.2), inset 0 0 40px rgba(45, 212, 212, 0.1); }
+}
+
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes bg-shimmer {
+  0% { opacity: 0.06; }
+  50% { opacity: 0.12; }
+  100% { opacity: 0.06; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.markdown-body table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+.markdown-body th, .markdown-body td { border: 1px solid rgba(45,212,212,0.3); padding: 8px; text-align: left; }
+.markdown-body th { background-color: rgba(45,212,212,0.1); }
+.markdown-body p { margin-bottom: 0.5em; }
+
+/* ── Focus ring for central Draw Molecule button ───────────── */
+.home-center-node:focus-visible {
+  box-shadow: 0 0 0 3px #2dd4d4, 0 0 30px rgba(45,212,212,0.5) !important;
+}
+
+/* ── Reduced-motion: disable animations, keep static emphasis ─ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  /* Keep the center node visually dominant via static glow */
+  .home-center-node {
+    box-shadow: 0 0 30px rgba(45,212,212,0.4), 0 0 70px rgba(45,212,212,0.15), inset 0 0 35px rgba(45,212,212,0.08) !important;
+  }
+}
