@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import AuthLayout from '../components/auth/AuthLayout.jsx'
-import { post, setToken, isAuthenticated } from '../lib/apiClient.js'
+import { post, setToken, clearUserData, isAuthenticated } from '../lib/apiClient.js'
 
 
 
@@ -72,6 +72,7 @@ export default function Signup() {
         security_question: securityQuestion,
         security_answer: securityAnswer
       })
+      clearUserData()
       setToken(data.access_token)
       navigate('/home')
     } catch (err) {
