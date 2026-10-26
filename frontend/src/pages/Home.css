@@ -614,13 +614,14 @@ button:focus-visible {
   margin: 6px auto 30px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(2, 13, 16, 0.85);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(2, 13, 16, 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 245, 233, 0.1);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   z-index: 15;
+  max-width: 95vw;
 }
 
 .stats:hover {
@@ -630,8 +631,8 @@ button:focus-visible {
 }
 
 .stats div {
-  min-width: 150px;
-  padding: 14px 32px 12px;
+  min-width: 120px;
+  padding: 12px 20px 10px;
   text-align: center;
   transition: background 0.25s ease;
 }
@@ -647,7 +648,7 @@ button:focus-visible {
 .stats b {
   display: block;
   font-weight: 800;
-  font-size: 38px;
+  font-size: 28px;
   line-height: 1.1;
   color: var(--cy);
   text-shadow: 0 0 18px rgba(0, 245, 233, 0.5);
@@ -658,11 +659,12 @@ button:focus-visible {
 .stats span {
   display: block;
   margin-top: 6px;
-  font-size: 11px;
-  letter-spacing: 0.16em;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #cfe9ea;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 /* ── Floating Expandable Assistant Bot ─────────────────────────── */

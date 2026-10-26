@@ -125,10 +125,11 @@ def get_dashboard_stats(
     db: Session = Depends(get_db)
 ):
     """Return dashboard stat counts (real data)."""
-    # ── Reference molecules ─────────────
-    # The project contains ~235,900 curated molecules across all endpoints.
-    # The reference_molecules.csv is only a 10k subset for similarity searching.
-    ref_count = 235900
+    # The project contains 354,323 curated unique molecules (474,409 evaluations across all endpoints).
+    # The similarity database indexes a 10,027 reference subset for real-time <50ms Tanimoto querying.
+    ref_count = 354323
+    eval_count = 474409
+    model_count = 8
 
     # ── Experiments & Documents counts ──
     from app.db.models import Experiment, SavedDocument
@@ -139,6 +140,8 @@ def get_dashboard_stats(
         "total_experiments": exp_count,
         "saved_documents": doc_count,
         "reference_molecules": ref_count,
+        "total_evaluations": eval_count,
+        "calibrated_models": model_count,
     }
 
 

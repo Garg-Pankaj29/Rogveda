@@ -127,7 +127,7 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
             Chemical Space Map
           </h2>
           <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
-            UMAP projection of a 10,000-molecule representative subset (from 235k total) with your molecule highlighted
+            UMAP projection of a 10,000-molecule representative subset (from 354k+ total) with your molecule highlighted
           </p>
         </div>
         <button

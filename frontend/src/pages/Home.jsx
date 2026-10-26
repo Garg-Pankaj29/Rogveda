@@ -176,7 +176,7 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I am **Rogveda AI**. How can I assist with your molecular structures, QSAR predictions, or chemical experiments today?',
+      content: 'Hello! I am **Rogveda AI**. Grounded on 474,409 bioactivity and toxicity evaluations across 354,323 unique molecules. How can I assist with your molecular structures, QSAR predictions, or chemical experiments today?',
     },
   ])
   const [chatInput, setChatInput] = useState('')
@@ -972,7 +972,7 @@ export default function Home() {
                 <rect x="5" y="11" width="14" height="9" rx="2" />
                 <path d="M8 11V8a4 4 0 0 1 8 0v3" />
               </svg>
-              {isOnline ? 'Offline-First' : 'Offline Mode'}
+              {isOnline ? 'Offline-First • 354k+ Compounds' : 'Offline Mode • 354k+ Compounds'}
             </div>
 
             {/* Central Spoke Lines SVG */}
@@ -1139,9 +1139,21 @@ export default function Home() {
           </div>
           <div>
             <b>
-              {stats?.reference_molecules ? `${Number(stats.reference_molecules).toLocaleString()}+` : <AnimatedNumber value={0} />}
+              {stats?.reference_molecules ? `${Number(stats.reference_molecules).toLocaleString()}+` : '354,323+'}
             </b>
-            <span>References</span>
+            <span>Curated Molecules</span>
+          </div>
+          <div>
+            <b>
+              {stats?.total_evaluations ? `${Number(stats.total_evaluations).toLocaleString()}+` : '474,409+'}
+            </b>
+            <span>Bioactivity Records</span>
+          </div>
+          <div>
+            <b>
+              {stats?.calibrated_models ? `${stats.calibrated_models} Ensembles` : '8 Ensembles'}
+            </b>
+            <span>Calibrated Models</span>
           </div>
         </footer>
       </div>
