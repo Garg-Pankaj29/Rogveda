@@ -79,8 +79,10 @@ button:focus-visible {
 }
 
 .brand {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -100,8 +102,9 @@ button:focus-visible {
 
 .nav {
   display: flex;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
 }
 
@@ -168,8 +171,10 @@ button:focus-visible {
 }
 
 .right {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
 }
 

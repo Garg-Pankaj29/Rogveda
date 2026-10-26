@@ -129,60 +129,62 @@ export default function TopNav({ user }) {
       {/* Left: Logo */}
       <div 
         className="flex items-center gap-2.5 cursor-pointer" 
-        style={{ flexBasis: '30%', paddingLeft: '40px' }}
+        style={{ flex: '1 1 0' }}
         onClick={() => navigate('/')}
       >
-        <img src="/rogveda_logo.png" alt="Rogveda Logo" style={{ height: '56px' }} />
+        <img src="/rogveda_logo.png" alt="Rogveda Logo" style={{ height: '52px' }} />
       </div>
 
       {/* Center: Nav Links */}
-      <div className="flex items-center justify-center gap-10" style={{ flexBasis: '45%' }}>
+      <div className="flex items-center justify-center gap-2 flex-shrink-0">
         {navLinks.map(link => {
           const isActive = location.pathname === `/${link.toLowerCase()}`
           const isTutorial = link === 'Tutorial'
           return (
-          <div key={link} className="relative flex items-center">
-            <button
-              onClick={() => navigate(`/${link.toLowerCase()}`)}
-              className="uppercase font-medium bg-transparent border-none cursor-pointer transition-colors duration-200"
-              style={{ 
-                fontSize: '12px', 
-                letterSpacing: '0.15em', 
-                color: isActive ? '#ffffff' : '#a0c4c4', 
-                padding: '10px 0',
-                textShadow: isActive ? '0 0 10px rgba(255,255,255,0.3)' : 'none'
-              }}
-              onMouseEnter={e => !isActive && (e.target.style.color = '#ffffff')}
-              onMouseLeave={e => !isActive && (e.target.style.color = '#a0c4c4')}
-            >
-              {link}
-            </button>
-            {isTutorial && (
+            <div key={link} className="relative flex items-center">
               <button
                 onClick={() => {
-                  if (location.pathname !== '/home') {
-                    navigate('/home')
-                    setTimeout(() => window.dispatchEvent(new Event('rogveda_show_onboarding')), 100)
+                  if (isTutorial) {
+                    if (location.pathname !== '/home') {
+                      navigate('/home')
+                      setTimeout(() => window.dispatchEvent(new Event('rogveda_show_onboarding')), 100)
+                    } else {
+                      window.dispatchEvent(new Event('rogveda_show_onboarding'))
+                    }
                   } else {
-                    window.dispatchEvent(new Event('rogveda_show_onboarding'))
+                    navigate(`/${link.toLowerCase()}`)
                   }
                 }}
-                title="Show tutorial again"
-                className="ml-2 items-center justify-center bg-transparent border border-[#2dd4d4] rounded-full cursor-pointer text-[#2dd4d4] hover:bg-[#2dd4d4] hover:text-[#050d0f] transition-colors"
-                style={{ 
-                  display: 'flex',
-                  width: '18px', height: '18px', fontSize: '11px', fontWeight: 'bold', flexShrink: 0 
-                }}
+                className={`app-nav-link ${isActive ? 'active' : ''}`}
               >
-                ?
+                {link}
+                {isTutorial && (
+                  <span
+                    className="q ml-1"
+                    aria-hidden="true"
+                    style={{
+                      display: 'inline-grid',
+                      placeItems: 'center',
+                      width: '18px',
+                      height: '18px',
+                      border: '1.5px solid var(--cy)',
+                      borderRadius: '50%',
+                      color: 'var(--cy)',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    ?
+                  </span>
+                )}
               </button>
-            )}
-          </div>
-        )})}
+            </div>
+          )
+        })}
       </div>
 
       {/* Right: Icons + User */}
-      <div className="flex items-center justify-end gap-5" style={{ flexBasis: '30%' }}>
+      <div className="flex items-center justify-end gap-5" style={{ flex: '1 1 0' }}>
         <div className="relative">
           <button 
             onClick={toggleHistory}
