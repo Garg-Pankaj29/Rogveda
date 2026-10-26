@@ -36,9 +36,9 @@ Every layer should be the **lightest technology that solves the problem**. No AI
 
 ## 4. Data
 
-- **Bioactivity training data:** ChEMBL (SQLite bundle from EBI FTP) + PubChem BioAssay bulk downloads.
-- **Toxicity training data:** Tox21, ClinTox (via DeepChem/MoleculeNet loaders, cached locally).
-- **Similarity-search reference library:** curated ~5k–20k compound subset (DrugBank open structures / filtered ChEMBL), stored as SMILES + precomputed Morgan fingerprints (2048-bit, radius 2) in SQLite.
+- **Bioactivity training data:** ChEMBL 37 (local SQLite bundle from EBI FTP) + PubChem BioAssay bulk downloads (474,409 evaluated compound records across 354,323 unique molecules).
+- **Toxicity training data:** Tox21 (12 assays + MMP), ClinTox (via DeepChem/MoleculeNet loaders, cached locally).
+- **Similarity-search reference library:** curated 10,027 compound drug-like subset (DrugBank open structures / filtered ChEMBL), stored as SMILES + precomputed Morgan fingerprints (2048-bit, radius 2) in SQLite for sub-50ms Tanimoto matching.
 
 ## 5. Dev tooling
 

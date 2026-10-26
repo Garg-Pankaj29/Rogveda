@@ -44,7 +44,7 @@ Everything below the top box runs on `localhost`/`127.0.0.1` only. No component 
 1. User draws or pastes SMILES → RDKit.js validates instantly client-side (instant UX feedback, e.g. red border on invalid SMILES).
 2. On "Load Molecule," frontend sends the canonical SMILES to `POST /api/molecule/analyze`.
 3. **Chemistry Service** (RDKit, Python) computes: formula, MW, LogP, TPSA, HBD/HBA, rotatable bonds, rings, QED, Fraction Csp3, formal charge, and a 2D depiction + a 3D conformer (ETKDG) → returned as an SDF/molblock for the frontend 3D viewer.
-4. **ML Prediction Service** loads pre-trained calibrated sklearn models (one per endpoint: anti-inflammatory, antioxidant, antimicrobial, anticancer, hepatotoxicity, cardiotoxicity, mutagenicity, carcinogenicity, hERG), featurizes the molecule (Morgan FP + descriptors), returns label + calibrated confidence per endpoint.
+4. **ML Prediction Service** loads pre-trained calibrated sklearn models (endpoints: anti-inflammatory, antioxidant, antimicrobial, anticancer, hERG cardiotoxicity, Tox21 MMP, Tox21 panel, ClinTox), featurizes the molecule (Morgan FP + descriptors), returns label + calibrated confidence per endpoint.
 5. **Similarity Service** computes the molecule's fingerprint, runs Tanimoto against the precomputed reference-DB fingerprints (indexed in SQLite), returns top-N similar compounds.
 6. All of the above structured JSON is assembled into a single **facts payload**.
 7. **Local LLM Client** sends the facts payload inside a tight template prompt (see §5) to the local LLM server → gets back a 2–4 sentence "AI Insight" string.

@@ -34,7 +34,7 @@ $$\text{Input (Draw / SMILES)} \longrightarrow \text{Compute Descriptors} \longr
 ### What Makes It Different
 1. **Local-First & Offline**: Operates completely on `127.0.0.1` without outbound runtime network calls. No user molecules, proprietary structures, or experiment notes leave the local machine.
 2. **Deterministic Cheminformatics**: Powered by native C++ **RDKit** binaries running locally via Python and WebAssembly in the browser.
-3. **Calibrated Machine Learning**: Uses scikit-learn models trained on 418,000+ compounds from **ChEMBL 37** and **Tox21**, evaluated strictly using **80/20 Bemis-Murcko Scaffold Splits** and calibrated via `CalibratedClassifierCV` for well-calibrated confidence probabilities.
+3. **Calibrated Machine Learning**: Uses scikit-learn models trained on 474,000+ compound evaluations (354,000+ unique molecules) from **ChEMBL 37**, **Tox21**, and **ClinTox**, evaluated strictly using **80/20 Bemis-Murcko Scaffold Splits** and calibrated via `CalibratedClassifierCV` for well-calibrated confidence probabilities.
 4. **Locally Grounded AI Insights (RAG)**: Connects to local LLM engines (e.g., LM Studio or `llama.cpp` running models like `llama-3.2-1b-instruct` or `Qwen2.5-0.5B`) to synthesize structured chemical facts, flag structural contradictions, and explain property trade-offs without cloud dependencies.
 
 ---
@@ -530,19 +530,19 @@ Output Probability & Calibrated Risk/Activity Label
 
 ### Model Performance Benchmarks
 
-All models were trained on bioactivity assays from **ChEMBL 37**, **Tox21**, and **ClinTox**, totaling **418,480 compounds** evaluated under a zero-leakage **80/20 Bemis-Murcko Scaffold Split** (ensuring test compounds possess distinct chemical core ring frameworks from training data):
+All models were trained on bioactivity assays from **ChEMBL 37**, **Tox21**, and **ClinTox**, totaling **474,409 evaluated compound records** (**354,323 unique molecules**) under a zero-leakage **80/20 Bemis-Murcko Scaffold Split** (ensuring test compounds possess distinct chemical core ring frameworks from training data):
 
 | Endpoint Target | Source Dataset | Total Compounds | Scaffold Accuracy | ROC-AUC | Precision | Recall | F1 Score | Chosen Threshold | Primary Optimization |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Anti-cancer** | ChEMBL 37 | 227,409 | **77.8%** *(80.3% @0.5)* | **0.822** | 0.627 | 0.670 | 0.648 | 0.30 | Broad pan-cancer cytotoxicity |
 | **Anti-microbial** | ChEMBL 37 | 149,610 | **89.4%** *(89.4% @0.5)* | **0.948** | 0.720 | 0.830 | 0.771 | 0.15 | S. aureus bacterial MIC |
-| **Anti-inflammatory** | ChEMBL 37 | 10,476 | **82.4%** *(82.4% @0.5)* | **0.865** | 0.843 | 0.953 | 0.894 | 0.50 | COX-1 / COX-2 target sensitivity |
-| **hERG Cardiotoxicity** | ChEMBL 37 | 9,820 | **67.6%** *(86.1% @0.5)* | **0.762** | 0.308 | 0.715 | 0.431 | 0.10 | Safety-first QT prolongation |
+| **Anti-inflammatory** | ChEMBL 37 (16 targets) | 52,211 | **79.8%** *(79.8% @0.5)* | **0.886** | 0.803 | 0.947 | 0.869 | 0.50 | COX-1/2, TNF, 5-LOX, iNOS, p38, JAKs |
+| **hERG Cardiotoxicity** | ChEMBL 37 (CHEMBL240) | 20,751 | **64.4%** *(74.0% @0.5)* | **0.799** | 0.533 | 0.865 | 0.660 | 0.20 | Safety-first QT prolongation recall |
+| **Anti-oxidant** | ChEMBL 37 (Redox/Radical) | 9,340 | **69.9%** *(71.5% @0.5)* | **0.806** | 0.643 | 0.905 | 0.752 | 0.30 | Multi-assay radical scavenging redox |
 | **Tox21 (Full Panel)** | NIH / Tox21 | 7,823 | **60.5%** *(65.8% @0.5)* | **0.708** | 0.541 | 0.830 | 0.655 | 0.30 | Broad biological hazard screening |
-| **Anti-oxidant** | ChEMBL 37 | 6,077 | **68.4%** *(71.1% @0.5)* | **0.794** | 0.607 | 0.870 | 0.715 | 0.25 | Radical scavenging redox |
 | **Tox21_MMP Toxicity** | Tox21 / NIH | 5,804 | **77.6%** *(78.6% @0.5)* | **0.798** | 0.517 | 0.635 | 0.570 | 0.15 | Mitochondrial membrane safety |
 | **ClinTox** | FDA / Clinical Trials | 1,461 | **82.9%** *(93.5% @0.5)* | **0.762** | 0.208 | 0.579 | 0.306 | 0.10 | Clinical trial failure detection |
-| **Total Evaluated** | **ChEMBL 37 + NIH** | **418,480** | — | — | — | — | — | — | **8 Calibrated Ensembles** |
+| **Total Evaluated** | **ChEMBL 37 + NIH** | **474,409** | — | — | — | — | — | — | **8 Calibrated Ensembles (354k+ unique)** |
 
 ### Why Scaffold Splitting & Threshold Optimization Matter
 Standard random splits allow identical or near-identical chemical scaffolds to appear in both training and test sets, artificially inflating reported accuracy. ROGVEDA enforces **Bemis-Murcko Scaffold Splitting**, measuring true generalization to novel, unseen chemotypes. Furthermore, for critical safety endpoints like cardiotoxicity (hERG) and clinical toxicity (ClinTox), ROGVEDA performs automated threshold scanning to prioritize recall over raw precision—ensuring potentially hazardous candidate molecules are reliably flagged rather than missed due to severe class imbalance.
