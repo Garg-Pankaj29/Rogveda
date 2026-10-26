@@ -96,14 +96,51 @@ function formulaToHtml(formula) {
    MAIN COMPONENT
    ══════════════════════════════════════════════ */
 export default function MoleculeDraw() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const expId = new URLSearchParams(location.search).get('expId')
+  const isNew = new URLSearchParams(location.search).get('new') === 'true'
+
   const [user, setUser] = useState(null)
   const [rdkit, setRdkit] = useState(null)
   const [isKetcherReady, setIsKetcherReady] = useState(false)
 
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('rogveda_active_tab') || 'Draw')
+  const resolveTabName = (param) => {
+    if (!param) return null
+    const lower = param.toLowerCase()
+    if (lower === 'analysis') return 'Analysis'
+    if (lower === 'prediction' || lower === 'ai') return 'Prediction'
+    if (lower === 'search' || lower === 'similarity') return 'Search'
+    if (lower === 'modify' || lower === 'modification') return 'Modify'
+    if (lower === 'compare') return 'Compare'
+    if (lower === 'batch') return 'Batch'
+    if (lower === 'chemspace' || lower === 'chemicalspace') return 'ChemSpace'
+    if (lower === 'draw') return 'Draw'
+    return null
+  }
+
+  const [activeTab, setActiveTab] = useState(() => {
+    const p = new URLSearchParams(window.location.search).get('tab')
+    const mapped = resolveTabName(p)
+    if (mapped) return mapped
+    return 'Draw'
+  })
   const activeTabRef = useRef(activeTab)
   const pendingMolfile = useRef(null) // Stores molfile to load when Draw tab becomes visible
   
+  useEffect(() => {
+    const p = new URLSearchParams(location.search).get('tab')
+    const mapped = resolveTabName(p)
+    if (mapped) {
+      if (mapped !== activeTab) {
+        setActiveTab(mapped)
+      }
+    } else {
+      // Default to Draw tab whenever navigating to draw without a specific tab query param
+      setActiveTab('Draw')
+    }
+  }, [location.search])
+
   useEffect(() => {
     localStorage.setItem('rogveda_active_tab', activeTab)
     activeTabRef.current = activeTab
@@ -146,10 +183,6 @@ export default function MoleculeDraw() {
 
   const ketcherRef = useRef(null)
   const [inputSmiles, setInputSmiles] = useState('')
-  const location = useLocation()
-  const navigate = useNavigate()
-  const expId = new URLSearchParams(location.search).get('expId')
-  const isNew = new URLSearchParams(location.search).get('new') === 'true'
   const initialLoadDone = useRef(false)
 
   const [showHistoryModal, setShowHistoryModal] = useState(false)

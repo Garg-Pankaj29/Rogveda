@@ -49,7 +49,7 @@ const cardStyle = {
 const COLUMNS = [
   { key: 'row_index', label: '#', width: '40px' },
   { key: 'name', label: 'Name', width: '120px' },
-  { key: 'canonical_smiles', label: 'SMILES', width: '180px' },
+  { key: 'canonical_smiles', label: 'SMILES', width: '280px' },
   { key: 'molecular_weight', label: 'MW', width: '70px' },
   { key: 'logp', label: 'LogP', width: '60px' },
   { key: 'tpsa', label: 'TPSA', width: '60px' },
@@ -98,6 +98,7 @@ export default function BatchScreening({ isEmbedded = false }) {
   const [sortDir, setSortDir] = useState('asc')
   const [powerStatus, setPowerStatus] = useState(null)
   const [showPowerDropdown, setShowPowerDropdown] = useState(false)
+  const [copiedSmiles, setCopiedSmiles] = useState(null)
 
   // Prevent browser from opening dragged files globally
   useEffect(() => {
@@ -604,12 +605,68 @@ export default function BatchScreening({ isEmbedded = false }) {
                           )
                         }
 
-                        // SMILES (truncated)
+                        // SMILES (full string with horizontal scroll & one-click copy)
                         if (col.key === 'canonical_smiles') {
-                          const display = val && val.length > 25 ? val.slice(0, 22) + '...' : val
+                          const isCopied = copiedSmiles === val && val
                           return (
-                            <td key={col.key} style={{ padding: '8px', fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8' }} title={val}>
-                              {display || '-'}
+                            <td key={col.key} style={{ padding: '6px 8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div
+                                  style={{
+                                    overflowX: 'auto',
+                                    whiteSpace: 'nowrap',
+                                    fontFamily: 'monospace',
+                                    fontSize: '11px',
+                                    color: '#c0dede',
+                                    background: 'rgba(0, 245, 233, 0.05)',
+                                    border: '1px solid rgba(0, 245, 233, 0.15)',
+                                    borderRadius: '5px',
+                                    padding: '4px 8px',
+                                    maxWidth: '230px',
+                                    scrollbarWidth: 'thin',
+                                    userSelect: 'all',
+                                  }}
+                                  title={val ? `Full SMILES: ${val} (scroll or copy)` : '-'}
+                                >
+                                  {val || '-'}
+                                </div>
+                                {val && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      navigator.clipboard.writeText(val)
+                                      setCopiedSmiles(val)
+                                      setTimeout(() => setCopiedSmiles(null), 2000)
+                                    }}
+                                    title={isCopied ? "Copied full SMILES!" : "Copy full SMILES"}
+                                    style={{
+                                      background: isCopied ? 'rgba(74, 222, 128, 0.2)' : 'rgba(0, 245, 233, 0.08)',
+                                      border: `1px solid ${isCopied ? '#4ade80' : 'rgba(0, 245, 233, 0.25)'}`,
+                                      borderRadius: '4px',
+                                      color: isCopied ? '#4ade80' : '#00F5E9',
+                                      padding: '4px 6px',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      flexShrink: 0,
+                                      transition: 'all 0.2s',
+                                    }}
+                                  >
+                                    {isCopied ? (
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    ) : (
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           )
                         }
@@ -665,7 +722,61 @@ export default function BatchScreening({ isEmbedded = false }) {
                     <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
                       <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{err.row_index}</td>
                       <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{err.name || '-'}</td>
-                      <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8' }}>{err.smiles}</td>
+                      <td style={{ padding: '6px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{
+                            overflowX: 'auto',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'monospace',
+                            fontSize: '11px',
+                            color: '#94a3b8',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '4px',
+                            padding: '3px 6px',
+                            maxWidth: '230px',
+                            scrollbarWidth: 'thin',
+                            userSelect: 'all',
+                          }}>
+                            {err.smiles}
+                          </div>
+                          {err.smiles && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                navigator.clipboard.writeText(err.smiles)
+                                setCopiedSmiles(err.smiles)
+                                setTimeout(() => setCopiedSmiles(null), 2000)
+                              }}
+                              title={copiedSmiles === err.smiles ? "Copied!" : "Copy SMILES"}
+                              style={{
+                                background: copiedSmiles === err.smiles ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                border: `1px solid ${copiedSmiles === err.smiles ? '#4ade80' : 'rgba(255, 255, 255, 0.15)'}`,
+                                borderRadius: '4px',
+                                color: copiedSmiles === err.smiles ? '#4ade80' : '#cbd5e1',
+                                padding: '3px 5px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {copiedSmiles === err.smiles ? (
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              ) : (
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </td>
                       <td style={{ padding: '10px 12px', color: '#f87171' }}>{err.reason}</td>
                     </tr>
                   ))}
