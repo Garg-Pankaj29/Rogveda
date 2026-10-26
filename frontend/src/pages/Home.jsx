@@ -1,1053 +1,1299 @@
 /**
- * ROGVEDA — HomePage Dashboard
+ * ROGVEDA — Advanced Interactive Molecular Research Homepage
  *
- * Main hub after login. Molecule-hub diagram with five feature nodes
- * arranged in a pentagon around a central "Draw Molecule" node.
- * Real data from /api/auth/me and /api/auth/stats.
+ * Implements the new 3D molecular hub architecture with real-time WebGL,
+ * dual interactive Three.js scenes, animated energy spokes, live endpoints
+ * (/api/auth/me, /api/auth/stats, /api/chat/, experimentService), activity
+ * history, notifications, onboarding tour, and responsive layout.
  */
 
-import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import * as THREE from 'three'
 import { get, post, clearToken, isAuthenticated } from '../lib/apiClient.js'
-import TopNav from '../components/TopNav.jsx'
+import { experimentService } from '../lib/experimentService.js'
+import { getHistory, getNotifications, markNotificationsRead, addHistory } from '../lib/events.js'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import './Home.css'
 
 /* ════════════════════════════════════════════════════════════
-   SVG ICON COMPONENTS
+   OUTER NODE DEFINITIONS & SPOKE TOPOLOGY
    ════════════════════════════════════════════════════════════ */
 
-function MoleculeIcon({ size = 20 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5">
-      <circle cx="12" cy="5" r="2.5" />
-      <circle cx="5" cy="17" r="2.5" />
-      <circle cx="19" cy="17" r="2.5" />
-      <line x1="12" y1="7.5" x2="5" y2="14.5" />
-      <line x1="12" y1="7.5" x2="19" y2="14.5" />
-      <line x1="7.5" y1="17" x2="16.5" y2="17" />
-    </svg>
-  )
-}
-
-function ChevronDown() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8aafaf" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
-
-function BarChartIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round">
-      <rect x="3" y="12" width="4" height="9" rx="0.5" />
-      <rect x="10" y="6" width="4" height="15" rx="0.5" />
-      <rect x="17" y="3" width="4" height="18" rx="0.5" />
-    </svg>
-  )
-}
-
-function BrainIcon() {
-  return (
-    <img 
-      src="/brain_icon.png" 
-      alt="Prediction & AI" 
-      style={{ 
-        width: '38px', 
-        height: '38px', 
-        objectFit: 'contain',
-        filter: 'brightness(0) saturate(100%) invert(76%) sepia(26%) saturate(2318%) hue-rotate(132deg) brightness(94%) contrast(88%) drop-shadow(0 0 4px rgba(45,212,212,0.4))'
-      }} 
-    />
-  )
-}
-
-function LayersIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 12 12 17 22 12" />
-      <polyline points="2 17 12 22 22 17" />
-    </svg>
-  )
-}
-
-function ScaleIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="3" x2="12" y2="21" />
-      <line x1="9" y1="21" x2="15" y2="21" />
-      <polyline points="3 7 12 3 21 7" />
-      <path d="M3 7l2.5 8.5C5.8 16.5 4.5 18 3 18s-2.8-1.5-2.5-2.5L3 7z" />
-      <path d="M21 7l2.5 8.5C23.8 16.5 22.5 18 21 18s-2.8-1.5-2.5-2.5L21 7z" />
-    </svg>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-      <line x1="15" y1="5" x2="19" y2="9" />
-    </svg>
-  )
-}
-
-function MagnifyingGlassIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="10.5" cy="10.5" r="7" />
-      <line x1="15.5" y1="15.5" x2="22" y2="22" />
-    </svg>
-  )
-}
-
-
-function RobotIcon({ width = 28, height = 28 }) {
-  return (
-    <svg width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="8" width="16" height="12" rx="3" />
-      <circle cx="9" cy="14" r="1.5" fill="#2dd4d4" />
-      <circle cx="15" cy="14" r="1.5" fill="#2dd4d4" />
-      <line x1="9" y1="18" x2="15" y2="18" />
-      <line x1="12" y1="4" x2="12" y2="8" />
-      <circle cx="12" cy="3" r="1" fill="#2dd4d4" />
-    </svg>
-  )
-}
-
-/* Central "Draw Molecule" canvas preview SVG */
-function CanvasPreview() {
-  return (
-    <svg width="100%" height="100%" viewBox="0 0 100 80" fill="none">
-      {/* Grid dots */}
-      {[20,40,60,80].map(x =>
-        [20,40,60].map(y =>
-          <circle key={`${x}-${y}`} cx={x} cy={y} r="1" fill="#1a3a3a" />
-        )
-      )}
-      {/* Molecule structure */}
-      <line x1="30" y1="25" x2="50" y2="40" stroke="#2dd4d4" strokeWidth="1.5" />
-      <line x1="50" y1="40" x2="70" y2="25" stroke="#2dd4d4" strokeWidth="1.5" />
-      <line x1="50" y1="40" x2="50" y2="60" stroke="#2dd4d4" strokeWidth="1.5" />
-      <line x1="50" y1="60" x2="35" y2="65" stroke="#2dd4d4" strokeWidth="1.5" />
-      <line x1="50" y1="60" x2="65" y2="65" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="30" cy="25" r="4" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="70" cy="25" r="4" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="50" cy="40" r="5" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="50" cy="60" r="4" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="35" cy="65" r="3" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      <circle cx="65" cy="65" r="3" fill="#0a1c1c" stroke="#2dd4d4" strokeWidth="1.5" />
-      {/* Pencil icon top-right */}
-      <g transform="translate(78, 8)">
-        <path d="M0 12L9 3l3 3-9 9H0v-3z" stroke="#2dd4d4" strokeWidth="1" fill="none" />
-      </g>
-      {/* 3 dots top center */}
-      <circle cx="44" cy="8" r="1.5" fill="#2dd4d4" />
-      <circle cx="50" cy="8" r="1.5" fill="#2dd4d4" />
-      <circle cx="56" cy="8" r="1.5" fill="#2dd4d4" />
-    </svg>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   NODE CONFIGURATION
-   ════════════════════════════════════════════════════════════ */
-
-const HUB_NODES = [
-  { id: 'analysis',     label: 'MOLECULAR\nANALYSIS',      desc: 'Calculate properties\nand descriptors',              icon: BarChartIcon,        route: '/analysis',      angle: -90 },
-  { id: 'prediction',   label: 'PREDICTION & AI',          desc: 'Predict biological\nactivities with\nmachine learning', icon: BrainIcon,        route: '/prediction',    angle: -30 },
-  { id: 'batch',        label: 'BATCH\nSCREENING',         desc: 'Process up to 500\nmolecules at once',               icon: LayersIcon,          route: '/batch',         angle: 30 },
-  { id: 'compare',      label: 'COMPARE\nMOLECULES',      desc: 'Analyze and compare\nmolecular structures',          icon: ScaleIcon,           route: '/compare',       angle: 90  },
-  { id: 'modification', label: 'MOLECULAR\nMODIFICATION',  desc: 'Edit and generate\nnew structures',                  icon: PencilIcon,          route: '/modification',  angle: 150 },
-  { id: 'similarity',   label: 'SIMILARITY\nSEARCH',       desc: 'Find structurally\nsimilar molecules',               icon: MagnifyingGlassIcon, route: '/similarity',    angle: 210 },
+const TOOLS = [
+  {
+    id: 'analysis',
+    title: 'Molecular analysis',
+    desc: 'Calculate properties and descriptors',
+    iconPath: 'M5 20v-8h4v8M10 20V5h4v15M15 20V9h4v11',
+    angle: -90,
+    align: 'r',
+    width: 170,
+    route: '/draw?tab=Analysis',
+  },
+  {
+    id: 'prediction',
+    title: 'Prediction & AI',
+    desc: 'Predict biological activities with machine learning',
+    iconPath: 'M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a2 2 0 0 0-2-2zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a2 2 0 0 1 2-2zM8 12h2.5M13.5 12h2.5',
+    angle: -30,
+    align: 'r',
+    width: 220,
+    route: '/draw?tab=Prediction',
+  },
+  {
+    id: 'batch',
+    title: 'Batch screening',
+    desc: 'Process up to 500 molecules at once',
+    iconPath: 'M12 3l9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5',
+    angle: 30,
+    align: 'r',
+    width: 160,
+    route: '/batch',
+  },
+  {
+    id: 'compare',
+    title: 'Compare molecules',
+    desc: 'Analyze and compare molecular structures',
+    iconPath: 'M12 4v16M7 20h10M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0zM19 7l-3 7a3.5 3.5 0 0 0 6 0z',
+    angle: 90,
+    align: 'r',
+    width: 160,
+    route: '/draw?tab=Compare',
+  },
+  {
+    id: 'modification',
+    title: 'Molecular modification',
+    desc: 'Edit and generate new structures',
+    iconPath: 'M4 20l1-4L16 5l3 3L8 19zM14 7l3 3',
+    angle: 150,
+    align: 'l',
+    width: 160,
+    route: '/draw?tab=Modify',
+  },
+  {
+    id: 'similarity',
+    title: 'Similarity search',
+    desc: 'Find structurally similar molecules',
+    iconPath: 'M10.500 4a6.500 6.500 0 1 0 0 13 6.500 6.500 0 0 0 0-13zM15.500 15.500L21 21',
+    angle: 210,
+    align: 'l',
+    width: 160,
+    route: '/draw?tab=Search',
+  },
 ]
 
+const CX = 480
+const CY = 350
+const D = 231
 
 /* ════════════════════════════════════════════════════════════
-   BACKGROUND COMPONENT
+   ANIMATED NUMBER COMPONENT
    ════════════════════════════════════════════════════════════ */
 
-function ProceduralBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-      {/* Top-left molecule cluster blob */}
-      <div
-        className="absolute"
-        style={{
-          top: '-5%', left: '-5%',
-          width: '450px', height: '450px',
-          background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, rgba(45,212,212,0.03) 30%, transparent 65%)',
-          filter: 'blur(40px)',
-          animation: 'bg-shimmer 8s ease-in-out infinite',
-        }}
-      />
-      {/* Top-right cluster */}
-      <div
-        className="absolute"
-        style={{
-          top: '-8%', right: '-3%',
-          width: '400px', height: '400px',
-          background: 'radial-gradient(circle, rgba(45,212,212,0.06) 0%, rgba(30,180,180,0.02) 35%, transparent 60%)',
-          filter: 'blur(50px)',
-          animation: 'bg-shimmer 10s ease-in-out infinite 2s',
-        }}
-      />
-      {/* Bottom-left cluster */}
-      <div
-        className="absolute"
-        style={{
-          bottom: '5%', left: '-3%',
-          width: '380px', height: '380px',
-          background: 'radial-gradient(circle, rgba(45,212,212,0.07) 0%, rgba(45,212,212,0.02) 30%, transparent 55%)',
-          filter: 'blur(45px)',
-          animation: 'bg-shimmer 9s ease-in-out infinite 1s',
-        }}
-      />
-      {/* Bottom-right DNA helix / particle stream */}
-      <div
-        className="absolute"
-        style={{
-          bottom: '-10%', right: '-5%',
-          width: '600px', height: '350px',
-          background: `
-            linear-gradient(135deg, transparent 20%, rgba(45,212,212,0.04) 40%, transparent 60%),
-            radial-gradient(ellipse at 60% 50%, rgba(45,212,212,0.06) 0%, transparent 50%)
-          `,
-          filter: 'blur(30px)',
-          transform: 'rotate(-15deg)',
-          animation: 'bg-shimmer 12s ease-in-out infinite 3s',
-        }}
-      />
-      {/* Scattered small dots to simulate distant particles */}
-      <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.04 }}>
-        <circle cx="15%" cy="20%" r="2" fill="#2dd4d4" />
-        <circle cx="85%" cy="15%" r="1.5" fill="#2dd4d4" />
-        <circle cx="10%" cy="75%" r="1.5" fill="#2dd4d4" />
-        <circle cx="90%" cy="80%" r="2" fill="#2dd4d4" />
-        <circle cx="25%" cy="50%" r="1" fill="#2dd4d4" />
-        <circle cx="75%" cy="45%" r="1" fill="#2dd4d4" />
-        <circle cx="50%" cy="85%" r="1.5" fill="#2dd4d4" />
-        <circle cx="40%" cy="10%" r="1" fill="#2dd4d4" />
-        <circle cx="65%" cy="92%" r="1" fill="#2dd4d4" />
-        {/* Thin connecting lines */}
-        <line x1="15%" y1="20%" x2="25%" y2="50%" stroke="#2dd4d4" strokeWidth="0.3" />
-        <line x1="85%" y1="15%" x2="75%" y2="45%" stroke="#2dd4d4" strokeWidth="0.3" />
-        <line x1="10%" y1="75%" x2="25%" y2="50%" stroke="#2dd4d4" strokeWidth="0.3" />
-        <line x1="90%" y1="80%" x2="75%" y2="45%" stroke="#2dd4d4" strokeWidth="0.3" />
-      </svg>
-    </div>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   CONNECTOR LINE (ball-and-stick bond between center & node)
-   ════════════════════════════════════════════════════════════ */
-
-function ConnectorLine({ angle, centerRadius, nodeRadius, orbitRadius }) {
-  const rad = (angle * Math.PI) / 180
-  const startX = Math.cos(rad) * (centerRadius + 4)
-  const startY = Math.sin(rad) * (centerRadius + 4)
-  const endX = Math.cos(rad) * (orbitRadius - nodeRadius - 4)
-  const endY = Math.sin(rad) * (orbitRadius - nodeRadius - 4)
-  return (
-    <line
-      x1={startX} y1={startY}
-      x2={endX} y2={endY}
-      stroke="#2dd4d4"
-      strokeWidth="12"
-      strokeLinecap="round"
-      style={{ filter: 'drop-shadow(0 0 4px rgba(45,212,212,0.3))' }}
-    />
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   OUTER NODE COMPONENT
-   ════════════════════════════════════════════════════════════ */
-
-function OuterNode({ node, orbitRadius, idx }) {
-  const rad = (node.angle * Math.PI) / 180
-  const x = Math.cos(rad) * orbitRadius
-  const y = Math.sin(rad) * orbitRadius
-  const nodeSize = 140
-  const Icon = node.icon
-
-  return (
-    <g
-      style={{ animation: `fade-in-up 0.6s ease-out ${0.3 + idx * 0.1}s both` }}
-    >
-      {/* Node circle */}
-      <circle
-        cx={x} cy={y} r={nodeSize / 2}
-        fill="rgba(8, 24, 24, 0.85)"
-        stroke="#2dd4d4"
-        strokeWidth="2"
-        style={{ filter: 'drop-shadow(0 0 8px rgba(45,212,212,0.2))' }}
-      />
-      {/* Icon */}
-      <foreignObject x={x - 30} y={y - 30} width={60} height={60}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'scale(1.3)' }}>
-          <Icon />
-        </div>
-      </foreignObject>
-    </g>
-  )
-}
-
-function OuterNodeText({ node, orbitRadius, idx }) {
-  const rad = (node.angle * Math.PI) / 180
-  const x = Math.cos(rad) * orbitRadius
-  const y = Math.sin(rad) * orbitRadius
-
-  let textX = x
-  let textY = y
-  let textAnchor = 'middle'
-
-  if (node.id === 'analysis')     { textX = x + 120; textY = y - 20;  textAnchor = 'start'; }
-  if (node.id === 'prediction')   { textX = x + 110; textY = y - 20;  textAnchor = 'start'; }
-  if (node.id === 'batch')        { textX = x + 110; textY = y - 20;  textAnchor = 'start'; }
-  if (node.id === 'compare')      { textX = x + 120; textY = y - 20;  textAnchor = 'start'; }
-  if (node.id === 'modification') { textX = x - 110; textY = y - 20;  textAnchor = 'end'; }
-  if (node.id === 'similarity')   { textX = x - 110; textY = y - 20;  textAnchor = 'end'; }
-
-  return (
-    <g
-      style={{ animation: `fade-in-up 0.6s ease-out ${0.3 + idx * 0.1}s both`, pointerEvents: 'none' }}
-    >
-      {/* Label text */}
-      <text
-        x={textX} y={textY}
-        textAnchor={textAnchor}
-        fill="#ffffff"
-        fontWeight="800"
-        fontSize="20"
-        letterSpacing="0.08em"
-        fontFamily="Inter, system-ui, sans-serif"
-      >
-        {node.label.split('\n').map((line, i) => (
-          <tspan key={i} x={textX} dy={i === 0 ? 0 : 26}>{line}</tspan>
-        ))}
-      </text>
-      {/* Description text */}
-      <text
-        x={textX} y={textY + node.label.split('\n').length * 26 + 8}
-        textAnchor={textAnchor}
-        fill="#8aafaf"
-        fontSize="16"
-        fontFamily="Inter, system-ui, sans-serif"
-      >
-        {node.desc.split('\n').map((line, i) => (
-          <tspan key={i} x={textX} dy={i === 0 ? 0 : 22}>{line}</tspan>
-        ))}
-      </text>
-    </g>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   MOLECULE HUB DIAGRAM
-   ════════════════════════════════════════════════════════════ */
-
-function MoleculeHub() {
-  const navigate = useNavigate()
-  const centerRadius = 158
-  const nodeRadius = 70
-  const orbitRadius = 300
-
-  const [showOnboarding, setShowOnboarding] = useState(false)
-
-  useEffect(() => {
-    if (localStorage.getItem('rogveda_onboarding_seen') !== 'true') {
-      setShowOnboarding(true)
-    }
-
-    const handleShowOnboarding = () => {
-      setShowOnboarding(true)
-      localStorage.removeItem('rogveda_onboarding_seen')
-    }
-    window.addEventListener('rogveda_show_onboarding', handleShowOnboarding)
-    return () => window.removeEventListener('rogveda_show_onboarding', handleShowOnboarding)
-  }, [])
-
-  const dismissOnboarding = (e) => {
-    e.stopPropagation()
-    localStorage.setItem('rogveda_onboarding_seen', 'true')
-    setShowOnboarding(false)
-  }
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: '740px', height: '660px', marginTop: '-60px', animation: 'float-drift 6s ease-in-out infinite' }}>
-      <svg
-        viewBox="-480 -340 960 680"
-        width="740"
-        height="660"
-        className="absolute inset-0"
-        style={{ overflow: 'visible' }}
-      >
-        {/* Connector lines (bonds) */}
-        {HUB_NODES.map(node => (
-          <ConnectorLine
-            key={node.id}
-            angle={node.angle}
-            centerRadius={centerRadius}
-            nodeRadius={nodeRadius}
-            orbitRadius={orbitRadius}
-          />
-        ))}
-        {/* Small ball joints at the ends of each connector */}
-        {HUB_NODES.map(node => {
-          const rad = (node.angle * Math.PI) / 180
-          const bx = Math.cos(rad) * (orbitRadius - nodeRadius - 4)
-          const by = Math.sin(rad) * (orbitRadius - nodeRadius - 4)
-          return <circle key={`ball-${node.id}`} cx={bx} cy={by} r="8" fill="#2dd4d4" style={{ filter: 'drop-shadow(0 0 6px rgba(45,212,212,0.6))' }} />
-        })}
-        {/* Central node glow ring — visually dominant filled style */}
-        <defs>
-          <radialGradient id="center-fill" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="rgba(45,212,212,0.12)" />
-            <stop offset="60%" stopColor="rgba(12,36,36,0.95)" />
-            <stop offset="100%" stopColor="rgba(8,24,24,0.98)" />
-          </radialGradient>
-        </defs>
-        <circle
-          cx={0} cy={0} r={centerRadius}
-          fill="url(#center-fill)"
-          stroke="#2dd4d4"
-          strokeWidth="3.5"
-          style={{ filter: 'drop-shadow(0 0 28px rgba(45,212,212,0.45)) drop-shadow(0 0 60px rgba(45,212,212,0.15))' }}
-        />
-        {/* Outer accent ring */}
-        <circle
-          cx={0} cy={0} r={centerRadius + 6}
-          fill="none"
-          stroke="rgba(45,212,212,0.12)"
-          strokeWidth="1"
-        />
-        {/* Inner dashed ring */}
-        <circle
-          cx={0} cy={0} r={centerRadius - 14}
-          fill="none"
-          stroke="rgba(45,212,212,0.18)"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-        />
-        {/* Outer Nodes */}
-        {HUB_NODES.map((node, idx) => (
-          <OuterNode key={node.id} node={node} orbitRadius={orbitRadius} idx={idx} />
-        ))}
-        {/* Texts on top of outer nodes */}
-        {HUB_NODES.map((node, idx) => (
-          <OuterNodeText key={'text-'+node.id} node={node} orbitRadius={orbitRadius} idx={idx} />
-        ))}
-      </svg>
-
-      {/* Central content (HTML overlay) — keyboard-accessible */}
-      <div className="relative">
-        <div
-          onClick={() => navigate('/draw?new=true')}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/draw?new=true') } }}
-          role="button"
-          tabIndex={0}
-          aria-label="Draw Molecule — Start your research here"
-          className="flex flex-col items-center justify-center cursor-pointer home-center-node relative"
-          style={{
-            width: `${centerRadius * 2}px`,
-            height: `${centerRadius * 2}px`,
-            borderRadius: '50%',
-            animation: 'glow-pulse-strong 3s ease-in-out infinite',
-            outline: 'none',
-            zIndex: 20
-          }}
-        >
-          <div
-            className="flex items-center justify-center rounded-lg mb-3 mt-4"
-            style={{
-              width: '175px',
-              height: '120px',
-              background: 'rgba(10, 28, 28, 0.8)',
-              border: '1px solid rgba(45,212,212,0.25)',
-            }}
-          >
-            <CanvasPreview />
-          </div>
-          <span className="text-white font-extrabold text-center leading-tight" style={{ fontSize: '16px', letterSpacing: '0.12em' }}>DRAW MOLECULE</span>
-          <span className="text-center mt-1" style={{ color: '#8aafaf', fontSize: '12px' }}>Start your research here</span>
-        </div>
-
-        {/* Onboarding Tooltip */}
-        {showOnboarding && (
-          <div 
-            className="absolute z-50 flex flex-col pointer-events-auto"
-            style={{ 
-              top: '-30px', 
-              right: '-240px', 
-              width: '240px', 
-              background: 'rgba(5, 13, 15, 0.95)',
-              border: '1px solid #2dd4d4',
-              borderRadius: '12px',
-              padding: '16px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 15px rgba(45,212,212,0.2)',
-              backdropFilter: 'blur(8px)',
-              animation: 'fade-in-up 0.5s ease-out'
-            }}
-          >
-            {/* Arrow pointing left */}
-            <div className="absolute" style={{ top: '60px', left: '-7px', width: '12px', height: '12px', background: 'rgba(5, 13, 15, 0.95)', borderLeft: '1px solid #2dd4d4', borderBottom: '1px solid #2dd4d4', transform: 'rotate(45deg)' }} />
-            
-            <h4 className="text-white m-0 mb-2 font-bold flex items-center gap-2" style={{ fontSize: '14px' }}>
-              <span style={{ color: '#2dd4d4' }}>✨</span> New here?
-            </h4>
-            <p className="m-0 mb-4 text-[#a0c4c4]" style={{ fontSize: '13px', lineHeight: '1.5' }}>
-              Start by drawing a molecule or pasting a SMILES string to begin your research.
-            </p>
-            <button 
-              onClick={dismissOnboarding}
-              className="bg-[#2dd4d4] text-[#050d0f] font-bold py-2 px-4 rounded transition-colors hover:bg-white border-none cursor-pointer"
-              style={{ fontSize: '13px', alignSelf: 'flex-start' }}
-            >
-              Got it
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   ANIMATED COUNT-UP NUMBER
-   ════════════════════════════════════════════════════════════ */
-
-function AnimatedNumber({ value, duration = 800 }) {
+function AnimatedNumber({ value, duration = 900 }) {
   const [display, setDisplay] = useState(0)
-  const prefersReducedMotion = useRef(false)
 
   useEffect(() => {
-    prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  }, [])
-
-  useEffect(() => {
+    const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const target = typeof value === 'number' ? value : 0
-    if (prefersReducedMotion.current || target === 0) {
+    if (isReduced || target === 0) {
       setDisplay(target)
       return
     }
-    let start = 0
+
     const startTime = performance.now()
+    let frameId
     function tick(now) {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
-      const current = Math.round(eased * target)
-      setDisplay(current)
-      if (progress < 1) requestAnimationFrame(tick)
+      setDisplay(Math.round(eased * target))
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick)
+      }
     }
-    requestAnimationFrame(tick)
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
   }, [value, duration])
 
   return <>{display > 999 ? `${Math.floor(display / 100) * 100}+` : display}</>
 }
 
-
 /* ════════════════════════════════════════════════════════════
-   OFFLINE BADGE
+   MAIN HOMEPAGE COMPONENT
    ════════════════════════════════════════════════════════════ */
 
-function OfflineBadge() {
-  return (
-    <div
-      className="flex items-center gap-2 rounded-full"
-      style={{
-        padding: '8px 20px',
-        background: 'rgba(0, 0, 0, 0.55)',
-        backdropFilter: 'blur(8px)',
-        border: '1.5px solid #2dd4d4',
-      }}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-      <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, letterSpacing: '0.04em' }}>Offline-First</span>
-    </div>
-  )
-}
+export default function Home() {
+  const navigate = useNavigate()
+  const location = useLocation()
 
+  // Real data state
+  const [user, setUser] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [experiments, setExperiments] = useState([])
+  const [history, setHistory] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [error, setError] = useState(null)
 
-/* ════════════════════════════════════════════════════════════
-   HERO IMPACT STRIP (replaces old StatsBar — distinct layout)
-   ════════════════════════════════════════════════════════════ */
-
-function HeroImpactStrip({ stats }) {
-  const items = [
-    { value: stats?.total_experiments ?? 0, label: 'Experiments' },
-    { value: stats?.saved_documents ?? 0, label: 'Documents' },
-    { value: stats?.reference_molecules ?? 0, label: 'References' },
-  ]
-
-  return (
-    <div
-      className="flex items-stretch rounded-xl mx-auto"
-      style={{
-        background: 'rgba(0, 0, 0, 0.55)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(45,212,212,0.35)',
-        width: 'fit-content',
-        animation: 'fade-in-up 0.6s ease-out 0.4s both',
-      }}
-    >
-      {items.map((item, i) => (
-        <div
-          key={i}
-          className="flex flex-col items-center justify-center"
-          style={{
-            padding: '14px 36px',
-            borderLeft: i > 0 ? '1px solid rgba(45,212,212,0.25)' : 'none',
-          }}
-        >
-          <span
-            style={{
-              color: '#2dd4d4',
-              fontSize: '32px',
-              fontWeight: 800,
-              lineHeight: 1.1,
-              fontFamily: 'Inter, system-ui, sans-serif',
-            }}
-          >
-            <AnimatedNumber value={item.value} />
-          </span>
-          <span
-            style={{
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: '11px',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              marginTop: '4px',
-              fontWeight: 500,
-            }}
-          >
-            {item.label}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   RECENT ACTIVITY BAR (bottom — replaces duplicate StatsBar)
-   Shows last 3 experiments from the same data source.
-   Option (b): repurposed to show different info.
-   ════════════════════════════════════════════════════════════ */
-
-function RecentActivityBar({ experiments }) {
-  if (!experiments || experiments.length === 0) {
-    return (
-      <div
-        className="flex items-center justify-center rounded-xl mx-auto"
-        style={{
-          background: 'rgba(10, 24, 26, 0.85)',
-          border: '1px solid rgba(45,212,212,0.1)',
-          backdropFilter: 'blur(10px)',
-          padding: '14px 32px',
-          animation: 'fade-in-up 0.7s ease-out 0.8s both',
-        }}
-      >
-        <span style={{ color: '#6a9a9a', fontSize: '13px', fontStyle: 'italic' }}>No experiments yet — draw a molecule to begin.</span>
-      </div>
-    )
-  }
-
-  const recent = experiments.slice(0, 3)
-
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'just now'
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24) return `${hrs}h ago`
-    const days = Math.floor(hrs / 24)
-    return `${days}d ago`
-  }
-
-  return (
-    <div
-      className="flex items-center justify-center rounded-xl mx-auto gap-0"
-      style={{
-        background: 'rgba(10, 24, 26, 0.85)',
-        border: '1px solid rgba(45,212,212,0.1)',
-        backdropFilter: 'blur(10px)',
-        width: 'fit-content',
-        animation: 'fade-in-up 0.7s ease-out 0.8s both',
-      }}
-    >
-      <div style={{ padding: '12px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2dd4d4" strokeWidth="1.5" strokeLinecap="round">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        <span style={{ color: '#8aafaf', fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>Recent</span>
-      </div>
-      {recent.map((exp, i) => (
-        <div
-          key={exp.id || i}
-          className="flex items-center gap-2"
-          style={{
-            padding: '12px 20px',
-            borderLeft: '1px solid rgba(45,212,212,0.12)',
-          }}
-        >
-          <span style={{ color: '#d8efef', fontSize: '13px', fontWeight: 500, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {exp.name || exp.smiles || 'Untitled'}
-          </span>
-          <span style={{ color: '#5a8080', fontSize: '11px', flexShrink: 0 }}>
-            {timeAgo(exp.date || exp.created_at)}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   CHATBOT FAB
-   ════════════════════════════════════════════════════════════ */
-
-function ChatbotFab() {
-  const [isExpanded, setIsExpanded] = useState(true)
-  const prefersReducedMotion = useRef(false)
+  // Interactive UI state
+  const [hoverIndex, setHoverIndex] = useState(null)
+  const [hoverHub, setHoverHub] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [isBotExpanded, setIsBotExpanded] = useState(true)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   useEffect(() => {
-    prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion.current) {
-       setIsExpanded(false)
-       return
+    const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (isReduced) {
+      setIsBotExpanded(false)
+      return
     }
     const timer = setTimeout(() => {
-      setIsExpanded(false)
+      setIsBotExpanded(false)
     }, 3500)
     return () => clearTimeout(timer)
   }, [])
 
-  return (
-    <button
-      className="fixed rounded-full flex items-center cursor-pointer group"
-      aria-label="Ask ROGVEDA"
-      style={{
-        bottom: '32px', right: '32px',
-        height: '56px',
-        maxWidth: isExpanded ? '200px' : '56px',
-        background: 'rgba(10, 24, 26, 0.9)',
-        border: '2px solid rgba(45,212,212,0.5)',
-        boxShadow: '0 0 20px rgba(45,212,212,0.15), 0 4px 20px rgba(0,0,0,0.4)',
-        zIndex: 50,
-        animation: 'glow-pulse 3s ease-in-out infinite',
-        transition: 'max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-        padding: 0
-      }}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-      onFocus={() => setIsExpanded(true)}
-      onBlur={() => setIsExpanded(false)}
-    >
-      <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
-         <RobotIcon />
-      </div>
-      <span 
-        className="font-bold text-[#2dd4d4] tracking-wider uppercase"
-        style={{
-           fontSize: '13px',
-           opacity: isExpanded ? 1 : 0,
-           transform: isExpanded ? 'translateX(0)' : 'translateX(10px)',
-           transition: 'all 0.3s ease-out',
-           transitionDelay: isExpanded ? '0.1s' : '0s',
-           paddingRight: '20px'
-        }}
-      >
-        Ask Rogveda
-      </span>
-    </button>
-  )
-}
-
-
-/* ════════════════════════════════════════════════════════════
-   CHAT INTERFACE
-   ════════════════════════════════════════════════════════════ */
-
-function ChatInterface({ isOpen, onClose }) {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hello! I am Rogveda AI. How can I help you with your molecular research today?' }
-  ])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  if (!isOpen) return null
-
-  const handleSend = async () => {
-    if (!input.trim()) return
-    const userMsg = { role: 'user', content: input.trim() }
-    setMessages(prev => [...prev, userMsg])
-    setInput('')
-    setIsLoading(true)
-
-    try {
-      const data = await post('/api/chat/', { messages: [...messages, userMsg] })
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: err.message || 'Connection error.' }])
-    } finally {
-      setIsLoading(false)
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
-  }
+  }, [])
 
-  return (
-    <div
-      className="fixed flex flex-col rounded-xl overflow-hidden"
-      style={{
-        bottom: '104px', right: '40px',
-        width: '380px', height: '500px',
-        background: 'rgba(5, 13, 15, 0.95)',
-        border: '1px solid rgba(45,212,212,0.3)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        zIndex: 51,
-        animation: 'fade-in-up 0.3s ease-out both'
-      }}
-    >
-      <div 
-        className="flex items-center justify-between" 
-        style={{ 
-          padding: '16px 24px', 
-          background: 'rgba(10, 24, 26, 0.9)', 
-          borderBottom: '1px solid rgba(45,212,212,0.15)' 
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center">
-            <RobotIcon width={22} height={22} />
-          </div>
-          <span className="text-white font-bold tracking-wide text-sm">Rogveda AI</span>
-        </div>
-        <button 
-          onClick={onClose} 
-          className="text-gray-400 hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center transition-colors"
-          style={{ width: '24px', height: '24px', fontSize: '18px', lineHeight: 1 }}
-        >
-          ✕
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto flex flex-col gap-4" style={{ padding: '24px' }}>
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className="rounded-xl max-w-[85%]"
-              style={{
-                padding: '12px 20px',
-                background: msg.role === 'user' ? 'rgba(45,212,212,0.15)' : 'rgba(255,255,255,0.05)',
-                color: '#d8efef', fontSize: '13.5px', lineHeight: '1.5',
-                border: msg.role === 'user' ? '1px solid rgba(45,212,212,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                wordBreak: 'break-word',
-                overflowWrap: 'anywhere'
-              }}
-            >
-              <div className="markdown-body">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {msg.content}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="rounded-xl" style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.05)', color: '#8aafaf', fontSize: '13.5px' }}>
-              Thinking...
-            </div>
-          </div>
-        )}
-      </div>
-      <div style={{ padding: '20px', borderTop: '1px solid rgba(45,212,212,0.15)', background: 'rgba(10, 24, 26, 0.9)' }}>
-        <div className="flex items-center rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(45,212,212,0.3)' }}>
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Ask something..."
-            className="flex-1 bg-transparent border-none outline-none text-white text-sm"
-            style={{ padding: '14px 24px' }}
-          />
-          <button 
-            onClick={handleSend} 
-            className="bg-transparent border-none cursor-pointer text-[#2dd4d4] hover:text-white font-bold"
-            style={{ padding: '14px 24px' }}
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+  // Chat conversation state
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Hello! I am **Rogveda AI**. How can I assist with your molecular structures, QSAR predictions, or chemical experiments today?',
+    },
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [isChatLoading, setIsChatLoading] = useState(false)
 
-/* ════════════════════════════════════════════════════════════
-   MAIN HOME PAGE EXPORT
-   ════════════════════════════════════════════════════════════ */
+  // Canvas Refs
+  const bgCanvasRef = useRef(null)
+  const hvCanvasRef = useRef(null)
+  const toastTimerRef = useRef(null)
 
-import { experimentService } from '../lib/experimentService'
+  // Interaction refs for Three.js animation loop without stale closures
+  const hoverIndexRef = useRef(null)
+  const hoverHubRef = useRef(false)
 
-export default function Home() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [stats, setStats] = useState(null)
-  const [experiments, setExperiments] = useState([])
-  const [error, setError] = useState(null)
-  const [isChatOpen, setIsChatOpen] = useState(false)
+  useEffect(() => {
+    hoverIndexRef.current = hoverIndex
+  }, [hoverIndex])
 
+  useEffect(() => {
+    hoverHubRef.current = hoverHub
+  }, [hoverHub])
+
+  // Helper toast notification
+  const showToast = useCallback((msg) => {
+    setToastMessage(msg)
+    clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToastMessage(''), 2400)
+  }, [])
+
+  // ── Authentication & Data Fetching ───────────────────────────
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login')
       return
     }
 
-    async function fetchData() {
+    async function loadData() {
       try {
         const [userData, statsData] = await Promise.all([
           get('/api/auth/me'),
           get('/api/auth/stats'),
         ])
         setUser(userData)
-        
+
         let exps = []
         try {
           exps = await experimentService.syncExperiments()
-        } catch(e) {}
-
+        } catch (e) {
+          console.warn('Could not sync experiments:', e)
+        }
         setExperiments(exps)
         setStats({
           ...statsData,
           total_experiments: exps.length,
         })
       } catch (err) {
-        console.error('Failed to fetch dashboard data', err)
+        console.error('Failed to load dashboard data', err)
         setError('Session expired. Please log in again.')
         clearToken()
         navigate('/login')
       }
     }
 
-    fetchData()
+    loadData()
+
+    // Load initial events & notifications
+    setHistory(getHistory())
+    const existingNotifs = getNotifications()
+    if (existingNotifs.length === 0) {
+      const welcome = {
+        id: 'welcome-init',
+        title: 'Welcome to Rogveda!',
+        message: 'Your molecular research workspace is ready. Draw molecules, predict properties, and screen compounds.',
+        time: new Date().toISOString(),
+        read: false,
+      }
+      localStorage.setItem('rogveda_notifications', JSON.stringify([welcome]))
+      setNotifications([welcome])
+    } else {
+      setNotifications(existingNotifs)
+    }
+
+    // Onboarding status
+    if (localStorage.getItem('rogveda_onboarding_seen') !== 'true') {
+      setShowOnboarding(true)
+    }
+
+    const handleOnboarding = () => {
+      setShowOnboarding(true)
+      localStorage.removeItem('rogveda_onboarding_seen')
+    }
+    window.addEventListener('rogveda_show_onboarding', handleOnboarding)
+
+    const handleHistoryUpdate = () => setHistory(getHistory())
+    const handleNotifUpdate = () => setNotifications(getNotifications())
+    window.addEventListener('rogveda_history_updated', handleHistoryUpdate)
+    window.addEventListener('rogveda_notifications_updated', handleNotifUpdate)
+
+    addHistory('Opened Research Dashboard')
+
+    return () => {
+      window.removeEventListener('rogveda_show_onboarding', handleOnboarding)
+      window.removeEventListener('rogveda_history_updated', handleHistoryUpdate)
+      window.removeEventListener('rogveda_notifications_updated', handleNotifUpdate)
+    }
   }, [navigate])
+
+  // ── Three.js 3D Visuals & Interactive Animation ─────────────
+  useEffect(() => {
+    if (!bgCanvasRef.current || !hvCanvasRef.current) return
+
+    const T = THREE
+    const isReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const isSmall = () => window.innerWidth < 820
+
+    function rng(s) {
+      return () => {
+        s |= 0
+        s = (s + 0x6d2b79f5) | 0
+        let t = Math.imul(s ^ (s >>> 15), 1 | s)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+    }
+
+    function grow(n, seed, ring) {
+      const r = rng(seed)
+      const P = []
+      const B = []
+      if (ring) {
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2
+          P.push(new T.Vector3(Math.cos(a), Math.sin(a), 0))
+        }
+        for (let i = 0; i < 6; i++) B.push([i, (i + 1) % 6])
+      } else {
+        P.push(new T.Vector3())
+      }
+      let k = 0
+      while (P.length < n && k++ < 600) {
+        const p = Math.floor(r() * P.length)
+        const d = new T.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).normalize()
+        const q = P[p].clone().add(d)
+        if (P.every((v) => v.distanceTo(q) > 0.85)) {
+          P.push(q)
+          B.push([p, P.length - 1])
+        }
+      }
+      const c = new T.Vector3()
+      P.forEach((v) => c.add(v))
+      c.divideScalar(P.length)
+      P.forEach((v) => v.sub(c))
+      return { P, B }
+    }
+
+    const UP = new T.Vector3(0, 1, 0)
+    const cyl = new T.CylinderGeometry(0.05, 0.05, 1, 6)
+    const sLo = new T.SphereGeometry(1, 12, 9)
+    const sHi = new T.SphereGeometry(1, 24, 18)
+    const PR = () => Math.min(window.devicePixelRatio || 1, isSmall() ? 1 : 1.5)
+
+    function bond(a, b, mat, w) {
+      const m = new T.Mesh(cyl, mat)
+      const d = b.clone().sub(a)
+      m.position.copy(a).addScaledVector(d, 0.5)
+      m.scale.set(w, d.length(), w)
+      m.quaternion.setFromUnitVectors(UP, d.normalize())
+      return m
+    }
+
+    const PL = []
+    const pm = new T.MeshBasicMaterial({
+      color: 0xe9ffff,
+      transparent: true,
+      opacity: 0.9,
+      blending: T.AdditiveBlending,
+      depthWrite: false,
+    })
+
+    function pulses(g, B, P, n, sz) {
+      for (let i = 0; i < n; i++) {
+        const m = new T.Mesh(sLo, pm)
+        m.scale.setScalar(sz)
+        g.add(m)
+        PL.push({
+          m,
+          B,
+          P,
+          b: B[Math.floor(Math.random() * B.length)],
+          t: Math.random(),
+          s: 0.25 + Math.random() * 0.3,
+        })
+      }
+    }
+
+    let bgR, hvR
+    try {
+      bgR = new T.WebGLRenderer({ canvas: bgCanvasRef.current, antialias: !isSmall(), alpha: true })
+      hvR = new T.WebGLRenderer({ canvas: hvCanvasRef.current, antialias: true, alpha: true })
+    } catch (e) {
+      console.warn('WebGL init failed:', e)
+      document.body.classList.add('nogl')
+      return
+    }
+
+    /* ── Background Scene ── */
+    const bgS = new T.Scene()
+    bgS.fog = new T.FogExp2(0x020d10, 0.04)
+    const bgC = new T.PerspectiveCamera(50, 1, 0.1, 80)
+    bgC.position.set(0, 0, 14)
+    bgS.add(new T.AmbientLight(0x1f5a5e, 0.9))
+
+    ;[
+      [-9, 5, 4, 0x00f5e9, 1.4],
+      [10, -4, 2, 0x00cfc8, 1.2],
+      [0, 0, -8, 0x008f91, 1.4],
+    ].forEach((a) => {
+      const l = new T.PointLight(a[3], a[4], 40)
+      l.position.set(a[0], a[1], a[2])
+      bgS.add(l)
+    })
+
+    const mk = (c, e, o) =>
+      new T.MeshStandardMaterial({
+        color: c,
+        emissive: c,
+        emissiveIntensity: e,
+        transparent: true,
+        opacity: o,
+        roughness: 0.4,
+      })
+
+    const am = [mk(0x00cfc8, 0.55, 0.85), mk(0x00cfc8, 0.35, 0.65), mk(0x008f91, 0.25, 0.5)]
+    const bb = new T.MeshBasicMaterial({ color: 0x00cfc8, transparent: true, opacity: 0.35 })
+
+    const MOL = []
+    const r = rng(5)
+    const N = isSmall() ? 8 : 14
+    const xs = isSmall() ? 0.55 : 1
+
+    for (let i = 0; i < N; i++) {
+      const big = i < 4
+      const side = i % 2 ? 1 : -1
+      const n = big ? 14 : 6 + Math.floor(r() * 6)
+      const s = big ? 1.5 : 0.6 + r() * 0.5
+      const base = new T.Vector3(
+        side * (big ? 11 + r() * 3 : 7 + r() * 9) * xs,
+        (r() - 0.5) * (big ? 12 : 15),
+        big ? -2 - r() * 3 : -5 - r() * 14
+      )
+      const { P, B } = grow(n, 100 + i, i % 3 === 0)
+      const g = new T.Group()
+      const mat = big ? am[0] : base.z < -12 ? am[2] : am[1]
+      P.forEach((p) => {
+        const m = new T.Mesh(sLo, mat)
+        m.position.copy(p)
+        m.scale.setScalar(0.22 + r() * 0.14)
+        g.add(m)
+      })
+      B.forEach(([a, b]) => g.add(bond(P[a], P[b], bb, 1)))
+      g.scale.setScalar(s)
+      g.position.copy(base)
+      bgS.add(g)
+      if (!isReduce) pulses(g, B, P, 2, 0.07)
+      MOL.push({
+        g,
+        base,
+        ph: r() * 6.28,
+        f: 0.1 + r() * 0.12,
+        rx: (r() - 0.5) * 0.12,
+        ry: (r() - 0.5) * 0.16 + 0.03,
+      })
+    }
+
+    const wm = new T.MeshBasicMaterial({ color: 0x008f91, wireframe: true, transparent: true, opacity: 0.14 })
+    const WF = []
+    ;[
+      [-12, -5, -6],
+      [13, 6, -10],
+      [-14, 6, -14],
+    ].forEach((p) => {
+      const m = new T.Mesh(new T.IcosahedronGeometry(2, 1), wm)
+      m.position.set(p[0] * xs, p[1], p[2])
+      bgS.add(m)
+      WF.push(m)
+    })
+
+    const pc = isSmall() ? 80 : 220
+    const pa = new Float32Array(pc * 3)
+    for (let i = 0; i < pc * 3; i += 3) {
+      pa[i] = (Math.random() - 0.5) * 34
+      pa[i + 1] = (Math.random() - 0.5) * 20
+      pa[i + 2] = -18 + Math.random() * 26
+    }
+    const pg = new T.BufferGeometry()
+    pg.setAttribute('position', new T.BufferAttribute(pa, 3))
+    const pts = new T.Points(
+      pg,
+      new T.PointsMaterial({
+        color: 0x00cfc8,
+        size: 0.06,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false,
+        blending: T.AdditiveBlending,
+      })
+    )
+    bgS.add(pts)
+
+    /* ── Hub Spinning Molecule Scene ── */
+    const H = grow(14, 7, true)
+    const hr = rng(11)
+    H.E = H.P.map((_, i) => (i === 3 ? 'N' : i < 6 ? 'C' : hr() < 0.25 ? 'N' : hr() < 0.45 ? 'O' : 'C'))
+    const sets = TOOLS.map((_, i) => {
+      const c = (i * 2 + 1) % H.P.length
+      const s = new Set([c])
+      H.B.forEach(([a, b]) => {
+        if (a === c) s.add(b)
+        if (b === c) s.add(a)
+      })
+      return s
+    })
+
+    const hs = new T.Scene()
+    const hc = new T.PerspectiveCamera(40, 1.5, 0.1, 50)
+    hc.position.z = 7.4
+    hs.add(new T.AmbientLight(0x1f5a5e, 0.9))
+
+    const dl = new T.DirectionalLight(0xe9ffff, 0.9)
+    dl.position.set(3, 4, 6)
+    hs.add(dl)
+
+    const p1 = new T.PointLight(0x00f5e9, 1.4, 30)
+    p1.position.set(-4, -2, 4)
+    hs.add(p1)
+
+    const pivot = new T.Group()
+    const mol = new T.Group()
+    pivot.add(mol)
+    hs.add(pivot)
+
+    const col = { C: 0x1fb8b4, N: 0x00f5e9, O: 0xe9ffff }
+    const rad = { C: 0.34, N: 0.38, O: 0.33 }
+    const atoms = H.P.map((p, i) => {
+      const e = H.E[i]
+      const m = new T.Mesh(
+        sHi,
+        new T.MeshStandardMaterial({
+          color: col[e],
+          emissive: col[e],
+          emissiveIntensity: 0.25,
+          roughness: 0.28,
+          metalness: 0.25,
+        })
+      )
+      m.position.copy(p)
+      m.scale.setScalar(rad[e])
+      m.userData = { i, h: 0, s: rad[e] }
+      mol.add(m)
+      return m
+    })
+
+    const hb = new T.MeshStandardMaterial({
+      color: 0x7fd6d4,
+      emissive: 0x008f91,
+      emissiveIntensity: 0.6,
+      roughness: 0.4,
+      metalness: 0.2,
+    })
+    H.B.forEach(([a, b]) => mol.add(bond(H.P[a], H.P[b], hb, 2)))
+    if (!isReduce) pulses(mol, H.B, H.P, 3, 0.09)
+
+    let yaw = 0.6
+    let mx = 0
+    let my = 0
+    let isVisible = true
+
+    const handlePointerMove = (e) => {
+      mx = e.clientX / window.innerWidth - 0.5
+      my = e.clientY / window.innerHeight - 0.5
+    }
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]) isVisible = entries[0].isIntersecting
+    })
+    if (hvCanvasRef.current) observer.observe(hvCanvasRef.current)
+
+    // Resize and scale handling
+    function updateDimensions() {
+      const w = window.innerWidth
+      const h = window.innerHeight
+      bgR.setPixelRatio(PR())
+      bgR.setSize(w, h, false)
+      bgC.aspect = w / h
+      bgC.updateProjectionMatrix()
+
+      const cw = hvCanvasRef.current?.clientWidth || 150
+      const ch = hvCanvasRef.current?.clientHeight || 100
+      const scaleVal = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1
+      hvR.setPixelRatio(Math.min(2, (window.devicePixelRatio || 1) * Math.max(1, scaleVal)))
+      hvR.setSize(cw, ch, false)
+      hc.aspect = cw / ch
+      hc.updateProjectionMatrix()
+
+      // Calculate responsive --s
+      const isMobile = w < 820
+      const newScale = isMobile ? 1 : Math.max(0.5, Math.min(1.1, (h - 80 - 150) / 660, (w - 32) / 960))
+      document.documentElement.style.setProperty('--s', newScale.toFixed(3))
+    }
+
+    updateDimensions()
+    window.addEventListener('resize', updateDimensions)
+
+    let lastTime = performance.now()
+    let elapsedSec = 0
+    let animId
+
+    function renderLoop(now) {
+      animId = requestAnimationFrame(renderLoop)
+      const dt = Math.min(0.05, (now - lastTime) / 1000)
+      lastTime = now
+      const md = isReduce ? 0 : dt
+      elapsedSec += md
+
+      bgC.position.x += (mx * 2 - bgC.position.x) * 0.04
+      bgC.position.y += (-my * 1.4 - bgC.position.y) * 0.04
+      bgC.lookAt(0, 0, 0)
+
+      MOL.forEach((m) => {
+        m.g.rotation.x += md * m.rx
+        m.g.rotation.y += md * m.ry
+        m.g.position.set(
+          m.base.x + Math.sin(elapsedSec * m.f + m.ph) * 1.2,
+          m.base.y + Math.cos(elapsedSec * m.f * 0.8 + m.ph) * 0.9,
+          m.base.z + Math.sin(elapsedSec * m.f * 0.6 + m.ph) * 0.8
+        )
+      })
+
+      WF.forEach((w, i) => {
+        w.rotation.x += md * 0.05 * (i + 1)
+        w.rotation.y += md * 0.07
+      })
+      pts.rotation.y += md * 0.01
+
+      PL.forEach((p) => {
+        p.t += md * p.s
+        if (p.t > 1) {
+          p.t = 0
+          p.b = p.B[Math.floor(Math.random() * p.B.length)]
+        }
+        p.m.position.lerpVectors(p.P[p.b[0]], p.P[p.b[1]], p.t)
+        p.m.visible = p.t > 0.02 && p.t < 0.98
+      })
+
+      bgR.render(bgS, bgC)
+
+      if (!isVisible) return
+
+      yaw += md * (hoverHubRef.current ? 0.7 : 0.25)
+      pivot.rotation.set(0.3 + my * 0.5, yaw + mx * 0.6, 0)
+
+      const activeSet = hoverIndexRef.current !== null ? sets[hoverIndexRef.current] : null
+      atoms.forEach((a) => {
+        const u = a.userData
+        const want = activeSet ? (activeSet.has(u.i) ? 1 : -0.4) : 0
+        u.h += (want - u.h) * 0.12
+        a.material.emissiveIntensity = Math.max(0.05, 0.25 + u.h * 0.9)
+        a.scale.setScalar(u.s * (1 + Math.max(0, u.h) * 0.3))
+      })
+
+      hvR.render(hs, hc)
+    }
+
+    animId = requestAnimationFrame(renderLoop)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('resize', updateDimensions)
+      observer.disconnect()
+      bgR?.dispose()
+      hvR?.dispose()
+    }
+  }, [])
+
+  // ── Handlers ────────────────────────────────────────────────
+  const handleLogout = () => {
+    clearToken()
+    navigate('/login')
+  }
+
+  const handleSendChat = async (promptText) => {
+    const textToSend = promptText || chatInput
+    if (!textToSend.trim()) return
+
+    const userMsg = { role: 'user', content: textToSend.trim() }
+    const updatedMessages = [...chatMessages, userMsg]
+    setChatMessages(updatedMessages)
+    setChatInput('')
+    setIsChatLoading(true)
+
+    try {
+      const data = await post('/api/chat/', { messages: updatedMessages })
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
+      addHistory(`Rogveda AI: ${userMsg.content.slice(0, 24)}...`)
+    } catch (err) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `Error communicating with AI: ${err.message || 'Check backend status.'}` },
+      ])
+    } finally {
+      setIsChatLoading(false)
+    }
+  }
+
+  const initials = user
+    ? user.display_name
+        ?.split(' ')
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'PG'
+    : 'PG'
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#050d0f' }}>
-        <p className="text-center" style={{ color: '#f87171' }}>{error}</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#050d0f' }}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="rounded-full" style={{ width: '40px', height: '40px', border: '2px solid #2dd4d4', borderTopColor: 'transparent', animation: 'spin-slow 1s linear infinite' }} />
-          <span style={{ color: '#5a8080', fontSize: '14px' }}>Loading dashboard...</span>
+      <div className="home-root flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-[rgba(3,25,29,0.9)] border border-red-500/30 rounded-2xl max-w-md">
+          <p className="text-red-400 font-semibold mb-4">{error}</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2.5 bg-[#00F5E9] text-[#020D10] font-bold rounded-lg cursor-pointer hover:bg-white transition-colors"
+          >
+            Return to Login
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden" style={{ background: '#050d0f url(/homepage_bg.jpg) center/cover no-repeat' }}>
-      {/* Background Blur Overlay */}
-      <div className="absolute inset-0" style={{ background: 'rgba(5, 13, 15, 0.45)', backdropFilter: 'blur(8px)', zIndex: 0 }} />
+    <div className="home-root">
+      {/* 3D Background Canvas */}
+      <canvas ref={bgCanvasRef} id="bg" aria-hidden="true" />
+      <div className="mask" aria-hidden="true" />
 
-      {/* Procedural background */}
-      <ProceduralBackground />
+      <div className="page">
+        {/* ── Header ── */}
+        <header className="top">
+          <div className="brand" onClick={() => navigate('/home')}>
+            <img src="/rogveda_logo.png" alt="Rogveda Logo" className="brand-logo-img" />
+          </div>
 
-      {/* Top Nav */}
-      <TopNav user={user} />
+          <nav className="nav" aria-label="Primary navigation">
+            <a
+              href="/about"
+              className={location.pathname === '/about' ? 'active' : ''}
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/about')
+              }}
+            >
+              About
+            </a>
+            <a
+              href="/features"
+              className={location.pathname === '/features' ? 'active' : ''}
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/features')
+              }}
+            >
+              Features
+            </a>
+            <a
+              href="/experiments"
+              className={location.pathname === '/experiments' ? 'active' : ''}
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/experiments')
+              }}
+            >
+              Experiments
+            </a>
+            <a
+              href="/contact"
+              className={location.pathname === '/contact' ? 'active' : ''}
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/contact')
+              }}
+            >
+              Contact
+            </a>
+            <a
+              href="/tutorial"
+              className={location.pathname === '/tutorial' ? 'active' : ''}
+              onClick={(e) => {
+                e.preventDefault()
+                setShowOnboarding(true)
+              }}
+            >
+              Tutorial{' '}
+              <span className="q" aria-hidden="true">
+                ?
+              </span>
+            </a>
+          </nav>
 
-      {/* Main content */}
-      <div className="relative flex flex-col items-center min-h-screen" style={{ paddingTop: '80px', paddingBottom: '32px', zIndex: 1 }}>
+          <div className="right">
+            {/* History Button & Popover */}
+            <div className="relative">
+              <button
+                className={`ib ${historyOpen ? 'active' : ''}`}
+                type="button"
+                aria-label="Activity History"
+                title="Activity History"
+                onClick={() => {
+                  setHistoryOpen(!historyOpen)
+                  setNotificationsOpen(false)
+                  setAccountOpen(false)
+                }}
+              >
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+              </button>
 
-        {/* Offline badge — top area */}
-        <div className="flex flex-col items-center gap-3" style={{ marginTop: '8px', zIndex: 10 }}>
-          <OfflineBadge />
+              {historyOpen && (
+                <div className="dropdown-popover history">
+                  <div className="px-4 py-3 border-b border-[#00F5E9]/20 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#00F5E9]">Activity History</span>
+                    <span className="text-[10px] text-[#8BA8AA]">{history.length} logged</span>
+                  </div>
+                  <div className="overflow-y-auto max-h-[280px] p-2 flex flex-col gap-1">
+                    {history.length === 0 ? (
+                      <div className="text-center py-6 text-sm text-[#8BA8AA]">No recorded activity</div>
+                    ) : (
+                      history.map((item) => (
+                        <div
+                          key={item.id}
+                          className="px-3 py-2 rounded-lg bg-[rgba(0,245,233,0.03)] hover:bg-[rgba(0,245,233,0.08)] transition-colors"
+                        >
+                          <div className="text-sm font-medium text-[#E9FFFF] truncate">{item.label}</div>
+                          <div className="text-[10px] text-[#8BA8AA] mt-0.5">
+                            {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Notifications Button & Popover */}
+            <div className="relative">
+              <button
+                className={`ib ${notifications.some((n) => !n.read) ? 'dot' : ''} ${notificationsOpen ? 'active' : ''}`}
+                type="button"
+                aria-label="Notifications"
+                title="Notifications"
+                onClick={() => {
+                  setNotificationsOpen(!notificationsOpen)
+                  setHistoryOpen(false)
+                  setAccountOpen(false)
+                  if (!notificationsOpen) markNotificationsRead()
+                }}
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21h4" />
+                </svg>
+              </button>
+
+              {notificationsOpen && (
+                <div className="dropdown-popover notifications">
+                  <div className="px-4 py-3 border-b border-[#00F5E9]/20 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#00F5E9]">Notifications</span>
+                    {notifications.filter((n) => !n.read).length > 0 && (
+                      <span className="bg-[#00F5E9]/20 text-[#00F5E9] px-2 py-0.5 rounded-full text-[9px] font-bold">
+                        {notifications.filter((n) => !n.read).length} NEW
+                      </span>
+                    )}
+                  </div>
+                  <div className="overflow-y-auto max-h-[300px] p-2 flex flex-col gap-1.5">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-6 text-sm text-[#8BA8AA]">No notifications</div>
+                    ) : (
+                      notifications.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-3 rounded-lg bg-[rgba(0,245,233,0.04)] border border-[rgba(0,245,233,0.1)] hover:bg-[rgba(0,245,233,0.08)] transition-colors"
+                        >
+                          <div className="text-sm font-semibold text-white mb-0.5">{item.title}</div>
+                          <div className="text-xs text-[#8BA8AA] leading-relaxed">{item.message}</div>
+                          <div className="text-[10px] text-[#00CFC8] mt-1.5 font-mono">
+                            {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Account Profile Button & Popover */}
+            <div className="relative">
+              <button
+                className={`me ${accountOpen ? 'active' : ''}`}
+                type="button"
+                aria-label="Account menu"
+                onClick={() => {
+                  setAccountOpen(!accountOpen)
+                  setHistoryOpen(false)
+                  setNotificationsOpen(false)
+                }}
+              >
+                <span className="pg">{initials}</span>
+                <span>Hi, {user?.display_name?.split(' ')[0] || 'Researcher'}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M5 9l7 7 7-7" />
+                </svg>
+              </button>
+
+              {accountOpen && (
+                <div className="dropdown-popover account">
+                  <div className="px-4 py-3 border-b border-[#00F5E9]/15">
+                    <div className="text-xs font-bold text-white truncate">{user?.display_name || 'Researcher'}</div>
+                    <div className="text-[11px] text-[#8BA8AA] truncate">{user?.email || 'user@rogveda.local'}</div>
+                  </div>
+                  <div className="p-1.5 flex flex-col">
+                    <button
+                      onClick={() => navigate('/draw?tab=Draw')}
+                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
+                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      </svg>
+                      Open Workspace
+                    </button>
+                    <button
+                      onClick={() => navigate('/experiments')}
+                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
+                      Saved Experiments
+                    </button>
+                    <button
+                      onClick={() => navigate('/documents')}
+                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      Saved Documents
+                    </button>
+                    <div className="h-px bg-[#00F5E9]/15 my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-500/15 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                      </svg>
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* ── Floating Quotes ── */}
+        <aside className="quote q1">
+          <span>Analyze Molecules.</span>
+          <span>Generate Insights.</span>
+          <span>Drive Discovery.</span>
+        </aside>
+
+        {/* ── Main Stage ── */}
+        <main className="wrap">
+          <div className="stage" id="stage">
+            {/* Top Offline-First Pill */}
+            <div className="pill">
+              <svg viewBox="0 0 24 24">
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+              {isOnline ? 'Offline-First' : 'Offline Mode'}
+            </div>
+
+            {/* Central Spoke Lines SVG */}
+            <svg className="spokes" id="spokes" viewBox="0 0 960 660" aria-hidden="true">
+              {TOOLS.map((tool, i) => {
+                const a = (tool.angle * Math.PI) / 180
+                const c = Math.cos(a)
+                const s = Math.sin(a)
+                const x1 = CX + 118 * c
+                const y1 = CY + 118 * s
+                const x2 = CX + (D - 52) * c
+                const y2 = CY + (D - 52) * s
+                const isHovered = hoverIndex === i
+
+                return (
+                  <g key={`spoke-${tool.id}`}>
+                    <line
+                      className={`sp ${isHovered ? 'on' : ''}`}
+                      id={`sp${i}`}
+                      x1={x1.toFixed(1)}
+                      y1={y1.toFixed(1)}
+                      x2={x2.toFixed(1)}
+                      y2={y2.toFixed(1)}
+                    />
+                    <line
+                      className="pu"
+                      style={{ animationDelay: `${-i * 0.55}s` }}
+                      x1={x1.toFixed(1)}
+                      y1={y1.toFixed(1)}
+                      x2={x2.toFixed(1)}
+                      y2={y2.toFixed(1)}
+                    />
+                  </g>
+                )
+              })}
+            </svg>
+
+            {/* Central Hub with Spinning 3D Molecule */}
+            <a
+              className="hub"
+              href="/draw?tab=Draw&new=true"
+              id="hub"
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/draw?tab=Draw&new=true')
+              }}
+              onPointerEnter={() => setHoverHub(true)}
+              onPointerLeave={() => setHoverHub(false)}
+              onFocus={() => setHoverHub(true)}
+              onBlur={() => setHoverHub(false)}
+              title="Draw Molecule — Start your research here"
+            >
+              <div className="card">
+                <canvas ref={hvCanvasRef} id="hv" aria-label="Rotating demo molecule" />
+                <div className="alt">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="6" cy="8" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="18" cy="7" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                    <path d="M7.5 9l3 2M13.7 11l3-3M12 14v3" />
+                  </svg>
+                </div>
+              </div>
+              <strong>Draw Molecule</strong>
+              <small>Start your research here</small>
+            </a>
+
+            {/* 6 Outer Feature Nodes */}
+            {TOOLS.map((tool, i) => {
+              const a = (tool.angle * Math.PI) / 180
+              const x = CX + D * Math.cos(a)
+              const y = CY + D * Math.sin(a)
+
+              return (
+                <a
+                  key={tool.id}
+                  className={`node ${tool.align}`}
+                  href={tool.route}
+                  style={{
+                    '--x': x.toFixed(1),
+                    '--y': y.toFixed(1),
+                    '--w': `${tool.width}px`,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    navigate(tool.route)
+                  }}
+                  onPointerEnter={() => setHoverIndex(i)}
+                  onPointerLeave={() => setHoverIndex(null)}
+                  onFocus={() => setHoverIndex(i)}
+                  onBlur={() => setHoverIndex(null)}
+                >
+                  <span className="ring">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d={tool.iconPath} />
+                    </svg>
+                  </span>
+                  <span className="lab">
+                    <b>{tool.title}</b>
+                    <span>{tool.desc}</span>
+                  </span>
+                </a>
+              )
+            })}
+
+            {/* Onboarding Guidance Tooltip */}
+            {showOnboarding && (
+              <div
+                className="absolute z-50 flex flex-col pointer-events-auto"
+                style={{
+                  top: '190px',
+                  right: '18px',
+                  width: '260px',
+                  background: 'rgba(3, 25, 29, 0.98)',
+                  border: '1.5px solid #00F5E9',
+                  borderRadius: '14px',
+                  padding: '18px',
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.7), 0 0 24px rgba(0,245,233,0.3)',
+                  backdropFilter: 'blur(12px)',
+                  animation: 'fade-in-up 0.4s ease-out',
+                }}
+              >
+                <h4 className="text-white m-0 mb-2 font-bold flex items-center gap-2 text-sm">
+                  <span style={{ color: '#00F5E9' }}>✨</span> Welcome to Rogveda
+                </h4>
+                <p className="m-0 mb-4 text-[#cfe9ea] text-xs leading-relaxed">
+                  Start by clicking <b>Draw Molecule</b> to sketch a chemical structure or select any module around the hub to run AI predictions and screening.
+                </p>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('rogveda_onboarding_seen', 'true')
+                    setShowOnboarding(false)
+                    showToast('Ready for discovery!')
+                  }}
+                  className="bg-[#00F5E9] text-[#020D10] font-bold py-1.5 px-4 rounded-lg transition-colors hover:bg-white border-none cursor-pointer text-xs self-start"
+                >
+                  Got it
+                </button>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* ── Bottom Quote ── */}
+        <aside className="quote q2">
+          <span>Discover Molecules.</span>
+          <span>Decode Possibilities.</span>
+        </aside>
+
+        {/* ── Research Statistics Bar (100% Dynamic) ── */}
+        <footer className="stats" aria-label="Research statistics">
+          <div>
+            <b>
+              <AnimatedNumber value={stats?.total_experiments ?? experiments.length ?? 0} />
+            </b>
+            <span>Experiments</span>
+          </div>
+          <div>
+            <b>
+              <AnimatedNumber value={stats?.saved_documents ?? 0} />
+            </b>
+            <span>Documents</span>
+          </div>
+          <div>
+            <b>
+              {stats?.reference_molecules ? `${Number(stats.reference_molecules).toLocaleString()}+` : <AnimatedNumber value={0} />}
+            </b>
+            <span>References</span>
+          </div>
+        </footer>
+      </div>
+
+      {/* ── Floating Assistant Bot with Smooth Slide-In ── */}
+      <button
+        className="bot-fab"
+        type="button"
+        aria-label="Ask Rogveda"
+        style={{
+          maxWidth: isBotExpanded ? '190px' : '56px',
+        }}
+        onMouseEnter={() => setIsBotExpanded(true)}
+        onMouseLeave={() => setIsBotExpanded(false)}
+        onFocus={() => setIsBotExpanded(true)}
+        onBlur={() => setIsBotExpanded(false)}
+        onClick={() => setIsChatOpen(!isChatOpen)}
+      >
+        <div className="bot-icon-wrapper">
+          <svg viewBox="0 0 24 24">
+            <rect x="5" y="9" width="14" height="10" rx="3" />
+            <path d="M12 9V6M12 4v.01M9.5 14v.01M14.5 14v.01M3 13v2M21 13v2" />
+          </svg>
         </div>
-
-        {/* Right sidebar text */}
-        <div
-          className="fixed flex items-start gap-3"
-          style={{ 
-            right: '24px', top: '88px', 
-            padding: '12px 16px',
-            background: 'rgba(5, 13, 15, 0.5)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: '12px',
-            border: '1px solid rgba(45, 212, 212, 0.1)',
-            animation: 'fade-in-up 0.7s ease-out 0.5s both', 
-            zIndex: 10 
+        <span
+          className="bot-text-label"
+          style={{
+            opacity: isBotExpanded ? 1 : 0,
+            transform: isBotExpanded ? 'translateX(0)' : 'translateX(10px)',
+            transitionDelay: isBotExpanded ? '0.08s' : '0s',
           }}
         >
-          <div className="rounded-full" style={{ width: '2px', height: '64px', background: '#2dd4d4', marginTop: '4px', flexShrink: 0, boxShadow: '0 0 8px rgba(45,212,212,0.4)' }} />
-          <div className="flex flex-col">
-            <span style={{ color: '#d8efef', fontSize: '15px', fontStyle: 'italic', fontFamily: '"Playfair Display", Georgia, serif' }}>Analyze Molecules.</span>
-            <span style={{ color: '#d8efef', fontSize: '15px', fontStyle: 'italic', fontFamily: '"Playfair Display", Georgia, serif' }}>Generate Insights.</span>
-            <span style={{ color: '#d8efef', fontSize: '15px', fontStyle: 'italic', fontFamily: '"Playfair Display", Georgia, serif' }}>Drive Discovery.</span>
+          Ask Rogveda
+        </span>
+      </button>
+
+      {/* ── Rogveda AI Chat Modal / Drawer ── */}
+      {isChatOpen && (
+        <div
+          className="fixed flex flex-col rounded-2xl overflow-hidden"
+          style={{
+            bottom: '100px',
+            right: '28px',
+            width: 'clamp(320px, 90vw, 420px)',
+            height: '540px',
+            background: 'rgba(3, 25, 29, 0.98)',
+            border: '1.5px solid rgba(0, 245, 233, 0.4)',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.8), 0 0 30px rgba(0,245,233,0.25)',
+            zIndex: 65,
+            backdropFilter: 'blur(20px)',
+            animation: 'fade-in-up 0.3s ease-out both',
+          }}
+        >
+          {/* Chat Header */}
+          <div className="flex items-center justify-between px-5 py-4 bg-[rgba(2,13,16,0.95)] border-b border-[#00F5E9]/20">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#00F5E9]/15 border border-[#00F5E9] flex items-center justify-center text-[#00F5E9]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="5" y="9" width="14" height="10" rx="3" />
+                  <path d="M12 9V6M12 4v.01M9.5 14v.01M14.5 14v.01M3 13v2M21 13v2" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white m-0">Rogveda AI Assistant</h3>
+                <span className="text-[11px] text-[#00CFC8] flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00F5E9] inline-block animate-pulse" />
+                  Chemistry Intelligence
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="text-[#8BA8AA] hover:text-white bg-transparent border-none cursor-pointer text-lg p-1 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Quick prompt chips */}
+          <div className="px-4 py-2 bg-[rgba(0,59,64,0.3)] border-b border-[#00F5E9]/10 flex gap-1.5 overflow-x-auto scrollbar-none">
+            {[
+              'Explain QSAR models',
+              'Lipinski Rule of 5',
+              'How to screen 500 molecules?',
+            ].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleSendChat(chip)}
+                className="whitespace-nowrap px-2.5 py-1 text-[11px] bg-[rgba(0,245,233,0.08)] hover:bg-[rgba(0,245,233,0.18)] text-[#E9FFFF] border border-[rgba(0,245,233,0.25)] rounded-full transition-colors cursor-pointer"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
+            {chatMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`rounded-xl max-w-[88%] px-4 py-3 text-[13px] leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-[rgba(0,245,233,0.15)] text-[#E9FFFF] border border-[rgba(0,245,233,0.35)]'
+                      : 'bg-[rgba(255,255,255,0.05)] text-[#cfe9ea] border border-white/10'
+                  }`}
+                  style={{ wordBreak: 'break-word' }}
+                >
+                  <div className="markdown-body">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {isChatLoading && (
+              <div className="flex justify-start">
+                <div className="rounded-xl px-4 py-2.5 bg-[rgba(255,255,255,0.05)] text-[#8BA8AA] text-xs flex items-center gap-2 border border-white/5">
+                  <span className="w-2 h-2 rounded-full bg-[#00F5E9] animate-ping" />
+                  Generating molecular insights...
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Chat Input */}
+          <div className="p-3 bg-[rgba(2,13,16,0.95)] border-t border-[#00F5E9]/20">
+            <div className="flex items-center rounded-full bg-[rgba(0,0,0,0.4)] border border-[#00F5E9]/30 pl-4 pr-1.5 py-1 focus-within:border-[#00F5E9] transition-colors">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                placeholder="Ask about molecules, descriptors, or drugs..."
+                className="flex-1 bg-transparent border-none outline-none text-[#E9FFFF] text-xs placeholder-[#8BA8AA]"
+              />
+              <button
+                onClick={() => handleSendChat()}
+                disabled={isChatLoading || !chatInput.trim()}
+                className="w-8 h-8 rounded-full bg-[#00F5E9] text-[#020D10] font-bold flex items-center justify-center cursor-pointer hover:bg-white transition-all disabled:opacity-40 disabled:cursor-not-allowed border-none ml-2"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Molecule Hub — centered */}
-        <div className="flex items-center justify-center" style={{ flex: 1, marginTop: '0px' }}>
-          <MoleculeHub />
-        </div>
-
-        {/* Bottom-left text */}
-        <div
-          className="fixed flex flex-col"
-          style={{ 
-            bottom: '88px', left: '24px', gap: '6px', 
-            padding: '12px 16px',
-            background: 'rgba(5, 13, 15, 0.5)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: '12px',
-            border: '1px solid rgba(45, 212, 212, 0.1)',
-            animation: 'fade-in-up 0.7s ease-out 0.6s both', 
-            zIndex: 10 
-          }}
-        >
-          <div className="rounded-full" style={{ width: '40px', height: '2px', background: '#2dd4d4', marginBottom: '4px', boxShadow: '0 0 8px rgba(45,212,212,0.4)' }} />
-          <span style={{ color: '#d8efef', fontSize: '15px', fontStyle: 'italic', fontFamily: '"Playfair Display", Georgia, serif' }}>Discover Molecules.</span>
-          <span style={{ color: '#d8efef', fontSize: '15px', fontStyle: 'italic', fontFamily: '"Playfair Display", Georgia, serif' }}>Decode Possibilities.</span>
-        </div>
-
-        {/* Hero Impact Strip — bottom */}
-        <div className="w-full flex justify-center" style={{ marginTop: 'auto', marginBottom: '16px', paddingLeft: '32px', paddingRight: '32px', zIndex: 10 }}>
-          <HeroImpactStrip stats={stats} />
-        </div>
+      {/* ── Feedback Toast ── */}
+      <div className={`toast ${toastMessage ? 'show' : ''}`} role="status">
+        {toastMessage}
       </div>
-
-      {/* Chatbot FAB */}
-      <div onClick={() => setIsChatOpen(!isChatOpen)}>
-        <ChatbotFab />
-      </div>
-
-      <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   )
 }

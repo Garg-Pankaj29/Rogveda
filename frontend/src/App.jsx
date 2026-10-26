@@ -38,6 +38,12 @@ function App() {
           <Route path="/experiments" element={<Experiments />} />
           <Route path="/documents" element={<SavedDocuments />} />
           <Route path="/batch" element={<BatchScreening />} />
+          <Route path="/analysis" element={<Navigate to="/draw?tab=Analysis" replace />} />
+          <Route path="/prediction" element={<Navigate to="/draw?tab=Prediction" replace />} />
+          <Route path="/similarity" element={<Navigate to="/draw?tab=Search" replace />} />
+          <Route path="/compare" element={<Navigate to="/draw?tab=Compare" replace />} />
+          <Route path="/modification" element={<Navigate to="/draw?tab=Modify" replace />} />
+          <Route path="/chemspace" element={<Navigate to="/draw?tab=ChemSpace" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
