@@ -34,8 +34,11 @@ HALOPERIDOL = "OC1(CCN(CCCC(=O)c2ccc(F)cc2)CC1)c1ccc(Cl)cc1"
 # Doxorubicin: Tox21 high-risk (0.73, threshold=0.15), anti-inf active (0.70)
 DOXORUBICIN = "COc1cccc2C(=O)c3c(O)c4C[C@](O)(C[C@@H](O[C@H]5C[C@H](N)[C@@H](O)[C@@H]5O)c4c(O)c3C(=O)c12)C(=O)CO"
 
-# Aspirin: NOT high-risk on hERG — used for "nothing to fix" test
+# Aspirin SMILES (used for simple input validation)
 ASPIRIN = "CC(=O)Oc1ccccc1C(O)=O"
+
+# Safe molecule on hERG (< 20% risk) used for 'nothing to fix' test
+SAFE_HERG_MOLECULE = "O=C(Nc1ccc(-c2nnc(NCCCN3CCCCCC3)o2)cc1)c1ccccc1F"
 
 
 class TestCriticalAcceptance:
@@ -113,7 +116,7 @@ class TestResultStructure:
 
     def test_not_found_result_structure(self):
         """When molecule isn't high-risk, result should be found=False."""
-        result = find_remediation(ASPIRIN, "herg", "antiinflammatory")
+        result = find_remediation(SAFE_HERG_MOLECULE, "herg", "antiinflammatory")
         assert result.found is False
         assert result.depth == 0
         assert result.transforms_applied == []
@@ -188,6 +191,6 @@ class TestNotHighRiskCase:
     """Test behavior when the molecule isn't actually high-risk."""
 
     def test_returns_not_found_for_safe_molecule(self):
-        result = find_remediation(ASPIRIN, "herg", "antiinflammatory")
+        result = find_remediation(SAFE_HERG_MOLECULE, "herg", "antiinflammatory")
         assert result.found is False
         assert "not flagged" in result.explanation.lower() or "not high risk" in result.explanation.lower() or "not flagged as high risk" in result.explanation.lower()
