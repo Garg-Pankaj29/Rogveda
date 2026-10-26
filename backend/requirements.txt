@@ -1,9 +1,27 @@
+# Core Web Framework & ASGI
 fastapi==0.115.12
 uvicorn[standard]==0.34.3
-sqlalchemy==2.0.41
-bcrypt==4.3.0
-python-jose[cryptography]==3.5.0
 pydantic==2.11.4
 python-dotenv==1.2.3
-httpx
-python-multipart
+python-multipart==0.0.32
+httpx==0.28.1
+
+# Database & Authentication
+SQLAlchemy==2.0.41
+bcrypt==4.3.0
+python-jose[cryptography]==3.5.0
+
+# Cheminformatics & ML Pipelines
+rdkit==2026.3.6
+numpy==2.5.3
+scipy==1.18.1
+scikit-learn==1.9.1
+pandas==3.0.5
+joblib==1.6.0
+pillow==12.3.0
+
+# System & Resource Monitoring
+psutil==7.2.2
+
+# Testing & Development
+pytest==9.1.1
