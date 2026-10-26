@@ -6,6 +6,20 @@
   --font-playfair: "Playfair Display", Georgia, serif;
 }
 
+:root {
+  --bg: #020D10;
+  --deep: #03191D;
+  --green: #003B40;
+  --cy: #00F5E9;
+  --tq: #00CFC8;
+  --tl: #008F91;
+  --tx: #E9FFFF;
+  --mu: #8BA8AA;
+  --line: rgba(0, 245, 233, 0.2);
+  --s: 1;
+  color-scheme: dark;
+}
+
 /* ── Global Base ───────────────────────────────────────────── */
 @layer base {
   html, body, #root {
@@ -15,8 +29,8 @@
 
   body {
     font-family: var(--font-inter);
-    background: #071211;
-    color: #e8f0f0;
+    background: radial-gradient(ellipse at 50% 45%, var(--green) 0%, var(--deep) 40%, var(--bg) 80%);
+    color: var(--tx);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -66,6 +80,15 @@
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -198; }
+}
+
+.quote-font {
+  font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+  font-style: italic;
 }
 
 .markdown-body table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
