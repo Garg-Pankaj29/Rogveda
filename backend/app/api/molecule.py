@@ -198,12 +198,12 @@ def get_insight(request: InsightRequest):
 
 
 @router.get("/model-info")
-def get_model_info():
+def get_model_info(endpoint: str = "herg"):
     """
-    Get metadata for the currently loaded hERG model.
+    Get metadata for the currently loaded model (defaults to herg).
     """
     try:
-        return ml_service.get_model_info()
+        return ml_service.get_model_info(endpoint=endpoint)
     except FileNotFoundError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
