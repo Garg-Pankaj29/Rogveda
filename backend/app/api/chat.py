@@ -70,19 +70,20 @@ def chat_with_bot(
         if match:
             compound = match.group(1).replace('?', '').strip()
             try:
-                url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{compound}/property/CanonicalSMILES/JSON"
+                url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{compound}/property/CanonicalSMILES,IsomericSMILES/JSON"
                 r = httpx.get(url, timeout=10.0)
                 if r.status_code == 200:
                     props = r.json().get("PropertyTable", {}).get("Properties", [])
                     if props:
-                        smiles = props[0].get("CanonicalSMILES") or props[0].get("ConnectivitySMILES")
+                        smiles = props[0].get("CanonicalSMILES") or props[0].get("IsomericSMILES") or props[0].get("ConnectivitySMILES")
                         if smiles:
-                            request.messages[-1].content = f"Answer this question factually. FACT: The SMILES for '{compound}' is '{smiles}'.\n\nQuestion: {last_msg}"
-                else:
-                    request.messages[-1].content = f"Question: {last_msg}\n\n[SYSTEM INSTRUCTION: You do not know the SMILES for this compound. You must explicitly reply: 'I cannot verify the exact SMILES string for this compound right now. Please draw it manually in the editor.' Do not guess.]"
+                            return ChatResponse(reply=f"The SMILES string for **{compound}** is:\n`{smiles}`")
+                
+                # If we get here, we couldn't find the SMILES.
+                return ChatResponse(reply=f"I couldn't find a verified SMILES string for '{compound}' in the PubChem database. You can try drawing it manually in the editor.")
             except Exception as e:
                 logger.warning(f"PubChem lookup failed: {e}")
-                request.messages[-1].content = f"Question: {last_msg}\n\n[SYSTEM INSTRUCTION: You do not know the SMILES for this compound. You must explicitly reply: 'I cannot verify the exact SMILES string for this compound right now. Please draw it manually in the editor.' Do not guess.]"
+                return ChatResponse(reply=f"I couldn't retrieve the SMILES string for '{compound}' due to a database connection error. Please draw it manually.")
 
     messages = [{"role": "system", "content": system_msg}]
     for msg in request.messages:

@@ -67,7 +67,6 @@ queries = {
           AND a.standard_value IS NOT NULL
           AND cs.canonical_smiles IS NOT NULL
         GROUP BY cs.canonical_smiles
-        LIMIT 50000
     '''
 }
 
