@@ -22,10 +22,36 @@ export function getToken() {
   return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
 }
 
-/** Remove the stored JWT (logout) */
+/** User-specific cache keys that must be wiped on logout/account switch */
+const USER_CACHE_KEYS = [
+  'rogveda_experiments',
+  'rogveda_documents',
+  'rogveda_history',
+  'rogveda_notifications',
+  'rogveda_autosave',
+  'rogveda_autosave_expId',
+  'rogveda_autosave_dbId',
+  'rogveda_mod_history',
+  'rogveda_compare_history',
+  'rogveda_compare_mola_source',
+]
+
+/** Wipe all cached user data from localStorage and sessionStorage */
+export function clearUserData() {
+  USER_CACHE_KEYS.forEach(key => {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // ignore
+    }
+  })
+}
+
+/** Remove the stored JWT (logout) and clean account data */
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
   sessionStorage.removeItem(TOKEN_KEY)
+  clearUserData()
 }
 
 /** Check if a token exists */
@@ -112,4 +138,4 @@ export async function upload(path, formData) {
   return res.json()
 }
 
-export default { get, post, patch, delete: del, upload, setToken, getToken, clearToken, isAuthenticated }
+export default { get, post, patch, delete: del, upload, setToken, getToken, clearToken, clearUserData, isAuthenticated }
