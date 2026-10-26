@@ -66,15 +66,15 @@ models/
 models
 *.pkl
 *.bak
+data/raw
 data/raw/
 data/tdc_datasets
-data/processed/*
-!data/processed/.gitkeep
+data/processed
+data/processed/
 data/models/*.pkl
 data/models/*.pt
 data/models/*.onnx
 data/models/*.bin
-!data/models/.gitkeep
 
 # ── Virtual Environments ────────────────────────────────────────────────────
 .venv/
