@@ -12,6 +12,8 @@ declare -A ENDPOINTS=(
     # ["antioxidant"]=12000
     ["antimicrobial"]=8
     ["anticancer"]=1500
+    ["tox21"]=1000
+    ["clintox"]=1000
 )
 
 for endpoint in "${!ENDPOINTS[@]}"; do

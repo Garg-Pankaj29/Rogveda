@@ -67,6 +67,7 @@ models
 *.pkl
 *.bak
 data/raw/
+data/tdc_datasets
 data/processed/*
 !data/processed/.gitkeep
 data/models/*.pkl
