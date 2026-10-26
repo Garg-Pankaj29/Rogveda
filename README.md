@@ -29,7 +29,7 @@ This fragmentation creates severe context switching, eliminates reproducibility,
 
 ### Why ROGVEDA Exists
 ROGVEDA unifies the complete molecular exploration cycle into a **single, local-first desktop application**:
-$$\text{Input (Draw / SMILES)} \longrightarrow \text{Compute Descriptors} \longrightarrow \text{Predict Multi-Endpoint Activity} \longrightarrow \text{Similarity Search} \longrightarrow \text{Optimize \& Mutate} \longrightarrow \text{Track \& Export}$$
+$$\text{Input (Draw / SMILES)} \longrightarrow \text{Compute Descriptors} \longrightarrow \text{Predict Multi-Endpoint Activity} \longrightarrow \text{Similarity Search} \longrightarrow \text{Optimize and Mutate} \longrightarrow \text{Track and Export}$$
 
 ### What Makes It Different
 1. **Local-First & Offline**: Operates completely on `127.0.0.1` without outbound runtime network calls. No user molecules, proprietary structures, or experiment notes leave the local machine.
