@@ -271,6 +271,12 @@ export default function CompareTab({
 
   useEffect(() => {
     if (isActive) {
+      const targetB = localStorage.getItem('rogveda_compare_target_molb')
+      if (targetB) {
+        setMolBSmiles(targetB)
+        setMolBSmilesInput(targetB)
+        localStorage.removeItem('rogveda_compare_target_molb')
+      }
       setTimeout(() => {
         if (molBKetcherRef.current && typeof molBKetcherRef.current.forceResize === 'function') {
           molBKetcherRef.current.forceResize()
