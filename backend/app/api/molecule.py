@@ -16,12 +16,17 @@ from app.schemas.molecule_schemas import (
     InsightRequest,
     InsightResponse,
 )
+from app.schemas.attribution_schemas import (
+    AttributionRequest,
+    AttributionResponse,
+)
 from app.services import ml_service
 from app.services import chemistry_service
 from app.services import llm_service
 from app.services import contradiction_service
 from app.services import synthesizability_service
 from app.services import cache_service
+from app.services import attribution_service
 
 router = APIRouter(
     prefix="/api/molecule",
@@ -43,6 +48,19 @@ def predict_molecule(request: PredictionRequest):
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+@router.post("/attribution", response_model=AttributionResponse)
+def get_molecular_attribution(request: AttributionRequest):
+    """
+    Generate explainable molecular attribution and structural alerts for an endpoint.
+    """
+    try:
+        return attribution_service.explain_prediction(request.smiles, request.endpoint)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Attribution failed: {str(e)}")
 
 
 @router.post("/3d", response_model=Conformer3DResponse)
@@ -264,6 +282,7 @@ def predict_all_endpoints(request: PredictionRequest, force_refresh: bool = Fals
                     status_label = "Inactive"
                     
             results.append({
+                "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
                 "status_label": status_label,
                 "confidence": round(pred.probability_active, 2),
@@ -271,6 +290,7 @@ def predict_all_endpoints(request: PredictionRequest, force_refresh: bool = Fals
             })
         except FileNotFoundError:
             results.append({
+                "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
                 "status_label": "Model not yet available",
                 "confidence": None,
@@ -278,6 +298,7 @@ def predict_all_endpoints(request: PredictionRequest, force_refresh: bool = Fals
             })
         except ValueError:
             results.append({
+                "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
                 "status_label": "Invalid input",
                 "confidence": None,
@@ -285,6 +306,7 @@ def predict_all_endpoints(request: PredictionRequest, force_refresh: bool = Fals
             })
         except Exception:
             results.append({
+                "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
                 "status_label": "Error",
                 "confidence": None,

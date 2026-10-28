@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Viewer3D from './Viewer3D'
+import AttributionViewer from './AttributionViewer'
 import api from '../lib/apiClient'
 import { computeProperties } from '../lib/chemistry'
 
@@ -160,6 +161,9 @@ export default function PredictionTab({
 
   // 2D SVG for the 2D view
   const [svgHtml, setSvgHtml] = useState('')
+
+  // Phase 2 Attribution state
+  const [explainingEndpoint, setExplainingEndpoint] = useState(null)
 
   // Track last fetched smiles to avoid redundant calls
   const lastFetchedSmiles = useRef('')
@@ -673,7 +677,7 @@ Instructions:
                 const colors = getBadgeColors(pred.status_label)
                 return (
                   <div key={i} style={{
-                    display: 'grid', gridTemplateColumns: '1fr 150px 1fr',
+                    display: 'grid', gridTemplateColumns: '1.2fr 130px 1fr auto',
                     alignItems: 'center', padding: '12px 0',
                     borderBottom: i < predictions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                   }}>
@@ -718,6 +722,39 @@ Instructions:
                       </div>
                     ) : (
                       <div style={{ height: '8px' }} />
+                    )}
+
+                    {/* Phase 2: Explain button */}
+                    {pred.available ? (
+                      <button
+                        onClick={() => {
+                          const mapping = {
+                            'hERG Cardiotoxicity': 'herg',
+                            'Anti-inflammatory': 'antiinflammatory',
+                            'Antioxidant': 'antioxidant',
+                            'Antimicrobial': 'antimicrobial',
+                            'Anticancer': 'anticancer',
+                            'Tox21 Mitochondrial Toxicity': 'tox21_mmp',
+                          }
+                          setExplainingEndpoint(pred.endpoint_id || mapping[pred.endpoint_name] || 'herg')
+                        }}
+                        style={{
+                          marginLeft: '12px',
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          background: 'rgba(45,212,212,0.08)', color: accentColor,
+                          border: '1px solid rgba(45,212,212,0.22)',
+                          borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 600,
+                          cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                        onMouseOver={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.18)' }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)' }}
+                        title="Explain prediction attribution and structural alerts"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        Explain
+                      </button>
+                    ) : (
+                      <div style={{ width: 68 }} />
                     )}
                   </div>
                 )
@@ -1017,6 +1054,14 @@ Instructions:
 
       {/* Spin animation keyframe */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* Phase 2: Explainable Molecular Attribution Modal */}
+      <AttributionViewer
+        isOpen={!!explainingEndpoint}
+        onClose={() => setExplainingEndpoint(null)}
+        smiles={canonicalSmiles}
+        initialEndpoint={explainingEndpoint || 'herg'}
+      />
     </>
   )
 }

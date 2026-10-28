@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import Viewer3D from './Viewer3D'
+import AttributionViewer from './AttributionViewer'
 import api from '../lib/apiClient'
 
 /* ═══════════════════════════════════════════
@@ -78,6 +79,9 @@ export default function AnalysisTab({
   // Phase 16 Synthesizability state
   const [synthData, setSynthData] = useState(null)
   const [synthLoading, setSynthLoading] = useState(false)
+
+  // Phase 2 Attribution state
+  const [explainingEndpoint, setExplainingEndpoint] = useState(null)
 
   /* ─── Fetch ML predictions whenever the molecule changes ─── */
   const fetchPredictions = useCallback(async (smiles) => {
@@ -598,6 +602,38 @@ export default function AnalysisTab({
                         <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', marginTop: '2px' }} />
                       ) : null}
 
+                      {/* Phase 2: Explain Prediction action */}
+                      {pred.available && (
+                        <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => {
+                              const mapping = {
+                                'hERG Cardiotoxicity': 'herg',
+                                'Anti-inflammatory': 'antiinflammatory',
+                                'Antioxidant': 'antioxidant',
+                                'Antimicrobial': 'antimicrobial',
+                                'Anticancer': 'anticancer',
+                                'Tox21 Mitochondrial Toxicity': 'tox21_mmp',
+                              }
+                              setExplainingEndpoint(pred.endpoint_id || mapping[pred.endpoint_name] || 'herg')
+                            }}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '5px',
+                              background: 'rgba(45,212,212,0.08)', color: accentColor,
+                              border: '1px solid rgba(45,212,212,0.22)',
+                              borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 600,
+                              cursor: 'pointer', transition: 'all 0.15s',
+                            }}
+                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.18)' }}
+                            onMouseOut={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)' }}
+                            title="Inspect atom and bond model attribution"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            Explain Prediction
+                          </button>
+                        </div>
+                      )}
+
                       {/* Phase 13: Suggest Fix button for High Risk predictions */}
                       {pred.status_label === 'High Risk' && (
                         <div style={{ marginTop: '8px', marginBottom: '8px' }}>
@@ -888,6 +924,14 @@ export default function AnalysisTab({
           onMouseLeave={e => e.target.style.opacity = '1'}
         >Load</button>
       </div>
+
+      {/* Phase 2: Explainable Molecular Attribution Modal */}
+      <AttributionViewer
+        isOpen={!!explainingEndpoint}
+        onClose={() => setExplainingEndpoint(null)}
+        smiles={canonicalSmiles}
+        initialEndpoint={explainingEndpoint || 'herg'}
+      />
     </>
   )
 }
