@@ -11,6 +11,7 @@ import ModificationTab from '../components/ModificationTab'
 import CompareTab from '../components/CompareTab'
 import PredictionTab from '../components/PredictionTab'
 import ChemicalSpaceTab from '../components/ChemicalSpaceTab'
+import WarRoomTab from '../components/WarRoomTab'
 import BatchScreening from './BatchScreening'
 import { computeProperties } from '../lib/chemistry'
 import { experimentService } from '../lib/experimentService'
@@ -66,6 +67,7 @@ const I = {
   search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
   modify: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="12" r="3" /><line x1="8.7" y1="7.5" x2="15.3" y2="10.5" /><line x1="8.7" y1="16.5" x2="15.3" y2="13.5" /></svg>,
   compare: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="9" height="9" rx="1" /><rect x="13" y="13" width="9" height="9" rx="1" /><path d="M13 2h4a2 2 0 0 1 2 2v4" /><path d="M2 13v4a2 2 0 0 0 2 2h4" /></svg>,
+  warRoom: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
   predict: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><circle cx="8" cy="16" r="1" /><circle cx="16" cy="16" r="1" /></svg>,
   chemSpace: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" strokeDasharray="4 4" /><circle cx="12" cy="12" r="3" /><circle cx="7" cy="8" r="1.5" fill="currentColor" /><circle cx="16" cy="7" r="1.5" fill="currentColor" /><circle cx="17" cy="15" r="1.5" fill="currentColor" /><circle cx="8" cy="16" r="1.5" fill="currentColor" /></svg>,
   layers: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>,
@@ -113,6 +115,7 @@ export default function MoleculeDraw() {
     if (lower === 'search' || lower === 'similarity') return 'Search'
     if (lower === 'modify' || lower === 'modification') return 'Modify'
     if (lower === 'compare') return 'Compare'
+    if (lower === 'warroom' || lower === 'war-room' || lower === 'leadopt') return 'WarRoom'
     if (lower === 'batch') return 'Batch'
     if (lower === 'chemspace' || lower === 'chemicalspace') return 'ChemSpace'
     if (lower === 'draw') return 'Draw'
@@ -174,6 +177,7 @@ export default function MoleculeDraw() {
   }, [])
 
   const [canonicalSmiles, setCanonicalSmiles] = useState('')
+  const [isWarRoomCalculating, setIsWarRoomCalculating] = useState(false)
   const [sdfBlock, setSdfBlock] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -731,6 +735,7 @@ export default function MoleculeDraw() {
     { id: 'Search', icon: I.search, label: 'Similarity Search', tagline: 'Explore Similarities.\nDiscover What\'s Next.' },
     { id: 'Modify', icon: I.modify, label: 'Molecular Modification', tagline: 'Modify Structures.\nOptimize Properties.' },
     { id: 'Compare', icon: I.compare, label: 'Compare Molecules', tagline: 'Design Molecules.\nDiscover Possibilities.' },
+    { id: 'WarRoom', icon: I.warRoom, label: 'War Room', isCalculating: isWarRoomCalculating, tagline: 'Lead Optimization.\nMulti-Parameter Decisions.' },
     { id: 'Prediction', icon: I.predict, label: 'Prediction & AI', tagline: 'Predict Properties.\nLeverage AI.' },
     { id: 'Batch', icon: I.layers, label: 'Batch Screening', tagline: 'Process Multiple.\nAnalyze at Scale.' },
     { id: 'ChemSpace', icon: I.chemSpace, label: 'Chemical Space', tagline: 'Map Your Molecule.\nExplore Drug Space.' },
@@ -841,6 +846,20 @@ export default function MoleculeDraw() {
             >
               <span style={{ display: 'flex' }}>{tab.icon}</span>
               {tab.label}
+              {tab.isCalculating && (
+                <span
+                  title="War Room calculating in background"
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#2dd4d4',
+                    boxShadow: '0 0 8px #2dd4d4',
+                    display: 'inline-block',
+                    marginLeft: '2px',
+                  }}
+                />
+              )}
             </button>
           ))}
         </div>
@@ -913,6 +932,30 @@ export default function MoleculeDraw() {
           />
         </div>
 
+        {/* ── Lead Optimization War Room Tab ── */}
+        <div style={{ display: activeTab === 'WarRoom' ? 'block' : 'none' }}>
+          <WarRoomTab
+            isActive={activeTab === 'WarRoom'}
+            rdkit={rdkit}
+            canonicalSmiles={canonicalSmiles}
+            currentMolecule={currentMolecule}
+            onCalculatingChange={setIsWarRoomCalculating}
+            onSaveExperiment={handleSaveExperiment}
+            onGenerateReport={handleGenerateReport}
+            logActivity={logActivity}
+            onSendToCompare={(pSmiles, aSmiles) => {
+              localStorage.setItem('rogveda_compare_target_molb', aSmiles)
+              setActiveTab('Compare')
+              logActivity(`War Room: Handoff candidate ${aSmiles} to Compare Tab`)
+            }}
+            onSendToEditor={(aSmiles) => {
+              handleLoadSmiles(aSmiles)
+              setActiveTab('Draw')
+              logActivity(`War Room: Loaded analog ${aSmiles} into editor`)
+            }}
+          />
+        </div>
+
         {/* ── Prediction & AI Tab ── */}
         <div style={{ display: activeTab === 'Prediction' ? 'block' : 'none' }}>
           <PredictionTab
@@ -946,7 +989,7 @@ export default function MoleculeDraw() {
           <BatchScreening isEmbedded={true} />
         </div>
 
-        {activeTab !== 'Draw' && activeTab !== 'Analysis' && activeTab !== 'Search' && activeTab !== 'Modify' && activeTab !== 'Compare' && activeTab !== 'Prediction' && activeTab !== 'ChemSpace' && activeTab !== 'Batch' && (
+        {activeTab !== 'Draw' && activeTab !== 'Analysis' && activeTab !== 'Search' && activeTab !== 'Modify' && activeTab !== 'Compare' && activeTab !== 'WarRoom' && activeTab !== 'Prediction' && activeTab !== 'ChemSpace' && activeTab !== 'Batch' && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px' }}>
             <div style={{ textAlign: 'center' }}>
               <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', color: '#2dd4d4', opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
