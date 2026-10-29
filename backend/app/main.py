@@ -20,6 +20,7 @@ from app.api.remediation import router as remediation_router
 from app.api.chemical_space import router as chemical_space_router
 from app.api.batch import router as batch_router
 from app.api.power import router as power_router
+from app.api.benchmarks import router as benchmarks_router
 from app.core.config import FRONTEND_ORIGIN
 from app.db.database import init_db
 import threading
@@ -62,6 +63,7 @@ app.include_router(remediation_router)
 app.include_router(chemical_space_router)
 app.include_router(batch_router)
 app.include_router(power_router)
+app.include_router(benchmarks_router)
 
 
 @app.get("/api/health")
