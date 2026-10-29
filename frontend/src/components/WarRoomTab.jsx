@@ -119,7 +119,7 @@ function MoleculeStructure({ rdkit, smiles, width = 210, height = 150 }) {
           alignItems: 'center',
           justifyContent: 'center',
           color: '#475569',
-          fontSize: '12px',
+          fontSize: '14px',
           fontStyle: 'italic',
         }}
       >
@@ -155,16 +155,16 @@ function CustomRadarTooltip({ active, payload }) {
         borderRadius: 6,
         padding: '8px 12px',
         color: '#e2e8f0',
-        fontSize: 11,
+        fontSize: 13,
         fontFamily: 'Inter, system-ui, sans-serif',
         boxShadow: '0 6px 16px rgba(0,0,0,0.5)',
       }}
     >
-      <div style={{ fontWeight: 600, color: accentColor, marginBottom: 4 }}>{data.axis}</div>
+      <div style={{ fontWeight: 600, color: accentColor, marginBottom: 4, fontSize: 13.5 }}>{data.axis}</div>
       <div style={{ color: '#2dd4d4' }}>Parent (Normalized): {data.parent != null ? (data.parent * 100).toFixed(1) + '%' : 'N/A'}</div>
       <div style={{ color: '#10b981' }}>Analog (Normalized): {data.analog != null ? (data.analog * 100).toFixed(1) + '%' : 'N/A'}</div>
       {data.parent_raw != null && (
-        <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 4 }}>
+        <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>
           Raw: Parent = {data.parent_raw} | Analog = {data.analog_raw}
         </div>
       )}
@@ -186,6 +186,7 @@ export default function WarRoomTab({
   onSendToCompare,
   onSendToEditor,
   onCalculatingChange,
+  onSelectBenchmarkParent,
 }) {
   const [profiles, setProfiles] = useState([])
   const [selectedProfileId, setSelectedProfileId] = useState('anti_inflammatory_exploration_v1')
@@ -198,15 +199,16 @@ export default function WarRoomTab({
   const [copyFeedback, setCopyFeedback] = useState('')
   const [attributionTarget, setAttributionTarget] = useState(null)
   const [isExportingDossier, setIsExportingDossier] = useState(false)
+  const [benchmarksList, setBenchmarksList] = useState([])
 
   const abortControllerRef = useRef(null)
   const debounceTimerRef = useRef(null)
   const lastEvaluatedKeyRef = useRef('')
 
-  // 1. Fetch available profiles
+  // 1. Fetch available profiles and benchmarks
   useEffect(() => {
     let isMounted = true
-    const fetchProfiles = async () => {
+    const fetchInitialData = async () => {
       try {
         const res = await api.get('/api/modification/profiles')
         if (isMounted && res.profiles?.length > 0) {
@@ -215,8 +217,17 @@ export default function WarRoomTab({
       } catch (err) {
         console.warn('Could not load optimization profiles from server:', err)
       }
+
+      try {
+        const bRes = await api.get('/api/benchmarks')
+        if (isMounted && bRes.benchmarks?.length > 0) {
+          setBenchmarksList(bRes.benchmarks)
+        }
+      } catch (err) {
+        console.warn('Could not load benchmarks in WarRoom:', err)
+      }
     }
-    fetchProfiles()
+    fetchInitialData()
     return () => { isMounted = false }
   }, [])
 
@@ -431,15 +442,60 @@ export default function WarRoomTab({
   /* ── 1. No Molecule Loaded Guard (Identical to CompareTab & ModificationTab) ── */
   if (!canonicalSmiles) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px', padding: '24px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '860px', width: '100%' }}>
           <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', color: accentColor, opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#d1d5db', marginBottom: '4px' }}>No Molecule Loaded</h2>
-          <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '400px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#d1d5db', margin: '0 0 8px 0', textAlign: 'center' }}>No Molecule Loaded</h2>
+          <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '460px', lineHeight: 1.5, margin: '0 auto', textAlign: 'center' }}>
             Please draw or load a molecule on the <span style={{ color: accentColor }}>Draw</span> tab first, then return here to optimize.
           </p>
+
+          {benchmarksList.length > 0 && (
+            <div style={{ marginTop: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', maxWidth: '560px', margin: '0 auto' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,212,0.15)' }} />
+                <span style={{ fontSize: '13.5px', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  Or select a documented benchmark drug as parent lead
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,212,0.15)' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', maxWidth: '680px', margin: '0 auto' }}>
+                {benchmarksList.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => onSelectBenchmarkParent?.(b.canonical_smiles)}
+                    style={{
+                      padding: '8px 16px', fontSize: '13.5px', fontWeight: 600,
+                      borderRadius: '6px', border: '1px solid rgba(45,212,212,0.3)',
+                      background: 'rgba(45,212,212,0.08)', color: accentColor,
+                      cursor: 'pointer', transition: 'all 0.2s',
+                      display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(45,212,212,0.2)'
+                      e.currentTarget.style.borderColor = accentColor
+                      e.currentTarget.style.transform = 'translateY(-1px)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(45,212,212,0.08)'
+                      e.currentTarget.style.borderColor = 'rgba(45,212,212,0.3)'
+                      e.currentTarget.style.transform = 'translateY(0)'
+                    }}
+                  >
+                    <span>{b.name}</span>
+                    <span style={{
+                      fontSize: '11.5px', padding: '2px 7px', borderRadius: '4px',
+                      background: 'rgba(45,212,212,0.15)', color: '#e2e8f0', fontWeight: 500,
+                    }}>
+                      {b.historical_status_badge}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -455,16 +511,16 @@ export default function WarRoomTab({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {ICONS.shield}
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
                 Lead Optimization War Room
               </h3>
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   textTransform: 'uppercase',
                   background: 'rgba(45,212,212,0.12)',
                   color: accentColor,
-                  padding: '2px 8px',
+                  padding: '3px 9px',
                   borderRadius: 4,
                   fontWeight: 600,
                   letterSpacing: '0.04em',
@@ -473,7 +529,7 @@ export default function WarRoomTab({
                 Multi-Parameter Optimization
               </span>
             </div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+            <div style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>
               Parent Molecule:{' '}
               <span style={{ color: '#cbd5e1', fontFamily: 'monospace', fontWeight: 600 }}>
                 {canonicalSmiles.length > 55 ? canonicalSmiles.slice(0, 52) + '...' : canonicalSmiles}
@@ -484,7 +540,7 @@ export default function WarRoomTab({
           {/* Right: Controls & Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div>
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', textTransform: 'uppercase', marginBottom: 2 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#64748b', textTransform: 'uppercase', marginBottom: 3, fontWeight: 600 }}>
                 Optimization Profile
               </label>
               <select
@@ -496,15 +552,15 @@ export default function WarRoomTab({
                   border: '1px solid rgba(45,212,212,0.18)',
                   color: '#e2e8f0',
                   borderRadius: '6px',
-                  padding: '6px 28px 6px 10px',
-                  fontSize: '12px',
+                  padding: '7px 30px 7px 11px',
+                  fontSize: '14px',
                   cursor: 'pointer',
                   outline: 'none',
                   appearance: 'none',
                   fontFamily: 'Inter, system-ui, sans-serif',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center',
+                  backgroundPosition: 'right 10px center',
                 }}
               >
                 {profiles.map((p) => (
@@ -515,8 +571,50 @@ export default function WarRoomTab({
               </select>
             </div>
 
+            {/* Benchmark Lead Selector */}
+            {benchmarksList.length > 0 && (
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', textTransform: 'uppercase', marginBottom: 3, fontWeight: 600 }}>
+                  Benchmark Lead
+                </label>
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    const found = benchmarksList.find(b => b.id === e.target.value)
+                    if (found && onSelectBenchmarkParent) {
+                      onSelectBenchmarkParent(found.canonical_smiles)
+                      e.target.value = ''
+                    }
+                  }}
+                  disabled={isLoading}
+                  style={{
+                    background: '#081214',
+                    border: '1px solid rgba(45,212,212,0.25)',
+                    color: '#e2e8f0',
+                    borderRadius: '6px',
+                    padding: '7px 30px 7px 11px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    appearance: 'none',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                  }}
+                >
+                  <option value="" disabled>Load Benchmark Lead...</option>
+                  {benchmarksList.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} ({b.historical_status_badge})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', textTransform: 'uppercase', marginBottom: 2 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#64748b', textTransform: 'uppercase', marginBottom: 3, fontWeight: 600 }}>
                 Candidates
               </label>
               <select
@@ -528,8 +626,8 @@ export default function WarRoomTab({
                   border: '1px solid rgba(45,212,212,0.18)',
                   color: '#e2e8f0',
                   borderRadius: '6px',
-                  padding: '6px 24px 6px 10px',
-                  fontSize: '12px',
+                  padding: '7px 28px 7px 11px',
+                  fontSize: '14px',
                   cursor: 'pointer',
                   outline: 'none',
                   appearance: 'none',
@@ -554,10 +652,10 @@ export default function WarRoomTab({
                     background: isExportingDossier ? 'rgba(45,212,212,0.2)' : 'rgba(45,212,212,0.12)',
                     color: accentColor,
                     fontWeight: 600,
-                    fontSize: '12px',
+                    fontSize: '14px',
                     border: '1px solid rgba(45,212,212,0.3)',
                     borderRadius: '6px',
-                    padding: '7px 12px',
+                    padding: '8px 14px',
                     cursor: isExportingDossier ? 'not-allowed' : 'pointer',
                     opacity: isExportingDossier ? 0.75 : 1,
                     display: 'flex',
@@ -587,10 +685,10 @@ export default function WarRoomTab({
                   background: isLoading ? 'rgba(45,212,212,0.2)' : accentColor,
                   color: isLoading ? '#64748b' : '#000',
                   fontWeight: 600,
-                  fontSize: '12px',
+                  fontSize: '14px',
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '7px 16px',
+                  padding: '8px 18px',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -613,7 +711,7 @@ export default function WarRoomTab({
               marginTop: '12px',
               paddingTop: '12px',
               borderTop: '1px solid rgba(45,212,212,0.08)',
-              fontSize: '11px',
+              fontSize: '13.5px',
               color: '#94a3b8',
               display: 'flex',
               alignItems: 'center',
@@ -646,7 +744,7 @@ export default function WarRoomTab({
             color: '#f87171',
             borderRadius: '8px',
             padding: '12px 16px',
-            fontSize: '12px',
+            fontSize: '14px',
             marginBottom: '16px',
             display: 'flex',
             alignItems: 'center',
@@ -663,11 +761,11 @@ export default function WarRoomTab({
         {/* LEFT PANEL: Structural Trade-Off (Parent vs Analog) */}
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
               Structural Trade-Off
             </h3>
             {selectedAnalog && (
-              <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
+              <span style={{ fontSize: '13.5px', color: '#10b981', fontWeight: 600 }}>
                 Analog #{selectedAnalog.rank}: {selectedAnalog.transform_name}
               </span>
             )}
@@ -687,14 +785,14 @@ export default function WarRoomTab({
                 justifyContent: 'center',
               }}
             >
-              <div style={{ alignSelf: 'flex-start', fontSize: '11px', fontWeight: 600, color: accentColor, marginBottom: 2 }}>
+              <div style={{ alignSelf: 'flex-start', fontSize: '13.5px', fontWeight: 600, color: accentColor, marginBottom: 4 }}>
                 Parent Molecule
               </div>
               <MoleculeStructure rdkit={rdkit} smiles={canonicalSmiles} width={190} height={135} />
               <div
                 onClick={() => handleCopySmiles(canonicalSmiles, 'parent')}
                 style={{
-                  fontSize: '10px',
+                  fontSize: '12px',
                   color: '#94a3b8',
                   fontFamily: 'monospace',
                   marginTop: 4,
@@ -706,7 +804,7 @@ export default function WarRoomTab({
               >
                 {copyFeedback === 'parent' ? 'Copied!' : (canonicalSmiles.length > 26 ? canonicalSmiles.slice(0, 24) + '...' : canonicalSmiles)}
               </div>
-              <div style={{ marginTop: 6, fontSize: '11px', color: '#cbd5e1', display: 'flex', gap: 10 }}>
+              <div style={{ marginTop: 6, fontSize: '13px', color: '#cbd5e1', display: 'flex', gap: 10 }}>
                 <span>MW: {evaluationData?.parent?.properties?.molecular_weight || currentMolecule?.mw || '-'}</span>
                 <span>LogP: {evaluationData?.parent?.properties?.logp || currentMolecule?.logP || '-'}</span>
               </div>
@@ -725,14 +823,14 @@ export default function WarRoomTab({
                 justifyContent: 'center',
               }}
             >
-              <div style={{ alignSelf: 'flex-start', fontSize: '11px', fontWeight: 600, color: '#10b981', marginBottom: 2 }}>
+              <div style={{ alignSelf: 'flex-start', fontSize: '13.5px', fontWeight: 600, color: '#10b981', marginBottom: 4 }}>
                 Selected Candidate
               </div>
               <MoleculeStructure rdkit={rdkit} smiles={selectedAnalog?.product_smiles} width={190} height={135} />
               <div
                 onClick={() => selectedAnalog && handleCopySmiles(selectedAnalog.product_smiles, 'analog')}
                 style={{
-                  fontSize: '10px',
+                  fontSize: '12px',
                   color: '#94a3b8',
                   fontFamily: 'monospace',
                   marginTop: 4,
@@ -744,7 +842,7 @@ export default function WarRoomTab({
               >
                 {copyFeedback === 'analog' ? 'Copied!' : (selectedAnalog?.product_smiles?.length > 26 ? selectedAnalog.product_smiles.slice(0, 24) + '...' : selectedAnalog?.product_smiles || '-')}
               </div>
-              <div style={{ marginTop: 6, fontSize: '11px', color: '#cbd5e1', display: 'flex', gap: 10 }}>
+              <div style={{ marginTop: 6, fontSize: '13px', color: '#cbd5e1', display: 'flex', gap: 10 }}>
                 <span>MW: {selectedAnalog?.properties?.molecular_weight || '-'}</span>
                 <span>LogP: {selectedAnalog?.properties?.logp || '-'}</span>
               </div>
@@ -754,7 +852,7 @@ export default function WarRoomTab({
           {/* Quick Handoff Action Bar */}
           {selectedAnalog && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(45,212,212,0.08)' }}>
-              <span style={{ fontSize: '11px', color: '#64748b' }}>Handoff candidate:</span>
+              <span style={{ fontSize: '13px', color: '#64748b' }}>Handoff candidate:</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => {
@@ -765,8 +863,8 @@ export default function WarRoomTab({
                     color: accentColor,
                     border: '1px solid rgba(45,212,212,0.25)',
                     borderRadius: '6px',
-                    padding: '5px 10px',
-                    fontSize: '11px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
@@ -786,8 +884,8 @@ export default function WarRoomTab({
                     color: '#e2e8f0',
                     border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '6px',
-                    padding: '5px 10px',
-                    fontSize: '11px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
@@ -806,8 +904,8 @@ export default function WarRoomTab({
                     color: accentColor,
                     border: '1px solid rgba(45,212,212,0.35)',
                     borderRadius: '6px',
-                    padding: '5px 10px',
-                    fontSize: '11px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     cursor: isExportingDossier ? 'not-allowed' : 'pointer',
                     opacity: isExportingDossier ? 0.75 : 1,
@@ -846,8 +944,8 @@ export default function WarRoomTab({
                     color: '#10b981',
                     border: '1px solid rgba(16,185,129,0.25)',
                     borderRadius: '6px',
-                    padding: '5px 10px',
-                    fontSize: '11px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
@@ -866,15 +964,15 @@ export default function WarRoomTab({
         {/* RIGHT PANEL: Radar Profile Visualizer */}
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
               Multi-Dimensional Radar Profile
             </h3>
-            <div style={{ display: 'flex', gap: 12, fontSize: '11px' }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: '13.5px' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: accentColor }}>
-                <span style={{ width: 8, height: 8, background: accentColor, borderRadius: 2 }} /> Parent
+                <span style={{ width: 9, height: 9, background: accentColor, borderRadius: 2 }} /> Parent
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#10b981' }}>
-                <span style={{ width: 8, height: 8, background: '#10b981', borderRadius: 2 }} /> Analog
+                <span style={{ width: 9, height: 9, background: '#10b981', borderRadius: 2 }} /> Analog
               </span>
             </div>
           </div>
@@ -884,21 +982,21 @@ export default function WarRoomTab({
               <ResponsiveContainer width="100%" height={230}>
                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarChartData}>
                   <PolarGrid stroke="rgba(45, 212, 212, 0.18)" />
-                  <PolarAngleAxis dataKey="axis" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 1]} tick={{ fill: '#64748b', fontSize: 9 }} />
+                  <PolarAngleAxis dataKey="axis" tick={{ fill: '#94a3b8', fontSize: 13 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 1]} tick={{ fill: '#64748b', fontSize: 11 }} />
                   <Radar name="Parent" dataKey="parent" stroke={accentColor} fill={accentColor} fillOpacity={0.2} strokeWidth={2} />
                   <Radar name="Analog" dataKey="analog" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
                   <RechartsTooltip content={<CustomRadarTooltip />} />
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ color: '#64748b', fontSize: '12px' }}>
+              <div style={{ color: '#64748b', fontSize: '14px' }}>
                 {isLoading ? 'Calculating radar dimensions...' : 'Run evaluation to render radar.'}
               </div>
             )}
           </div>
 
-          <div style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic', marginTop: 4 }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', marginTop: 4 }}>
             * Note: Metabolic Stability is marked unavailable in the offline model bundle and is excluded from the radar polygon to prevent misleading 0-value distortion.
           </div>
         </div>
@@ -911,22 +1009,22 @@ export default function WarRoomTab({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {ICONS.target}
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
                 Ranked Analog Shortlist
               </h3>
             </div>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>
+            <span style={{ fontSize: '13px', color: '#64748b' }}>
               Evaluated {evaluationData?.total_evaluated_analogs || 0} transforms
             </span>
           </div>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '420px', paddingRight: '4px' }}>
             {isLoading ? (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
+              <div style={{ padding: '40px 0', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
                 Simulating molecular transforms, calculating properties and running ML inferences...
               </div>
             ) : !evaluationData?.shortlist?.length ? (
-              <div style={{ padding: '30px 0', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
+              <div style={{ padding: '30px 0', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
                 No analogs generated for this structure.
               </div>
             ) : (
@@ -942,30 +1040,30 @@ export default function WarRoomTab({
                       background: isSelected ? 'rgba(45,212,212,0.08)' : 'rgba(8,18,20,0.6)',
                       border: `1px solid ${isSelected ? 'rgba(45,212,212,0.4)' : 'rgba(45,212,212,0.08)'}`,
                       borderRadius: '6px',
-                      padding: '10px 12px',
+                      padding: '11px 14px',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span
                           style={{
                             background: isSelected ? accentColor : '#1e293b',
                             color: isSelected ? '#050b0d' : '#94a3b8',
-                            width: 20,
-                            height: 20,
+                            width: 22,
+                            height: 22,
                             borderRadius: '50%',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '10px',
+                            fontSize: '12px',
                             fontWeight: 700,
                           }}
                         >
                           #{cand.rank}
                         </span>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#38bdf8' : '#e2e8f0' }}>
+                        <span style={{ fontSize: '14.5px', fontWeight: 600, color: isSelected ? '#38bdf8' : '#e2e8f0' }}>
                           {cand.transform_name}
                         </span>
                       </div>
@@ -974,15 +1072,15 @@ export default function WarRoomTab({
                         {isViolation ? (
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '12px',
                               background: 'rgba(244,63,94,0.15)',
                               color: '#f43f5e',
-                              padding: '2px 5px',
+                              padding: '2px 7px',
                               borderRadius: 4,
                               fontWeight: 600,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 3,
                             }}
                             title={cand.constraint_violations?.map((v) => v.description).join('; ')}
                           >
@@ -991,32 +1089,32 @@ export default function WarRoomTab({
                         ) : (
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '12px',
                               background: 'rgba(16,185,129,0.12)',
                               color: '#10b981',
-                              padding: '2px 5px',
+                              padding: '2px 7px',
                               borderRadius: 4,
                               fontWeight: 600,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 3,
                             }}
                           >
                             {ICONS.check} Passed
                           </span>
                         )}
 
-                        <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', color: isSelected ? accentColor : '#cbd5e1' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'monospace', color: isSelected ? accentColor : '#cbd5e1' }}>
                           {(cand.aggregate_score * 100).toFixed(1)}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: 6 }}>
+                    <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: 6 }}>
                       {cand.transform_description}
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8, fontSize: '10px', color: '#94a3b8' }}>
+                    <div style={{ display: 'flex', gap: 10, fontSize: '12.5px', color: '#94a3b8' }}>
                       <span>MW: <strong style={{ color: cand.property_deltas?.molecular_weight?.delta > 0 ? '#f59e0b' : '#38bdf8' }}>{cand.property_deltas?.molecular_weight?.delta > 0 ? '+' : ''}{cand.property_deltas?.molecular_weight?.delta}</strong></span>
                       <span>LogP: <strong style={{ color: cand.property_deltas?.logp?.delta > 0 ? '#f59e0b' : '#10b981' }}>{cand.property_deltas?.logp?.delta > 0 ? '+' : ''}{cand.property_deltas?.logp?.delta}</strong></span>
                       <span>TPSA: <strong style={{ color: '#cbd5e1' }}>{cand.property_deltas?.tpsa?.delta > 0 ? '+' : ''}{cand.property_deltas?.tpsa?.delta}</strong></span>
@@ -1032,11 +1130,11 @@ export default function WarRoomTab({
         {/* RIGHT PANEL: Dimension Breakdown & Score Contribution */}
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
               Multi-Dimensional Evaluation Table
             </h3>
             {selectedAnalog && (
-              <span style={{ fontSize: '11px', color: accentColor, fontWeight: 600, fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '14px', color: accentColor, fontWeight: 600, fontFamily: 'monospace' }}>
                 Score: {(selectedAnalog.aggregate_score * 100).toFixed(2)}
               </span>
             )}
@@ -1044,15 +1142,15 @@ export default function WarRoomTab({
 
           {/* Dimension Breakdown Table */}
           <div style={{ flex: 1, overflowX: 'auto', marginBottom: '12px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#64748b' }}>
-                  <th style={{ padding: '6px 8px' }}>Dimension</th>
-                  <th style={{ padding: '6px 8px' }}>Parent Raw</th>
-                  <th style={{ padding: '6px 8px' }}>Analog Raw</th>
-                  <th style={{ padding: '6px 8px' }}>Weight</th>
-                  <th style={{ padding: '6px 8px' }}>Score</th>
-                  <th style={{ padding: '6px 8px' }}>Status</th>
+                  <th style={{ padding: '8px 10px' }}>Dimension</th>
+                  <th style={{ padding: '8px 10px' }}>Parent Raw</th>
+                  <th style={{ padding: '8px 10px' }}>Analog Raw</th>
+                  <th style={{ padding: '8px 10px' }}>Weight</th>
+                  <th style={{ padding: '8px 10px' }}>Score</th>
+                  <th style={{ padding: '8px 10px' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1065,25 +1163,25 @@ export default function WarRoomTab({
 
                     return (
                       <tr key={dim.dimension_key} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <td style={{ padding: '6px 8px', fontWeight: 500, color: isAvail ? '#e2e8f0' : '#64748b' }}>
+                        <td style={{ padding: '8px 10px', fontWeight: 500, color: isAvail ? '#e2e8f0' : '#64748b' }}>
                           {dim.dimension_name}
                         </td>
-                        <td style={{ padding: '6px 8px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                        <td style={{ padding: '8px 10px', color: '#94a3b8', fontFamily: 'monospace' }}>
                           {isAvail ? String(dim.parent_raw ?? '-') : '—'}
                         </td>
-                        <td style={{ padding: '6px 8px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                        <td style={{ padding: '8px 10px', color: '#94a3b8', fontFamily: 'monospace' }}>
                           {isAvail ? String(dim.analog_raw ?? '-') : '—'}
                         </td>
-                        <td style={{ padding: '6px 8px', color: isAvail ? '#38bdf8' : '#64748b', fontFamily: 'monospace' }}>
+                        <td style={{ padding: '8px 10px', color: isAvail ? '#38bdf8' : '#64748b', fontFamily: 'monospace' }}>
                           {b ? `${(b.effective_weight * 100).toFixed(1)}%` : '—'}
                         </td>
-                        <td style={{ padding: '6px 8px', color: isAvail ? '#10b981' : '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
+                        <td style={{ padding: '8px 10px', color: isAvail ? '#10b981' : '#64748b', fontFamily: 'monospace', fontWeight: 600 }}>
                           {aNorm != null ? `${(aNorm * 100).toFixed(1)}%` : '—'}
                         </td>
-                        <td style={{ padding: '6px 8px' }}>
+                        <td style={{ padding: '8px 10px' }}>
                           {isAvail ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ color: '#10b981', fontSize: '10px' }}>Available</span>
+                              <span style={{ color: '#10b981', fontSize: '12px' }}>Available</span>
                               {['cardiac_safety', 'mitochondrial_safety', 'activity'].includes(dim.dimension_key) && (
                                 <button
                                   onClick={() => {
@@ -1099,9 +1197,9 @@ export default function WarRoomTab({
                                     background: 'rgba(45,212,212,0.1)',
                                     color: accentColor,
                                     border: '1px solid rgba(45,212,212,0.25)',
-                                    borderRadius: '3px',
-                                    padding: '1px 5px',
-                                    fontSize: '9px',
+                                    borderRadius: '4px',
+                                    padding: '3px 8px',
+                                    fontSize: '12.5px',
                                     cursor: 'pointer',
                                     fontWeight: 600,
                                   }}
@@ -1115,9 +1213,9 @@ export default function WarRoomTab({
                             <span
                               style={{
                                 color: '#eab308',
-                                fontSize: '10px',
+                                fontSize: '11.5px',
                                 background: 'rgba(234,179,8,0.1)',
-                                padding: '2px 5px',
+                                padding: '2px 7px',
                                 borderRadius: 4,
                               }}
                               title={dim.reason || 'Not available offline'}
@@ -1131,7 +1229,7 @@ export default function WarRoomTab({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} style={{ padding: '16px 8px', color: '#64748b', textAlign: 'center' }}>
+                    <td colSpan={6} style={{ padding: '16px 8px', color: '#64748b', textAlign: 'center', fontSize: '13px' }}>
                       No evaluation data loaded.
                     </td>
                   </tr>
@@ -1143,19 +1241,19 @@ export default function WarRoomTab({
           {/* Hard Constraints Bottom Status */}
           {selectedAnalog && (
             <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(45,212,212,0.08)' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#cbd5e1', marginBottom: 2 }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#cbd5e1', marginBottom: 4 }}>
                 Hard Constraints Check:
               </div>
               {selectedAnalog.constraints_passed ? (
-                <div style={{ fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ fontSize: '13px', color: '#10b981', display: 'flex', alignItems: 'center', gap: 5 }}>
                   {ICONS.check} All {activeProfile?.hard_constraints?.length || 0} hard constraints satisfied for this candidate.
                 </div>
               ) : (
-                <div style={{ fontSize: '11px', color: '#f43f5e' }}>
+                <div style={{ fontSize: '13px', color: '#f43f5e' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
                     {ICONS.alert} Violated constraints:
                   </div>
-                  <ul style={{ margin: '2px 0 0 0', paddingLeft: 16, color: '#fca5a5' }}>
+                  <ul style={{ margin: '4px 0 0 0', paddingLeft: 18, color: '#fca5a5' }}>
                     {selectedAnalog.constraint_violations?.map((v, i) => (
                       <li key={i}>{v.description} (Actual: {v.actual_value})</li>
                     ))}
@@ -1170,13 +1268,13 @@ export default function WarRoomTab({
       {/* ── BOTTOM SCIENTIFIC NOTICE (Consistent with footer disclaimers) ── */}
       <div
         style={{
-          padding: '10px 14px',
+          padding: '12px 16px',
           background: 'rgba(8,18,20,0.5)',
           border: '1px solid rgba(45,212,212,0.08)',
           borderRadius: '6px',
-          fontSize: '11px',
+          fontSize: '12.5px',
           color: '#64748b',
-          lineHeight: 1.4,
+          lineHeight: 1.5,
         }}
       >
         <strong style={{ color: '#94a3b8' }}>Scientific Notice:</strong>{' '}

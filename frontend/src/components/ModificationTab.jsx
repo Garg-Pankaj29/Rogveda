@@ -132,7 +132,7 @@ function Tooltip({ text, children }) {
       {children}
       <div style={{
         position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px',
-        background: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', fontSize: '12px',
+        background: '#1e293b', color: '#e2e8f0', padding: '7px 12px', borderRadius: '5px', fontSize: '13px',
         whiteSpace: 'nowrap', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
         boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400,
       }}>
@@ -148,14 +148,14 @@ function Tooltip({ text, children }) {
 function StatBlock({ label, value, isHtml = false }) {
   return (
     <div style={{ flex: 1, textAlign: 'center' }}>
-      <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 500, marginBottom: '4px', letterSpacing: '0.03em' }}>{label}</div>
+      <div style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 500, marginBottom: '4px', letterSpacing: '0.03em' }}>{label}</div>
       {isHtml ? (
         <div
           dangerouslySetInnerHTML={{ __html: value || '-' }}
-          style={{ color: '#fff', fontSize: '14px', fontWeight: 600, fontFamily: 'monospace' }}
+          style={{ color: '#fff', fontSize: '16.5px', fontWeight: 600, fontFamily: 'monospace' }}
         />
       ) : (
-        <div style={{ color: '#fff', fontSize: '14px', fontWeight: 600, fontFamily: 'monospace' }}>{value || '-'}</div>
+        <div style={{ color: '#fff', fontSize: '16.5px', fontWeight: 600, fontFamily: 'monospace' }}>{value || '-'}</div>
       )}
     </div>
   )
@@ -823,11 +823,11 @@ export default function ModificationTab({
   /* ── No molecule loaded guard ── */
   if (!canonicalSmiles) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px', padding: '24px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
           <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', color: accentColor, opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#d1d5db', marginBottom: '4px' }}>No Molecule Loaded</h2>
-          <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '400px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#d1d5db', margin: '0 0 8px 0', textAlign: 'center' }}>No Molecule Loaded</h2>
+          <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', lineHeight: 1.5, margin: '0 auto', textAlign: 'center' }}>
             Please draw or load a molecule on the <span style={{ color: accentColor }}>Draw</span> tab first, then return here to modify it.
           </p>
         </div>
@@ -849,7 +849,7 @@ export default function ModificationTab({
         {/* ── COLUMN 1: Original Molecule ── */}
         <div style={{ flex: '3', ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>Original Molecule</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>Original Molecule</h3>
             <Tooltip text="The unmodified molecule from your current workspace">{Icons.info}</Tooltip>
           </div>
 
@@ -858,7 +858,7 @@ export default function ModificationTab({
             <button
               onClick={() => setOrigView('2d')}
               style={{
-                padding: '5px 16px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                 ...(origView === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}
@@ -867,7 +867,7 @@ export default function ModificationTab({
               onClick={handleOrig3D}
               disabled={origSdfLoading}
               style={{
-                padding: '5px 16px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: origSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: origSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif', opacity: origSdfLoading ? 0.5 : 1,
                 ...(origView === '3d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}
@@ -894,7 +894,7 @@ export default function ModificationTab({
                   }}
                 />
               ) : (
-                <span style={{ color: '#475569', fontSize: '12px', fontStyle: 'italic' }}>No structure</span>
+                <span style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic' }}>No structure</span>
               )
             )}
           </div>
@@ -911,8 +911,8 @@ export default function ModificationTab({
         <div style={{ flex: '4', ...cardStyle, display: 'flex', flexDirection: 'column', padding: '0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>Molecular Editor</h3>
-              <span style={{ color: '#64748b', fontSize: '12px', fontStyle: 'italic' }}>(Modify the molecule directly)</span>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>Molecular Editor</h3>
+              <span style={{ color: '#64748b', fontSize: '13.5px', fontStyle: 'italic' }}>(Modify the molecule directly)</span>
               <Tooltip text="Edit the molecule here — changes appear live in the Modified Molecule panel">{Icons.info}</Tooltip>
             </div>
             {/* Theme toggle */}
@@ -952,7 +952,7 @@ export default function ModificationTab({
         {/* ── COLUMN 3: Modified Molecule ── */}
         <div style={{ flex: '3', ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>Modified Molecule</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>Modified Molecule</h3>
             <Tooltip text="Live preview of the modified structure from the editor">{Icons.info}</Tooltip>
           </div>
 
@@ -961,7 +961,7 @@ export default function ModificationTab({
             <button
               onClick={() => setModView('2d')}
               style={{
-                padding: '5px 16px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                 ...(modView === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}
@@ -970,7 +970,7 @@ export default function ModificationTab({
               onClick={handleMod3D}
               disabled={modSdfLoading}
               style={{
-                padding: '5px 16px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: modSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: modSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif', opacity: modSdfLoading ? 0.5 : 1,
                 ...(modView === '3d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}
@@ -1020,7 +1020,7 @@ export default function ModificationTab({
                     }}
                   />
                 ) : (
-                  <span style={{ color: '#475569', fontSize: '12px', fontStyle: 'italic' }}>Awaiting edits…</span>
+                  <span style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic' }}>Awaiting edits…</span>
                 )
               )}
             </div>
@@ -1046,7 +1046,7 @@ export default function ModificationTab({
 
           {/* History indicator */}
           {isViewingHistory && (
-            <div style={{ textAlign: 'center', marginTop: '4px', fontSize: '11px', color: '#f59e0b' }}>
+            <div style={{ textAlign: 'center', marginTop: '4px', fontSize: '12.5px', color: '#f59e0b' }}>
               Viewing history: edit {historyIndex + 1} of {history.length} ({displayEntry?.timestamp})
             </div>
           )}
@@ -1066,7 +1066,7 @@ export default function ModificationTab({
         {/* ── LEFT: Modification Analysis ── */}
         <div style={{ flex: '7', ...cardStyle }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>Modification Analysis</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>Modification Analysis</h3>
             <Tooltip text="Compare properties between original and modified structures">{Icons.info}</Tooltip>
           </div>
 
@@ -1082,7 +1082,7 @@ export default function ModificationTab({
                 key={tab.id}
                 onClick={() => setAnalysisSubTab(tab.id)}
                 style={{
-                  padding: '9px 22px', fontSize: '14px', fontWeight: 600,
+                  padding: '10px 22px', fontSize: '14.5px', fontWeight: 600,
                   border: '1px solid rgba(45,212,212,0.15)', borderRadius: '6px',
                   cursor: 'pointer', transition: 'all 0.2s',
                   fontFamily: 'Inter, system-ui, sans-serif',
@@ -1100,44 +1100,50 @@ export default function ModificationTab({
               {/* Toolbar & Filter Chips */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
                     Targeted Structural Transformations
                   </h4>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#94a3b8', lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: '14.5px', color: '#94a3b8', lineHeight: 1.5 }}>
                     Select a transformation to mutate the parent molecule, view physicochemical property deltas, and compute independent ML predictions.
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {[
-                    { id: 'all', label: `All (${applicabilityData?.transforms?.length || 12})` },
-                    { id: 'applicable', label: `Applicable (${applicabilityData?.num_applicable ?? 0})` },
-                    { id: 'unavailable', label: `Unavailable (${applicabilityData?.num_unavailable ?? 0})` },
-                  ].map(f => (
-                    <button
-                      key={f.id}
-                      onClick={() => setPaletteFilter(f.id)}
-                      style={{
-                        padding: '6px 14px', fontSize: '13px', fontWeight: 600, borderRadius: '6px',
-                        cursor: 'pointer', transition: 'all 0.15s',
-                        border: paletteFilter === f.id ? `1px solid ${accentColor}` : '1px solid rgba(45,212,212,0.15)',
-                        background: paletteFilter === f.id ? 'rgba(45,212,212,0.18)' : '#081214',
-                        color: paletteFilter === f.id ? accentColor : '#94a3b8',
-                      }}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                  {(() => {
+                    const allTransforms = applicabilityData?.transforms || []
+                    const totalCount = applicabilityData?.total_transforms ?? (allTransforms.length || 12)
+                    const applicableCount = applicabilityData?.applicable_count ?? applicabilityData?.num_applicable ?? allTransforms.filter(t => t.applicable || t.is_applicable).length
+                    const unavailableCount = applicabilityData?.num_unavailable ?? Math.max(0, totalCount - applicableCount)
+                    return [
+                      { id: 'all', label: `All (${totalCount})` },
+                      { id: 'applicable', label: `Applicable (${applicableCount})` },
+                      { id: 'unavailable', label: `Unavailable (${unavailableCount})` },
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        onClick={() => setPaletteFilter(f.id)}
+                        style={{
+                          padding: '7px 15px', fontSize: '13.5px', fontWeight: 600, borderRadius: '6px',
+                          cursor: 'pointer', transition: 'all 0.15s',
+                          border: paletteFilter === f.id ? `1px solid ${accentColor}` : '1px solid rgba(45,212,212,0.15)',
+                          background: paletteFilter === f.id ? 'rgba(45,212,212,0.18)' : '#081214',
+                          color: paletteFilter === f.id ? accentColor : '#94a3b8',
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    ))
+                  })()}
                 </div>
               </div>
 
               {/* Transform Catalog Cards Grid */}
               {applicabilityLoading && !applicabilityData ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '14px', padding: '24px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '14.5px', padding: '24px 0' }}>
                   <div style={{ width: '18px', height: '18px', border: '2px solid rgba(45,212,212,0.3)', borderTop: `2px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                   Evaluating molecular substructures across transformation catalog…
                 </div>
               ) : applicabilityError ? (
-                <div style={{ color: '#f87171', fontSize: '14px', padding: '14px', background: 'rgba(239,68,68,0.1)', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div style={{ color: '#f87171', fontSize: '14.5px', padding: '14px', background: 'rgba(239,68,68,0.1)', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)' }}>
                   {applicabilityError}
                 </div>
               ) : (
@@ -1150,16 +1156,20 @@ export default function ModificationTab({
                   paddingRight: '6px',
                 }}>
                   {(applicabilityData?.transforms || []).filter(item => {
-                    if (paletteFilter === 'applicable') return item.applicable
-                    if (paletteFilter === 'unavailable') return !item.applicable
+                    const isApp = Boolean(item.applicable ?? item.is_applicable)
+                    if (paletteFilter === 'applicable') return isApp
+                    if (paletteFilter === 'unavailable') return !isApp
                     return true
                   }).map(item => {
+                    const isApplicable = Boolean(item.applicable ?? item.is_applicable)
+                    const matchCount = item.substructure_matches ?? item.match_count ?? 0
+                    const variantCount = item.product_variants_count ?? item.variants?.length ?? 0
                     const isSelected = selectedTransformId === item.id
                     return (
                       <div
                         key={item.id}
                         onClick={() => {
-                          if (item.applicable) {
+                          if (isApplicable) {
                             handleSelectMutation(item.id, 0)
                           }
                         }}
@@ -1167,13 +1177,13 @@ export default function ModificationTab({
                           background: isSelected ? 'rgba(45,212,212,0.14)' : '#081214',
                           border: isSelected
                             ? `1px solid ${accentColor}`
-                            : item.applicable
+                            : isApplicable
                               ? '1px solid rgba(45,212,212,0.18)'
                               : '1px solid rgba(100,116,139,0.15)',
                           borderRadius: '8px',
                           padding: '16px',
-                          cursor: item.applicable ? 'pointer' : 'not-allowed',
-                          opacity: item.applicable ? 1 : 0.65,
+                          cursor: isApplicable ? 'pointer' : 'not-allowed',
+                          opacity: isApplicable ? 1 : 0.65,
                           transition: 'all 0.15s ease',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1181,50 +1191,50 @@ export default function ModificationTab({
                           boxShadow: isSelected ? '0 0 14px rgba(45,212,212,0.25)' : 'none',
                         }}
                         onMouseEnter={e => {
-                          if (item.applicable && !isSelected) {
+                          if (isApplicable && !isSelected) {
                             e.currentTarget.style.borderColor = 'rgba(45,212,212,0.45)'
                             e.currentTarget.style.background = '#0c1b1e'
                           }
                         }}
                         onMouseLeave={e => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = item.applicable ? 'rgba(45,212,212,0.18)' : 'rgba(100,116,139,0.15)'
+                            e.currentTarget.style.borderColor = isApplicable ? 'rgba(45,212,212,0.18)' : 'rgba(100,116,139,0.15)'
                             e.currentTarget.style.background = '#081214'
                           }
                         }}
                       >
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(45,212,212,0.08)', color: accentColor, fontWeight: 600 }}>
+                            <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(45,212,212,0.08)', color: accentColor, fontWeight: 600 }}>
                               {item.category}
                             </span>
                             <span style={{
-                              fontSize: '11px', padding: '3px 9px', borderRadius: '4px', fontWeight: 600,
-                              background: item.applicable ? 'rgba(74,222,128,0.12)' : 'rgba(148,163,184,0.1)',
-                              color: item.applicable ? '#4ade80' : '#64748b',
+                              fontSize: '12px', padding: '3px 9px', borderRadius: '4px', fontWeight: 600,
+                              background: isApplicable ? 'rgba(74,222,128,0.12)' : 'rgba(148,163,184,0.1)',
+                              color: isApplicable ? '#4ade80' : '#64748b',
                             }}>
-                              {item.applicable ? `✓ ${item.substructure_matches} site${item.substructure_matches > 1 ? 's' : ''}` : 'Unavailable'}
+                              {isApplicable ? `✓ ${matchCount} site${matchCount > 1 ? 's' : ''}` : 'Unavailable'}
                             </span>
                           </div>
-                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px', lineHeight: 1.35 }}>
+                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px', lineHeight: 1.35 }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: '13px', color: '#a1a1aa', lineHeight: 1.5, marginBottom: '10px' }}>
+                          <div style={{ fontSize: '14px', color: '#a1a1aa', lineHeight: 1.5, marginBottom: '10px' }}>
                             {item.description}
                           </div>
                         </div>
 
                         <div>
-                          <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span>Target: <strong style={{ color: '#e2e8f0' }}>{item.target_group}</strong></span>
                             {item.has_multiple_products && (
-                              <span style={{ color: '#facc15', fontWeight: 600, background: 'rgba(250,204,21,0.1)', padding: '2px 7px', borderRadius: '4px', fontSize: '11px' }}>
-                                {item.product_variants_count} isomers
+                              <span style={{ color: '#facc15', fontWeight: 600, background: 'rgba(250,204,21,0.1)', padding: '2px 7px', borderRadius: '4px', fontSize: '12px' }}>
+                                {variantCount > 0 ? `${variantCount} isomers` : 'isomers'}
                               </span>
                             )}
                           </div>
-                          {!item.applicable && item.unavailability_reason && (
-                            <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px', fontStyle: 'italic', lineHeight: 1.45 }}>
+                          {!isApplicable && item.unavailability_reason && (
+                            <div style={{ fontSize: '13px', color: '#fca5a5', marginTop: '6px', fontStyle: 'italic', lineHeight: 1.45 }}>
                               {item.unavailability_reason}
                             </div>
                           )}
@@ -1242,10 +1252,10 @@ export default function ModificationTab({
                   padding: '28px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px',
                 }}>
                   <div style={{ width: '32px', height: '32px', border: '3px solid rgba(45,212,212,0.2)', borderTop: `3px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                  <div style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 600 }}>
+                  <div style={{ color: '#e2e8f0', fontSize: '16px', fontWeight: 600 }}>
                     Simulating transformation & computing candidate properties...
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '13px' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>
                     Computing 9 RDKit physicochemical descriptors and generating 6 independent neural ML endpoint predictions.
                   </div>
                 </div>
@@ -1254,12 +1264,12 @@ export default function ModificationTab({
               {mutationError && !mutationLoading && (
                 <div style={{
                   background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px',
-                  padding: '16px', color: '#fca5a5', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '16px', color: '#fca5a5', fontSize: '14.5px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <span>{mutationError}</span>
                   <button
                     onClick={() => handleSelectMutation(selectedTransformId, selectedVariantIndex)}
-                    style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', color: '#fca5a5', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}
+                    style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', color: '#fca5a5', padding: '5px 12px', cursor: 'pointer', fontSize: '13px' }}
                   >Retry</button>
                 </div>
               )}
@@ -1277,18 +1287,20 @@ export default function ModificationTab({
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: accentColor, display: 'flex' }}>{Icons.flask}</span>
-                        <h4 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>
+                        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#fff' }}>
                           Candidate Analogue: {mutationResult.transform_name}
                         </h4>
-                        <span style={{ fontSize: '12px', background: 'rgba(74,222,128,0.12)', color: '#4ade80', padding: '3px 9px', borderRadius: '4px', fontWeight: 600 }}>
+                        <span style={{ fontSize: '13px', background: 'rgba(74,222,128,0.12)', color: '#4ade80', padding: '3px 9px', borderRadius: '4px', fontWeight: 600 }}>
                           Validated Product
                         </span>
                       </div>
-                      <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>
+                      <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '6px' }}>
                         Lineage: <span style={{ fontFamily: 'monospace', color: '#cbd5e1' }}>{canonicalSmiles}</span>
                         <span style={{ margin: '0 8px', color: accentColor }}>→</span>
                         <strong style={{ color: '#fff' }}>Candidate</strong>
-                        <span style={{ marginLeft: '12px', color: '#64748b' }}>({(mutationResult.timing_ms / 1000).toFixed(2)}s inference)</span>
+                        {mutationResult.timing_ms !== undefined && (
+                          <span style={{ marginLeft: '12px', color: '#64748b' }}>({(mutationResult.timing_ms / 1000).toFixed(2)}s inference)</span>
+                        )}
                       </div>
                     </div>
 
@@ -1298,7 +1310,7 @@ export default function ModificationTab({
                         onClick={handleAcceptCandidate}
                         style={{
                           padding: '10px 18px', background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
-                          border: 'none', borderRadius: '6px', color: '#000', fontWeight: 700, fontSize: '13px',
+                          border: 'none', borderRadius: '6px', color: '#000', fontWeight: 700, fontSize: '14px',
                           cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                           boxShadow: '0 2px 10px rgba(45,212,212,0.3)',
                           transition: 'all 0.15s ease',
@@ -1314,7 +1326,7 @@ export default function ModificationTab({
                         style={{
                           padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1327,7 +1339,7 @@ export default function ModificationTab({
                         style={{
                           padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1340,7 +1352,7 @@ export default function ModificationTab({
                         style={{
                           padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1353,7 +1365,7 @@ export default function ModificationTab({
                         style={{
                           padding: '10px 14px', background: 'transparent',
                           border: '1px solid rgba(148,163,184,0.2)', borderRadius: '6px', color: '#94a3b8',
-                          fontWeight: 500, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 500, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                         onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
@@ -1368,38 +1380,41 @@ export default function ModificationTab({
                     <div style={{
                       background: 'rgba(45,212,212,0.12)', border: '1px solid rgba(45,212,212,0.3)',
                       borderRadius: '6px', padding: '10px 14px', marginBottom: '14px',
-                      color: accentColor, fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px',
+                      color: accentColor, fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px',
                     }}>
                       {Icons.check} {actionFeedback}
                     </div>
                   )}
 
                   {/* Isomer Selector Pills (if multiple positional isomers exist) */}
-                  {mutationResult.has_multiple_products && mutationResult.total_variants > 1 && (
+                  {mutationResult.has_multiple_products && (mutationResult.total_variants > 1 || mutationResult.variants?.length > 1) && (
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px',
                       background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
                       borderRadius: '6px', padding: '10px 14px', flexWrap: 'wrap',
                     }}>
-                      <span style={{ fontSize: '13px', color: '#facc15', fontWeight: 600 }}>
-                        Multiple Positional Isomers ({mutationResult.total_variants} products):
+                      <span style={{ fontSize: '14px', color: '#facc15', fontWeight: 600 }}>
+                        Multiple Positional Isomers ({mutationResult.total_variants || mutationResult.variants?.length} products):
                       </span>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {mutationResult.variants.map((vSmiles, vIdx) => (
-                          <button
-                            key={vIdx}
-                            onClick={() => handleSelectMutation(mutationResult.transform_id, vIdx)}
-                            style={{
-                              padding: '5px 12px', fontSize: '12px', fontWeight: 600, borderRadius: '5px',
-                              cursor: 'pointer', transition: 'all 0.15s',
-                              border: mutationResult.selected_variant_index === vIdx ? '1px solid #facc15' : '1px solid rgba(245,158,11,0.2)',
-                              background: mutationResult.selected_variant_index === vIdx ? '#facc15' : 'transparent',
-                              color: mutationResult.selected_variant_index === vIdx ? '#000' : '#facc15',
-                            }}
-                          >
-                            Isomer {vIdx + 1}
-                          </button>
-                        ))}
+                        {mutationResult.variants.map((vSmiles, vIdx) => {
+                          const activeIdx = mutationResult.selected_variant_index ?? mutationResult.variant_index ?? 0
+                          return (
+                            <button
+                              key={vIdx}
+                              onClick={() => handleSelectMutation(mutationResult.transform_id, vIdx)}
+                              style={{
+                                padding: '5px 12px', fontSize: '13px', fontWeight: 600, borderRadius: '5px',
+                                cursor: 'pointer', transition: 'all 0.15s',
+                                border: activeIdx === vIdx ? '1px solid #facc15' : '1px solid rgba(245,158,11,0.2)',
+                                background: activeIdx === vIdx ? '#facc15' : 'transparent',
+                                color: activeIdx === vIdx ? '#000' : '#facc15',
+                              }}
+                            >
+                              Isomer {vIdx + 1}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -1413,8 +1428,8 @@ export default function ModificationTab({
                       padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center',
                     }}>
                       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>2D Structure Preview</span>
-                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>Formula: <span dangerouslySetInnerHTML={{ __html: formulaToHtml(mutationResult.candidate_formula) }} /></span>
+                        <span style={{ fontSize: '14.5px', fontWeight: 600, color: '#e2e8f0' }}>2D Structure Preview</span>
+                        <span style={{ fontSize: '13px', color: '#94a3b8' }}>Formula: <span dangerouslySetInnerHTML={{ __html: formulaToHtml(mutationResult.candidate_formula || mutationResult.candidate_properties?.formula) }} /></span>
                       </div>
 
                       <div style={{
@@ -1427,7 +1442,7 @@ export default function ModificationTab({
                             style={{ filter: 'invert(0.85) hue-rotate(180deg) brightness(1.2)' }}
                           />
                         ) : (
-                          <span style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>Structure preview</span>
+                          <span style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic' }}>Structure preview</span>
                         )}
                       </div>
 
@@ -1437,7 +1452,7 @@ export default function ModificationTab({
                         background: '#0a1618', border: '1px solid rgba(45,212,212,0.12)', borderRadius: '6px',
                         padding: '6px 10px',
                       }}>
-                        <span style={{ flex: 1, fontFamily: 'monospace', fontSize: '12px', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {mutationResult.candidate_smiles}
                         </span>
                         <button
@@ -1455,10 +1470,10 @@ export default function ModificationTab({
 
                     {/* Physicochemical Property Deltas Table */}
                     <div style={{ flex: '1.4', minWidth: '340px', overflowX: 'auto' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: '10px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#e2e8f0', marginBottom: '10px' }}>
                         Before-and-After Property Deltas
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid rgba(45,212,212,0.15)' }}>
                             <th style={{ textAlign: 'left', padding: '8px 10px', color: accentColor, fontWeight: 600 }}>Property</th>
@@ -1468,27 +1483,38 @@ export default function ModificationTab({
                           </tr>
                         </thead>
                         <tbody>
-                          {(mutationResult.property_deltas || []).map((row, rIdx) => {
-                            const isPositive = typeof row.delta === 'string' && row.delta.startsWith('+') && row.delta !== '+0' && row.delta !== '+0.00'
-                            const isNegative = typeof row.delta === 'string' && row.delta.startsWith('-')
-                            return (
-                              <tr key={rIdx} style={{ borderBottom: '1px solid rgba(45,212,212,0.06)' }}>
-                                <td style={{ padding: '8px 10px', color: '#e2e8f0', fontWeight: 500 }}>{row.label}</td>
-                                <td style={{ padding: '8px 10px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                                  {row.parent_val !== undefined ? `${row.parent_val}${row.unit ? ` ${row.unit}` : ''}` : '-'}
-                                </td>
-                                <td style={{ padding: '8px 10px', color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>
-                                  {row.candidate_val !== undefined ? `${row.candidate_val}${row.unit ? ` ${row.unit}` : ''}` : '-'}
-                                </td>
-                                <td style={{
-                                  padding: '8px 10px', fontFamily: 'monospace', fontWeight: 700,
-                                  color: isPositive ? '#4ade80' : isNegative ? '#f87171' : '#94a3b8',
-                                }}>
-                                  {row.delta !== undefined ? `${row.delta}${row.unit ? ` ${row.unit}` : ''}` : '-'}
-                                </td>
-                              </tr>
-                            )
-                          })}
+                          {(() => {
+                            const deltaRows = Array.isArray(mutationResult.property_deltas)
+                              ? mutationResult.property_deltas
+                              : (mutationResult.property_deltas && typeof mutationResult.property_deltas === 'object')
+                                ? Object.values(mutationResult.property_deltas)
+                                : []
+                            return deltaRows.map((row, rIdx) => {
+                              const deltaStr = String(row.delta ?? '')
+                              const isPositive = deltaStr.startsWith('+') && deltaStr !== '+0' && deltaStr !== '+0.00'
+                              const isNegative = deltaStr.startsWith('-')
+                              const parentVal = row.parent_val !== undefined ? row.parent_val : (row.parent !== undefined ? row.parent : '-')
+                              const candVal = row.candidate_val !== undefined ? row.candidate_val : (row.candidate !== undefined ? row.candidate : '-')
+                              const deltaVal = row.delta !== undefined ? row.delta : '-'
+                              return (
+                                <tr key={rIdx} style={{ borderBottom: '1px solid rgba(45,212,212,0.06)' }}>
+                                  <td style={{ padding: '8px 10px', color: '#e2e8f0', fontWeight: 500 }}>{row.label || '-'}</td>
+                                  <td style={{ padding: '8px 10px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                                    {parentVal !== '-' ? `${parentVal}${row.unit ? ` ${row.unit}` : ''}` : '-'}
+                                  </td>
+                                  <td style={{ padding: '8px 10px', color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>
+                                    {candVal !== '-' ? `${candVal}${row.unit ? ` ${row.unit}` : ''}` : '-'}
+                                  </td>
+                                  <td style={{
+                                    padding: '8px 10px', fontFamily: 'monospace', fontWeight: 700,
+                                    color: isPositive ? '#4ade80' : isNegative ? '#f87171' : '#94a3b8',
+                                  }}>
+                                    {deltaVal !== '-' ? `${deltaVal}${row.unit ? ` ${row.unit}` : ''}` : '-'}
+                                  </td>
+                                </tr>
+                              )
+                            })
+                          })()}
                         </tbody>
                       </table>
                     </div>
@@ -1498,67 +1524,73 @@ export default function ModificationTab({
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#e2e8f0' }}>
                           Candidate ML Predictions (Independent Inference)
                         </span>
-                        <span style={{ fontSize: '11px', background: 'rgba(45,212,212,0.1)', color: accentColor, padding: '3px 8px', borderRadius: '4px', fontWeight: 500 }}>
+                        <span style={{ fontSize: '12px', background: 'rgba(45,212,212,0.1)', color: accentColor, padding: '3px 8px', borderRadius: '4px', fontWeight: 500 }}>
                           Ensemble Warm Models
                         </span>
                       </div>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                      <span style={{ fontSize: '13px', color: '#94a3b8' }}>
                         Not reused from parent
                       </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-                      {(mutationResult.predictions || []).map((pred, pIdx) => {
-                        const isBio = pred.category === 'Bioactivity'
-                        const isActive = pred.status_label === 'Active'
-                        const isLowRisk = pred.status_label === 'Low Risk'
-                        const isFavorable = isBio ? isActive : isLowRisk
-                        const pct = Math.round(pred.probability * 100)
+                      {(() => {
+                        const predList = mutationResult.predictions || mutationResult.candidate_predictions || []
+                        return predList.map((pred, pIdx) => {
+                          const isBio = pred.category === 'Bioactivity'
+                          const isActive = pred.status_label === 'Active'
+                          const isLowRisk = pred.status_label === 'Low Risk'
+                          const isFavorable = isBio ? isActive : isLowRisk
+                          const probVal = pred.probability ?? pred.confidence ?? 0
+                          const pct = Math.round(probVal * 100)
+                          const confVal = pred.confidence ?? pred.probability
+                          const confPct = confVal !== null && confVal !== undefined ? Math.round(confVal * 100) : null
 
-                        return (
-                          <div
-                            key={pIdx}
-                            style={{
-                              background: '#050c0e',
-                              border: '1px solid rgba(45,212,212,0.12)',
-                              borderRadius: '8px',
-                              padding: '12px',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{pred.category}</span>
-                              <span style={{
-                                fontSize: '11px', padding: '3px 8px', borderRadius: '4px', fontWeight: 700,
-                                background: isFavorable ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
-                                color: isFavorable ? '#4ade80' : '#f87171',
-                              }}>
-                                {pred.status_label}
-                              </span>
-                            </div>
+                          return (
+                            <div
+                              key={pIdx}
+                              style={{
+                                background: '#050c0e',
+                                border: '1px solid rgba(45,212,212,0.12)',
+                                borderRadius: '8px',
+                                padding: '12px',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>{pred.category || 'Endpoint'}</span>
+                                <span style={{
+                                  fontSize: '12px', padding: '3px 8px', borderRadius: '4px', fontWeight: 700,
+                                  background: isFavorable ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
+                                  color: isFavorable ? '#4ade80' : '#f87171',
+                                }}>
+                                  {pred.status_label}
+                                </span>
+                              </div>
 
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>
-                              {pred.endpoint_name}
-                            </div>
+                              <div style={{ fontSize: '14.5px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>
+                                {pred.endpoint_name}
+                              </div>
 
-                            {/* Progress bar */}
-                            <div style={{ height: '7px', background: '#0a1618', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
-                              <div style={{
-                                height: '100%', width: `${pct}%`,
-                                background: isFavorable ? '#4ade80' : '#f87171',
-                                borderRadius: '4px', transition: 'width 0.4s ease',
-                              }} />
-                            </div>
+                              {/* Progress bar */}
+                              <div style={{ height: '7px', background: '#0a1618', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
+                                <div style={{
+                                  height: '100%', width: `${pct}%`,
+                                  background: isFavorable ? '#4ade80' : '#f87171',
+                                  borderRadius: '4px', transition: 'width 0.4s ease',
+                                }} />
+                              </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
-                              <span>Prob: <strong style={{ color: '#fff' }}>{pct}%</strong></span>
-                              <span>Conf: <strong style={{ color: '#cbd5e1' }}>{Math.round(pred.confidence * 100)}%</strong></span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#94a3b8' }}>
+                                <span>Prob: <strong style={{ color: '#fff' }}>{pct}%</strong></span>
+                                <span>Conf: <strong style={{ color: '#cbd5e1' }}>{confPct !== null ? `${confPct}%` : 'N/A'}</strong></span>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1570,11 +1602,11 @@ export default function ModificationTab({
           {analysisSubTab === 'insights' && (
             <div style={{ minHeight: '150px' }}>
               {!displaySmiles || displaySmiles === canonicalSmiles ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   Make an edit in the Molecular Editor to see AI-powered insights about your modifications.
                 </div>
               ) : insightsLoading ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '14px', padding: '20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '15px', padding: '20px 0' }}>
                   <div style={{
                     width: '16px', height: '16px', border: '2px solid rgba(45,212,212,0.3)',
                     borderTop: `2px solid ${accentColor}`, borderRadius: '50%',
@@ -1583,7 +1615,7 @@ export default function ModificationTab({
                   Generating insights from local AI…
                 </div>
               ) : insightsError ? (
-                <div style={{ color: '#f59e0b', fontSize: '14px', padding: '20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ color: '#f59e0b', fontSize: '15px', padding: '20px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {Icons.brain}
                   {insightsError}
                 </div>
@@ -1595,7 +1627,7 @@ export default function ModificationTab({
                         width: '8px', height: '8px', borderRadius: '50%', marginTop: '6px', flexShrink: 0,
                         background: accentColor, boxShadow: `0 0 6px ${accentColor}`,
                       }} />
-                      <span style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>{bullet}</span>
+                      <span style={{ color: '#e2e8f0', fontSize: '15px', lineHeight: 1.6 }}>{bullet}</span>
                     </div>
                   ))}
                 </div>
@@ -1607,18 +1639,18 @@ export default function ModificationTab({
           {analysisSubTab === 'comparison' && (
             <div style={{ overflowX: 'auto' }}>
               {!displaySmiles || displaySmiles === canonicalSmiles ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   Make an edit in the Molecular Editor to see a property comparison.
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14.5px' }}>
                   <thead>
                     <tr>
                       {['Property', 'Original', 'Modified', 'Δ (Delta)'].map(h => (
                         <th key={h} style={{
                           textAlign: 'left', padding: '10px 12px',
                           borderBottom: '1px solid rgba(45,212,212,0.15)',
-                          color: accentColor, fontWeight: 600, fontSize: '12px',
+                          color: accentColor, fontWeight: 600, fontSize: '13.5px',
                           letterSpacing: '0.03em',
                         }}>{h}</th>
                       ))}
@@ -1649,11 +1681,11 @@ export default function ModificationTab({
           {analysisSubTab === 'structural' && (
             <div style={{ minHeight: '120px' }}>
               {!displaySmiles || displaySmiles === canonicalSmiles ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   Make an edit in the Molecular Editor to see structural changes.
                 </div>
               ) : structuralChanges.length === 0 ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   No structural differences detected.
                 </div>
               ) : (
@@ -1673,7 +1705,7 @@ export default function ModificationTab({
                         color: change.type === 'added' ? '#4ade80'
                           : change.type === 'removed' ? '#f87171'
                           : '#94a3b8',
-                        fontSize: '14px', fontWeight: 500,
+                        fontSize: '15px', fontWeight: 500,
                       }}>{change.text}</span>
                     </div>
                   ))}
@@ -1697,11 +1729,11 @@ export default function ModificationTab({
           }}>
             <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               {Icons.report}
               Report Generation
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px', lineHeight: 1.5 }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 16px', lineHeight: 1.5 }}>
               Generate a detailed report of your modifications.
             </p>
 
@@ -1711,7 +1743,7 @@ export default function ModificationTab({
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '8px', padding: '10px 12px',
                 marginBottom: '14px', outline: 'none', appearance: 'none', cursor: 'pointer',
                 fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -1726,7 +1758,7 @@ export default function ModificationTab({
             <button
               onClick={() => onGenerateReport?.(reportFormat)}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
+                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '15px',
                 borderRadius: '8px', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
@@ -1753,11 +1785,11 @@ export default function ModificationTab({
           }}>
             <div style={{ position: 'absolute', top: '-20px', left: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               {Icons.brain}
               Suggest Best Modifications
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 14px', lineHeight: 1.5 }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 14px', lineHeight: 1.5 }}>
               Auto-rank structural modifications optimized for your target.
             </p>
 
@@ -1768,7 +1800,7 @@ export default function ModificationTab({
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '8px', padding: '10px 12px',
                 marginBottom: '14px', outline: 'none', appearance: 'none', cursor: 'pointer',
                 fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -1785,7 +1817,7 @@ export default function ModificationTab({
               onClick={fetchShortlist}
               disabled={shortlistLoading || !canonicalSmiles}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
+                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '15px',
                 borderRadius: '8px', border: 'none',
                 cursor: shortlistLoading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1822,7 +1854,7 @@ export default function ModificationTab({
             {shortlistVisible && (
               <div style={{ marginTop: '16px' }}>
                 {shortlistError && !shortlistLoading && (
-                  <div style={{ color: '#f59e0b', fontSize: '13px', padding: '8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ color: '#f59e0b', fontSize: '13.5px', padding: '8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {Icons.info}
                     {shortlistError}
                   </div>
@@ -1854,15 +1886,15 @@ export default function ModificationTab({
                                 : idx === 1 ? 'linear-gradient(135deg, #94a3b8, #64748b)'
                                 : 'linear-gradient(135deg, #78716c, #57534e)',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '12px', fontWeight: 700, color: '#000', flexShrink: 0,
+                              fontSize: '13px', fontWeight: 700, color: '#000', flexShrink: 0,
                             }}>{item.rank}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.transform_name}
                               </div>
                             </div>
                             <div style={{
-                              fontSize: '13px', fontWeight: 700, fontFamily: 'monospace',
+                              fontSize: '15px', fontWeight: 700, fontFamily: 'monospace',
                               color: item.score >= 0.5 ? '#4ade80' : item.score >= 0 ? '#facc15' : '#f87171',
                               flexShrink: 0,
                             }}>
@@ -1871,7 +1903,7 @@ export default function ModificationTab({
                           </div>
 
                           {/* Description */}
-                          <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', lineHeight: 1.4 }}>
+                          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '8px', lineHeight: 1.4 }}>
                             {item.transform_description}
                           </div>
 
@@ -1879,7 +1911,7 @@ export default function ModificationTab({
                           {item.property_deltas && Object.keys(item.property_deltas).length > 0 && (
                             <div style={{ display: 'flex', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                               {Object.entries(item.property_deltas).map(([key, val]) => (
-                                <div key={key} style={{ fontSize: '11px' }}>
+                                <div key={key} style={{ fontSize: '12.5px' }}>
                                   <span style={{ color: '#94a3b8' }}>{key}: </span>
                                   <span style={{
                                     fontFamily: 'monospace', fontWeight: 600,
@@ -1896,7 +1928,7 @@ export default function ModificationTab({
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
                             {targetPred && targetPred.available && (
                               <span style={{
-                                fontSize: '10px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600,
+                                fontSize: '12px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600,
                                 background: targetPred.status_label === 'Active'
                                   ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
                                 color: targetPred.status_label === 'Active' ? '#4ade80' : '#f87171',
@@ -1907,7 +1939,7 @@ export default function ModificationTab({
                             )}
                             {riskPreds.map((rp, ri) => (
                               <span key={ri} style={{
-                                fontSize: '10px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600,
+                                fontSize: '12px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600,
                                 background: rp.status_label === 'Low Risk'
                                   ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
                                 color: rp.status_label === 'Low Risk' ? '#4ade80' : '#f87171',
@@ -1922,7 +1954,7 @@ export default function ModificationTab({
                           <button
                             onClick={() => applyShortlistSuggestion(item.product_smiles)}
                             style={{
-                              width: '100%', padding: '6px 0', fontSize: '12px', fontWeight: 600,
+                              width: '100%', padding: '7px 0', fontSize: '13.5px', fontWeight: 600,
                               borderRadius: '6px', cursor: 'pointer',
                               background: 'transparent',
                               border: '1px solid rgba(45,212,212,0.2)',
@@ -1952,7 +1984,7 @@ export default function ModificationTab({
             style={{
               width: '100%', padding: '14px 0', borderRadius: '8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              fontSize: '14px', fontWeight: 600,
+              fontSize: '15.5px', fontWeight: 600,
               background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.12)',
               color: accentColor, cursor: 'pointer',
               fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',

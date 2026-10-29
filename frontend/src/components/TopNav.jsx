@@ -196,20 +196,20 @@ export default function TopNav({ user }) {
           
           {historyOpen && (
             <div
-              className="absolute right-0 mt-3 py-3 w-64 rounded-xl shadow-2xl flex flex-col max-h-[300px] overflow-hidden"
+              className="absolute right-0 mt-3 py-3 w-72 rounded-xl shadow-2xl flex flex-col max-h-[340px] overflow-hidden"
               style={{ background: 'rgba(10, 24, 26, 0.98)', border: '1px solid rgba(45,212,212,0.2)', backdropFilter: 'blur(20px)' }}
             >
-              <div className="px-4 pb-2 border-b border-[rgba(45,212,212,0.1)] mb-2 text-[#a0c4c4] text-xs font-bold uppercase tracking-widest">
+              <div className="px-4 pb-2 border-b border-[rgba(45,212,212,0.1)] mb-2 text-[#a0c4c4] text-sm font-bold uppercase tracking-widest">
                 Activity History
               </div>
               <div className="overflow-y-auto px-2 flex-1">
                 {history.length === 0 ? (
-                  <div className="text-center text-[#5a8080] text-xs py-4">No recent activity</div>
+                  <div className="text-center text-[#5a8080] text-sm py-4">No recent activity</div>
                 ) : (
                   history.map(item => (
                     <div key={item.id} className="py-2 px-2 hover:bg-[rgba(45,212,212,0.05)] rounded-lg transition-colors mb-1">
-                      <div className="text-[#c0dede] text-sm truncate">{item.label}</div>
-                      <div className="text-[#5a8080] text-[10px] mt-0.5">{new Date(item.time).toLocaleTimeString()}</div>
+                      <div className="text-[#c0dede] text-base truncate">{item.label}</div>
+                      <div className="text-[#5a8080] text-xs mt-0.5">{new Date(item.time).toLocaleTimeString()}</div>
                     </div>
                   ))
                 )}
@@ -232,28 +232,28 @@ export default function TopNav({ user }) {
           
           {notificationsOpen && (
             <div
-              className="absolute right-0 mt-3 py-3 w-72 rounded-xl shadow-2xl flex flex-col max-h-[300px] overflow-hidden"
+              className="absolute right-0 mt-3 py-3 w-80 rounded-xl shadow-2xl flex flex-col max-h-[340px] overflow-hidden"
               style={{ background: 'rgba(10, 24, 26, 0.98)', border: '1px solid rgba(45,212,212,0.2)', backdropFilter: 'blur(20px)' }}
             >
-              <div className="px-4 pb-2 border-b border-[rgba(45,212,212,0.1)] mb-2 text-[#a0c4c4] text-xs font-bold uppercase tracking-widest flex justify-between">
+              <div className="px-4 pb-2 border-b border-[rgba(45,212,212,0.1)] mb-2 text-[#a0c4c4] text-sm font-bold uppercase tracking-widest flex justify-between">
                 <span>Notifications</span>
                 {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="bg-[rgba(45,212,212,0.2)] text-[#2dd4d4] px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="bg-[rgba(45,212,212,0.2)] text-[#2dd4d4] px-2 py-0.5 rounded text-[11px] font-semibold">
                     {notifications.filter(n => !n.read).length} NEW
                   </span>
                 )}
               </div>
               <div className="px-2 overflow-y-auto flex-1">
                 {notifications.length === 0 ? (
-                  <div className="text-center text-[#5a8080] text-xs py-4">No notifications</div>
+                  <div className="text-center text-[#5a8080] text-sm py-4">No notifications</div>
                 ) : (
                   notifications.map(notif => (
-                    <div key={notif.id} className="py-2 px-3 mb-2 bg-[rgba(45,212,212,0.05)] rounded-lg border border-[rgba(45,212,212,0.1)] transition-colors hover:bg-[rgba(45,212,212,0.08)]">
-                      <div className="text-white text-sm font-medium mb-1">{notif.title}</div>
-                      <div className="text-[#8aafaf] text-xs leading-relaxed">
+                    <div key={notif.id} className="py-2.5 px-3 mb-2 bg-[rgba(45,212,212,0.05)] rounded-lg border border-[rgba(45,212,212,0.1)] transition-colors hover:bg-[rgba(45,212,212,0.08)]">
+                      <div className="text-white text-base font-medium mb-1">{notif.title}</div>
+                      <div className="text-[#8aafaf] text-sm leading-relaxed">
                         {notif.message}
                       </div>
-                      <div className="text-[#5a8080] text-[10px] mt-2">
+                      <div className="text-[#5a8080] text-xs mt-2">
                         {new Date(notif.time).toLocaleTimeString()}
                       </div>
                     </div>
@@ -267,14 +267,14 @@ export default function TopNav({ user }) {
         {/* User avatar with Dropdown */}
         <div className="relative">
           <div
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2.5 cursor-pointer"
             onClick={toggleUserDropdown}
           >
             <div
               className="rounded-full flex items-center justify-center font-bold"
               style={{
-                width: '36px', height: '36px',
-                fontSize: '12px', color: '#2dd4d4',
+                width: '38px', height: '38px',
+                fontSize: '13.5px', color: '#2dd4d4',
                 background: 'rgba(45,212,212,0.12)',
                 border: '1.5px solid rgba(45,212,212,0.4)',
                 flexShrink: 0,
@@ -282,7 +282,7 @@ export default function TopNav({ user }) {
             >
               {initials}
             </div>
-            <span style={{ fontSize: '13px', color: '#c0dede', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '14.5px', color: '#c0dede', whiteSpace: 'nowrap' }}>
               Hi, {user?.display_name?.split(' ')[0] || 'User'}
             </span>
             <ChevronDown />
@@ -291,13 +291,13 @@ export default function TopNav({ user }) {
           {/* Dropdown Menu */}
           {dropdownOpen && (
             <div
-              className="absolute right-0 mt-2 py-2 w-32 rounded-lg shadow-xl"
+              className="absolute right-0 mt-2 py-2 w-36 rounded-lg shadow-xl"
               style={{ background: 'rgba(10, 24, 26, 0.95)', border: '1px solid rgba(45,212,212,0.2)' }}
             >
               <button
                 onClick={handleLogout}
                 className="w-full text-left hover:bg-white/10 transition-colors cursor-pointer border-none bg-transparent"
-                style={{ color: '#ff4d4d', fontSize: '13px', fontWeight: 'bold', padding: '10px 16px' }}
+                style={{ color: '#ff4d4d', fontSize: '14.5px', fontWeight: 'bold', padding: '10px 16px' }}
               >
                 Log Out
               </button>

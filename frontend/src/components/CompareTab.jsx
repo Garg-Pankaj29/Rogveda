@@ -42,6 +42,7 @@ const Icons = {
   zoomOut:   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>,
   expand:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>,
   chevDown:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  benchmark: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
 }
 
 /* ═══════════════════════════════════════════
@@ -178,7 +179,7 @@ function Tooltip({ text, children }) {
       {children}
       <div style={{
         position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px',
-        background: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', fontSize: '12px',
+        background: '#1e293b', color: '#e2e8f0', padding: '7px 12px', borderRadius: '5px', fontSize: '13px',
         whiteSpace: 'nowrap', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
         boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400,
       }}>
@@ -217,7 +218,7 @@ function SimilarityGauge({ score, size = 80 }) {
       </svg>
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: size > 100 ? '22px' : '14px', fontWeight: 700, color: hasScore ? color : '#475569',
+        fontSize: size > 100 ? '24px' : '16px', fontWeight: 700, color: hasScore ? color : '#475569',
         fontFamily: 'monospace',
       }}>
         {hasScore ? (percent * 100).toFixed(0) + '%' : 'N/A'}
@@ -249,7 +250,7 @@ export default function CompareTab({
 
   /* ── Molecule B state ── */
   const [molBSmiles, setMolBSmiles] = useState('')
-  const [molBInputMode, setMolBInputMode] = useState('SMILES') // 'Draw' | 'SMILES' | 'From History'
+  const [molBInputMode, setMolBInputMode] = useState('SMILES') // 'Draw' | 'SMILES' | 'From History' | 'From Benchmark'
   const [molBSmilesInput, setMolBSmilesInput] = useState('')
   const [molBViewMode, setMolBViewMode] = useState('2d')
   const [molBSdfBlock, setMolBSdfBlock] = useState('')
@@ -258,6 +259,19 @@ export default function CompareTab({
   const molBKetcherRef = useRef(null)
   const [molBKetcherReady, setMolBKetcherReady] = useState(false)
   const [molBKetcherTheme, setMolBKetcherTheme] = useState('light')
+
+  /* ── Benchmark Catalog & Case Studies ── */
+  const [benchmarksList, setBenchmarksList] = useState([])
+  const [caseStudiesList, setCaseStudiesList] = useState([])
+
+  useEffect(() => {
+    api.get('/api/benchmarks')
+      .then(res => {
+        if (res.benchmarks) setBenchmarksList(res.benchmarks)
+        if (res.case_studies) setCaseStudiesList(res.case_studies)
+      })
+      .catch(e => console.warn('Failed to fetch benchmarks in CompareTab:', e))
+  }, [])
 
   /* ── Sub-nav ── */
   const [activeSubNav, setActiveSubNav] = useState('property')
@@ -271,6 +285,13 @@ export default function CompareTab({
 
   useEffect(() => {
     if (isActive) {
+      const targetA = localStorage.getItem('rogveda_compare_mola_source')
+      if (targetA) {
+        setMolASmiles(targetA)
+        setMolASource(`custom_${targetA.slice(0, 10)}`)
+        localStorage.removeItem('rogveda_compare_mola_source')
+      }
+
       const targetB = localStorage.getItem('rogveda_compare_target_molb')
       if (targetB) {
         setMolBSmiles(targetB)
@@ -331,19 +352,45 @@ export default function CompareTab({
         }
       }
     } catch (e) { /* ignore */ }
+
+    // Add curated benchmark options
+    if (benchmarksList.length > 0) {
+      benchmarksList.forEach(b => {
+        options.push({
+          id: `benchmark_${b.id}`,
+          label: `Benchmark: ${b.name} (${b.historical_status_badge})`,
+          smiles: b.canonical_smiles,
+        })
+      })
+    }
+
     return options
-  }, [canonicalSmiles])
+  }, [canonicalSmiles, benchmarksList])
+
+  /* ── Preset Case Study Loader ── */
+  const loadPresetCaseStudy = useCallback((studyId) => {
+    const cs = caseStudiesList.find(c => c.id === studyId)
+    if (cs && cs.compound_a && cs.compound_b) {
+      setMolASource(`benchmark_${cs.compound_a.id}`)
+      setMolASmiles(cs.compound_a.canonical_smiles)
+      setMolBInputMode('From Benchmark')
+      setMolBSmiles(cs.compound_b.canonical_smiles)
+      setMolBSmilesInput(cs.compound_b.canonical_smiles)
+      logActivity?.(`Compare: Loaded preset case study "${cs.title}"`)
+    }
+  }, [caseStudiesList, logActivity])
 
   /* ── Resolve Molecule A SMILES whenever source changes ── */
   useEffect(() => {
     const opt = molAOptions.find(o => o.id === molASource)
     if (opt) {
       setMolASmiles(opt.smiles)
-    } else if (molAOptions.length > 0) {
+    } else if (molASmiles && molAOptions.some(o => o.smiles === molASmiles)) {
+      const match = molAOptions.find(o => o.smiles === molASmiles)
+      setMolASource(match.id)
+    } else if (!molASmiles && molAOptions.length > 0) {
       setMolASource(molAOptions[0].id)
       setMolASmiles(molAOptions[0].smiles)
-    } else {
-      setMolASmiles('')
     }
   }, [molASource, molAOptions])
 
@@ -620,11 +667,11 @@ export default function CompareTab({
   /* ── No molecule loaded guard ── */
   if (!canonicalSmiles) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px', padding: '24px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
           <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', color: accentColor, opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/><path d="M13 2h4a2 2 0 0 1 2 2v4"/><path d="M2 13v4a2 2 0 0 0 2 2h4"/></svg>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#d1d5db', marginBottom: '4px' }}>No Molecule Loaded</h2>
-          <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '400px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#d1d5db', margin: '0 0 8px 0', textAlign: 'center' }}>No Molecule Loaded</h2>
+          <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', lineHeight: 1.5, margin: '0 auto', textAlign: 'center' }}>
             Please draw or load a molecule on the <span style={{ color: accentColor }}>Draw</span> tab first, then return here to compare.
           </p>
         </div>
@@ -647,33 +694,85 @@ export default function CompareTab({
 
   return (
     <>
+      {/* ── PRESET BENCHMARK CASE STUDIES BAR ── */}
+      {caseStudiesList.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px',
+          background: 'linear-gradient(90deg, #071518 0%, #060e10 100%)',
+          border: '1px solid rgba(45,212,212,0.2)', borderRadius: '8px',
+          padding: '12px 18px', flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{
+              background: 'rgba(45,212,212,0.15)', color: accentColor,
+              padding: '4px 10px', borderRadius: '4px', fontSize: '13px',
+              fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+            }}>
+              Benchmark Case Studies
+            </span>
+            <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>1-Click Comparison:</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {caseStudiesList.map((cs) => (
+              <button
+                key={cs.id}
+                onClick={() => loadPresetCaseStudy(cs.id)}
+                style={{
+                  padding: '6px 14px', fontSize: '14px', fontWeight: 600,
+                  borderRadius: '6px', border: '1px solid rgba(45,212,212,0.25)',
+                  background: 'rgba(45,212,212,0.06)', color: '#e2e8f0',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(45,212,212,0.18)'
+                  e.currentTarget.style.borderColor = accentColor
+                  e.currentTarget.style.color = '#fff'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(45,212,212,0.06)'
+                  e.currentTarget.style.borderColor = 'rgba(45,212,212,0.25)'
+                  e.currentTarget.style.color = '#e2e8f0'
+                }}
+                title={cs.description}
+              >
+                <span style={{ color: accentColor }}>✦</span>
+                <span>{cs.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── TOP ROW: Two panels + swap button ── */}
       <div style={{ display: 'flex', gap: '0px', marginBottom: '16px', alignItems: 'stretch', position: 'relative' }}>
 
         {/* ── LEFT PANEL: Molecule A (From Workspace) ── */}
         <div style={{ flex: 1, ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
-              Molecule A <span style={{ color: '#94a3b8', fontWeight: 400 }}>(From Workspace)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
+              Molecule A <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '15px' }}>(From Workspace)</span>
             </h3>
             <Tooltip text="Molecule A is sourced from your current workspace molecule or modification history">{Icons.info}</Tooltip>
           </div>
 
           {/* Source dropdown + 2D/3D toggle row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             {/* Dropdown */}
-            <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: '340px' }}>
               <select
                 value={molASource}
                 onChange={e => setMolASource(e.target.value)}
                 style={{
                   width: '100%', background: '#081214', border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                  fontSize: '13px', borderRadius: '6px', padding: '8px 32px 8px 12px', outline: 'none', appearance: 'none', cursor: 'pointer',
+                  fontSize: '15px', borderRadius: '6px', padding: '9px 34px 9px 12px', outline: 'none', appearance: 'none', cursor: 'pointer',
                   fontFamily: 'Inter, system-ui, sans-serif',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
                 }}
               >
                 {molAOptions.map(opt => (
@@ -688,12 +787,12 @@ export default function CompareTab({
             {/* 2D / 3D toggle */}
             <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(45,212,212,0.15)', background: '#050b0d' }}>
               <button onClick={() => setMolAViewMode('2d')} style={{
-                padding: '5px 14px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                 ...(molAViewMode === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}>2D View</button>
               <button onClick={handleA3D} disabled={molASdfLoading} style={{
-                padding: '5px 14px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: molASdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
+                padding: '6px 16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: molASdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
                 transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif', opacity: molASdfLoading ? 0.5 : 1,
                 ...(molAViewMode === '3d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
               }}>{molASdfLoading ? '...' : '3D View'}</button>
@@ -718,7 +817,7 @@ export default function CompareTab({
                   }}
                 />
               ) : (
-                <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>No structure</span>
+                <span style={{ color: '#475569', fontSize: '15px', fontStyle: 'italic' }}>No structure</span>
               )
             )}
           </div>
@@ -748,21 +847,22 @@ export default function CompareTab({
         {/* ── RIGHT PANEL: Molecule B (From your Input) ── */}
         <div style={{ flex: 1, ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#fff' }}>
-                Molecule B <span style={{ color: '#94a3b8', fontWeight: 400 }}>(From your Input)</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
+                Molecule B <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '15px' }}>(From your Input)</span>
               </h3>
               <Tooltip text="Add a second molecule to compare against Molecule A">{Icons.info}</Tooltip>
             </div>
 
             {/* Mode buttons */}
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {[
                 { id: 'Draw', icon: Icons.pencil },
                 { id: 'SMILES', icon: Icons.smiles },
                 { id: 'From History', icon: Icons.history },
+                { id: 'From Benchmark', icon: Icons.benchmark },
               ].map(mode => (
                 <button
                   key={mode.id}
@@ -774,7 +874,7 @@ export default function CompareTab({
                     }
                   }}
                   style={{
-                    padding: '5px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '6px',
+                    padding: '6px 14px', fontSize: '13.5px', fontWeight: 500, borderRadius: '6px',
                     border: '1px solid rgba(45,212,212,0.15)', cursor: 'pointer', transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', gap: '6px',
                     fontFamily: 'Inter, system-ui, sans-serif',
@@ -789,9 +889,49 @@ export default function CompareTab({
             </div>
           </div>
 
+          {/* From Benchmark dropdown (shown in From Benchmark mode) */}
+          {molBInputMode === 'From Benchmark' && (
+            <div style={{ marginBottom: '10px' }}>
+              <select
+                value={benchmarksList.find(b => b.canonical_smiles === molBSmiles)?.id || ''}
+                onChange={(e) => {
+                  const found = benchmarksList.find(b => b.id === e.target.value)
+                  if (found) {
+                    setMolBSmiles(found.canonical_smiles)
+                    setMolBSmilesInput(found.canonical_smiles)
+                    logActivity?.(`Compare: Selected benchmark ${found.name} for Molecule B`)
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  background: '#081214',
+                  border: '1px solid rgba(45,212,212,0.25)',
+                  color: '#e2e8f0',
+                  borderRadius: '6px',
+                  padding: '9px 34px 9px 12px',
+                  fontSize: '15px',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                <option value="" disabled>Select a benchmark drug for Molecule B...</option>
+                {benchmarksList.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} — {b.historical_status_badge} ({b.formula}, {b.molecular_weight} g/mol)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* SMILES input bar (shown in SMILES mode) */}
           {molBInputMode === 'SMILES' && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
               <input
                 type="text"
                 value={molBSmilesInput}
@@ -800,14 +940,14 @@ export default function CompareTab({
                 placeholder="Enter SMILES (e.g. CC(C)Cc1ccc(cc1)C(C)C(=O)O)"
                 style={{
                   flex: 1, background: '#081214', border: '1px solid rgba(45,212,212,0.15)',
-                  color: '#e2e8f0', fontSize: '13px', borderRadius: '6px', padding: '8px 12px',
+                  color: '#e2e8f0', fontSize: '15px', borderRadius: '6px', padding: '9px 12px',
                   outline: 'none', fontFamily: 'monospace',
                 }}
               />
               <button
                 onClick={handleLoadBSmiles}
                 style={{
-                  padding: '8px 16px', fontWeight: 600, fontSize: '13px', borderRadius: '6px',
+                  padding: '9px 18px', fontWeight: 600, fontSize: '14.5px', borderRadius: '6px',
                   border: 'none', cursor: 'pointer', background: accentColor, color: '#000',
                   fontFamily: 'Inter, system-ui, sans-serif',
                 }}
@@ -817,9 +957,9 @@ export default function CompareTab({
 
           {/* From History list */}
           {molBInputMode === 'From History' && (
-            <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {experimentHistory.length === 0 ? (
-                <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '8px' }}>No saved experiments found.</span>
+                <span style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', padding: '8px' }}>No saved experiments found.</span>
               ) : experimentHistory.map(exp => (
                 <div
                   key={exp.id}
@@ -840,16 +980,16 @@ export default function CompareTab({
                     }
                   }}
                   style={{
-                    padding: '8px 12px', background: 'rgba(45,212,212,0.05)', border: '1px solid rgba(45,212,212,0.12)',
+                    padding: '9px 14px', background: 'rgba(45,212,212,0.05)', border: '1px solid rgba(45,212,212,0.12)',
                     borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.1)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.05)'}
                 >
-                  <div style={{ fontSize: '13px', color: '#e2e8f0', fontWeight: 500 }}>
-                    {exp.name} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 400, marginLeft: '6px' }}>({exp.type})</span>
+                  <div style={{ fontSize: '14.5px', color: '#e2e8f0', fontWeight: 500 }}>
+                    {exp.name} <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: 400, marginLeft: '6px' }}>({exp.type})</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>Last modified: {new Date(exp.date).toLocaleString()}</div>
+                  <div style={{ fontSize: '12.5px', color: '#64748b' }}>Last modified: {new Date(exp.date).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -906,14 +1046,14 @@ export default function CompareTab({
                     }}
                   />
                 ) : (
-                  <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Processing...</span>
+                  <span style={{ color: '#475569', fontSize: '15px', fontStyle: 'italic' }}>Processing...</span>
                 )
               )
             ) : (
               /* Empty state */
               <div style={{ textAlign: 'center', color: '#475569' }}>
                 <div style={{ color: 'rgba(45,212,212,0.3)', marginBottom: '12px' }}>{Icons.plus}</div>
-                <p style={{ fontSize: '13px', margin: 0, lineHeight: 1.6, maxWidth: '280px' }}>
+                <p style={{ fontSize: '15px', margin: 0, lineHeight: 1.6, maxWidth: '300px' }}>
                   Draw, paste SMILES or select from experiment history to add your molecule.
                 </p>
               </div>
@@ -923,12 +1063,12 @@ export default function CompareTab({
             {hasMolB && molBInputMode !== 'Draw' && (
               <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(45,212,212,0.15)', background: '#050b0d' }}>
                 <button onClick={() => setMolBViewMode('2d')} style={{
-                  padding: '4px 10px', fontSize: '11px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
+                  padding: '5px 12px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px',
                   transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                   ...(molBViewMode === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
                 }}>2D</button>
                 <button onClick={handleB3D} disabled={molBSdfLoading} style={{
-                  padding: '4px 10px', fontSize: '11px', fontWeight: 600, border: 'none', cursor: molBSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
+                  padding: '5px 12px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: molBSdfLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
                   transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif', opacity: molBSdfLoading ? 0.5 : 1,
                   ...(molBViewMode === '3d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
                 }}>{molBSdfLoading ? '...' : '3D'}</button>
@@ -942,14 +1082,14 @@ export default function CompareTab({
       <div style={{ display: 'flex', gap: '16px' }}>
 
         {/* ── LEFT: Sub-nav ── */}
-        <div style={{ flex: '0 0 15%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ flex: '0 0 16%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {subNavItems.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveSubNav(item.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '12px 14px', fontSize: '13px', fontWeight: 500,
+                padding: '13px 16px', fontSize: '14.5px', fontWeight: 500,
                 border: activeSubNav === item.id ? '1px solid rgba(45,212,212,0.3)' : '1px solid rgba(45,212,212,0.08)',
                 borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s',
                 fontFamily: 'Inter, system-ui, sans-serif', textAlign: 'left',
@@ -968,7 +1108,7 @@ export default function CompareTab({
         {/* ── MIDDLE: Comparison Results ── */}
         <div style={{ flex: '6', ...cardStyle }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: accentColor }}>Comparison Results</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: accentColor }}>Comparison Results</h3>
             <Tooltip text="Side-by-side comparison of molecular properties">{Icons.info}</Tooltip>
           </div>
 
@@ -990,24 +1130,24 @@ export default function CompareTab({
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '10px' }}>
                       <span style={{ color: '#64748b', display: 'flex' }}>{stat.icon}</span>
-                      <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>{stat.label}</span>
+                      <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>{stat.label}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                       <div>
                         {stat.isFormula ? (
-                          <div dangerouslySetInnerHTML={{ __html: formulaToHtml(stat.valA) }} style={{ fontSize: '15px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }} />
+                          <div dangerouslySetInnerHTML={{ __html: formulaToHtml(stat.valA) }} style={{ fontSize: '17px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }} />
                         ) : (
-                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{stat.valA}</div>
+                          <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{stat.valA}</div>
                         )}
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Molecule A</div>
+                        <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '4px' }}>Molecule A</div>
                       </div>
                       <div>
                         {stat.isFormula ? (
-                          <div dangerouslySetInnerHTML={{ __html: formulaToHtml(stat.valB) }} style={{ fontSize: '15px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }} />
+                          <div dangerouslySetInnerHTML={{ __html: formulaToHtml(stat.valB) }} style={{ fontSize: '17px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }} />
                         ) : (
-                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{stat.valB}</div>
+                          <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{stat.valB}</div>
                         )}
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Molecule B</div>
+                        <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '4px' }}>Molecule B</div>
                       </div>
                     </div>
                   </div>
@@ -1016,29 +1156,29 @@ export default function CompareTab({
 
               {/* Structural Similarity section */}
               <div style={{ borderTop: '1px solid rgba(45,212,212,0.08)', paddingTop: '20px' }}>
-                <h4 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: accentColor }}>
+                <h4 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 600, color: accentColor }}>
                   Structural Similarity
                   <span style={{ marginLeft: '8px' }}><Tooltip text="Tanimoto coefficient computed from Morgan fingerprints (radius=2, 2048 bits)">{Icons.info}</Tooltip></span>
                 </h4>
                 <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
                   {/* Gauge */}
                   <div style={{ textAlign: 'center' }}>
-                    <SimilarityGauge score={tanimoto} size={80} />
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginTop: '8px' }}>Similarity Score</div>
+                    <SimilarityGauge score={tanimoto} size={84} />
+                    <div style={{ fontSize: '14.5px', fontWeight: 600, color: '#e2e8f0', marginTop: '8px' }}>Similarity Score</div>
                     {!hasMolB && (
-                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>(Requires second molecule)</div>
+                      <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '2px' }}>(Requires second molecule)</div>
                     )}
                   </div>
 
                   {/* Key Differences */}
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 10px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>Key Differences</h4>
+                    <h4 style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 600, color: '#fff' }}>Key Differences</h4>
                     {hasMolB && keyDifferences.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {keyDifferences.map((diff, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
-                            <span style={{ fontSize: '13px', color: '#e2e8f0' }}>{diff}</span>
+                            <span style={{ fontSize: '14.5px', color: '#e2e8f0' }}>{diff}</span>
                           </div>
                         ))}
                       </div>
@@ -1046,11 +1186,11 @@ export default function CompareTab({
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#475569', flexShrink: 0 }} />
-                          <span style={{ fontSize: '13px', color: '#94a3b8' }}>Molecular weight, formula and properties will be compared once the second molecule is added.</span>
+                          <span style={{ fontSize: '14.5px', color: '#94a3b8' }}>Molecular weight, formula and properties will be compared once the second molecule is added.</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#475569', flexShrink: 0 }} />
-                          <span style={{ fontSize: '13px', color: '#94a3b8' }}>Structural similarity will be calculated based on the two molecules provided.</span>
+                          <span style={{ fontSize: '14.5px', color: '#94a3b8' }}>Structural similarity will be calculated based on the two molecules provided.</span>
                         </div>
                       </div>
                     )}
@@ -1064,11 +1204,11 @@ export default function CompareTab({
           {activeSubNav === 'structural' && (
             <div style={{ minHeight: '150px' }}>
               {!hasMolB ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   Add Molecule B to see structural comparison.
                 </div>
               ) : structuralChanges.length === 0 ? (
-                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '20px 0' }}>
+                <div style={{ color: '#64748b', fontSize: '15px', fontStyle: 'italic', padding: '20px 0' }}>
                   No structural differences detected.
                 </div>
               ) : (
@@ -1082,7 +1222,7 @@ export default function CompareTab({
                       }} />
                       <span style={{
                         color: change.type === 'added' ? '#4ade80' : change.type === 'removed' ? '#f87171' : '#94a3b8',
-                        fontSize: '14px', fontWeight: 500,
+                        fontSize: '15px', fontWeight: 500,
                       }}>{change.text}</span>
                     </div>
                   ))}
@@ -1095,20 +1235,20 @@ export default function CompareTab({
           {activeSubNav === 'similarity' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 0' }}>
               <SimilarityGauge score={tanimoto} size={140} />
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginTop: '16px' }}>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: '#e2e8f0', marginTop: '16px' }}>
                 Tanimoto Similarity
               </div>
-              <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>
+              <div style={{ fontSize: '14.5px', color: '#94a3b8', marginTop: '6px' }}>
                 {hasMolB
                   ? `Morgan fingerprints (radius=2, 2048 bits) — Score: ${tanimoto !== null ? (tanimoto * 100).toFixed(1) + '%' : 'N/A'}`
                   : 'Add Molecule B to calculate similarity score'}
               </div>
               {hasMolB && tanimoto !== null && (
                 <div style={{
-                  marginTop: '16px', padding: '10px 20px', borderRadius: '8px',
+                  marginTop: '16px', padding: '12px 24px', borderRadius: '8px',
                   background: tanimoto >= 0.7 ? 'rgba(74,222,128,0.1)' : tanimoto >= 0.4 ? 'rgba(245,158,11,0.1)' : 'rgba(248,113,113,0.1)',
                   border: `1px solid ${tanimoto >= 0.7 ? 'rgba(74,222,128,0.2)' : tanimoto >= 0.4 ? 'rgba(245,158,11,0.2)' : 'rgba(248,113,113,0.2)'}`,
-                  fontSize: '13px', fontWeight: 500,
+                  fontSize: '14.5px', fontWeight: 500,
                   color: tanimoto >= 0.7 ? '#4ade80' : tanimoto >= 0.4 ? '#f59e0b' : '#f87171',
                 }}>
                   {tanimoto >= 0.7 ? 'High similarity — molecules are structurally related'
@@ -1125,59 +1265,59 @@ export default function CompareTab({
               <div style={{ display: 'flex', gap: '16px' }}>
                 {/* Molecule A prediction */}
                 <div style={{ flex: 1, background: '#081214', border: '1px solid rgba(45,212,212,0.08)', borderRadius: '8px', padding: '16px' }}>
-                  <h4 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: accentColor }}>Molecule A — hERG Prediction</h4>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: accentColor }}>Molecule A — hERG Prediction</h4>
                   {predALoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '14px' }}>
                       <div style={{ width: '14px', height: '14px', border: '2px solid rgba(45,212,212,0.3)', borderTop: `2px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                       Loading prediction...
                     </div>
                   ) : predA ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Label:</span>
-                        <span style={{ color: predA.label?.includes('active') && !predA.label?.includes('inactive') ? '#f87171' : '#4ade80', fontSize: '13px', fontWeight: 600 }}>{predA.label || '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Label:</span>
+                        <span style={{ color: predA.label?.includes('active') && !predA.label?.includes('inactive') ? '#f87171' : '#4ade80', fontSize: '14.5px', fontWeight: 600 }}>{predA.label || '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Probability:</span>
-                        <span style={{ color: '#e2e8f0', fontSize: '13px', fontFamily: 'monospace' }}>{predA.probability_active !== undefined ? (predA.probability_active * 100).toFixed(1) + '%' : '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Probability:</span>
+                        <span style={{ color: '#e2e8f0', fontSize: '14.5px', fontFamily: 'monospace' }}>{predA.probability_active !== undefined ? (predA.probability_active * 100).toFixed(1) + '%' : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Confidence:</span>
-                        <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500, textTransform: 'capitalize' }}>{predA.confidence || '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Confidence:</span>
+                        <span style={{ color: '#e2e8f0', fontSize: '14.5px', fontWeight: 500, textTransform: 'capitalize' }}>{predA.confidence || '-'}</span>
                       </div>
                     </div>
                   ) : (
-                    <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>-</span>
+                    <span style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>-</span>
                   )}
                 </div>
 
                 {/* Molecule B prediction */}
                 <div style={{ flex: 1, background: '#081214', border: '1px solid rgba(45,212,212,0.08)', borderRadius: '8px', padding: '16px' }}>
-                  <h4 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: accentColor }}>Molecule B — hERG Prediction</h4>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: accentColor }}>Molecule B — hERG Prediction</h4>
                   {!hasMolB ? (
-                    <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Add Molecule B to see prediction</span>
+                    <span style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>Add Molecule B to see prediction</span>
                   ) : predBLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '14px' }}>
                       <div style={{ width: '14px', height: '14px', border: '2px solid rgba(45,212,212,0.3)', borderTop: `2px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                       Loading prediction...
                     </div>
                   ) : predB ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Label:</span>
-                        <span style={{ color: predB.label?.includes('active') && !predB.label?.includes('inactive') ? '#f87171' : '#4ade80', fontSize: '13px', fontWeight: 600 }}>{predB.label || '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Label:</span>
+                        <span style={{ color: predB.label?.includes('active') && !predB.label?.includes('inactive') ? '#f87171' : '#4ade80', fontSize: '14.5px', fontWeight: 600 }}>{predB.label || '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Probability:</span>
-                        <span style={{ color: '#e2e8f0', fontSize: '13px', fontFamily: 'monospace' }}>{predB.probability_active !== undefined ? (predB.probability_active * 100).toFixed(1) + '%' : '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Probability:</span>
+                        <span style={{ color: '#e2e8f0', fontSize: '14.5px', fontFamily: 'monospace' }}>{predB.probability_active !== undefined ? (predB.probability_active * 100).toFixed(1) + '%' : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Confidence:</span>
-                        <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500, textTransform: 'capitalize' }}>{predB.confidence || '-'}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '14.5px' }}>Confidence:</span>
+                        <span style={{ color: '#e2e8f0', fontSize: '14.5px', fontWeight: 500, textTransform: 'capitalize' }}>{predB.confidence || '-'}</span>
                       </div>
                     </div>
                   ) : (
-                    <span style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Prediction unavailable</span>
+                    <span style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>Prediction unavailable</span>
                   )}
                 </div>
               </div>
@@ -1196,10 +1336,10 @@ export default function CompareTab({
           }}>
             <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 4px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               Report Generation
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '12px', margin: '0 0 14px' }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 14px' }}>
               Generate a detailed report of your results.
             </p>
 
@@ -1209,7 +1349,7 @@ export default function CompareTab({
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '8px', padding: '10px 12px',
                 marginBottom: '14px', outline: 'none', appearance: 'none', cursor: 'pointer',
                 fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -1224,7 +1364,7 @@ export default function CompareTab({
             <button
               onClick={() => onGenerateReport?.(reportFormat)}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
+                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '15px',
                 borderRadius: '8px', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
@@ -1246,7 +1386,7 @@ export default function CompareTab({
             style={{
               width: '100%', padding: '16px 0', borderRadius: '8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
-              fontSize: '15px', fontWeight: 600,
+              fontSize: '16px', fontWeight: 600,
               background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.12)',
               color: accentColor, cursor: 'pointer',
               fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',
@@ -1257,7 +1397,7 @@ export default function CompareTab({
             {Icons.save}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <span>Save & Exit</span>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400, marginTop: '2px' }}>Save current comparison</span>
+              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 400, marginTop: '2px' }}>Save current comparison</span>
             </div>
             {Icons.arrow}
           </button>

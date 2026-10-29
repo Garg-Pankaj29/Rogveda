@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import Viewer3D from './Viewer3D'
 import AttributionViewer from './AttributionViewer'
+import BenchmarkContextCard from './BenchmarkContextCard'
+import BenchmarkSelectorModal from './BenchmarkSelectorModal'
 import api from '../lib/apiClient'
 
 /* ═══════════════════════════════════════════
    SVG ICON HELPERS
    ═══════════════════════════════════════════ */
 const Icons = {
-  info:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
-  fit:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>,
-  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
-  brain:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/></svg>,
-  code:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+  info:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+  fit:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>,
+  download:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  brain:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/></svg>,
+  code:      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+  benchmark: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
 }
 
 /* ═══════════════════════════════════════════
@@ -66,12 +69,17 @@ export default function AnalysisTab({
   handleLoadSmiles,
   handleClearSmiles,
   last3dSmiles,
+  onOpenBenchmarkModal,
+  onSendToCompare,
+  onSendToWarRoom,
 }) {
   const [analysisView, setAnalysisView] = useState('2d') // '2d' or '3d'
   const [predictions, setPredictions] = useState([])
   const [predLoading, setPredLoading] = useState(false)
   const [reportFormat, setReportFormat] = useState('Research Dossier (PDF)')
   const [isReportGenerating, setIsReportGenerating] = useState(false)
+  const [activeBenchmark, setActiveBenchmark] = useState(null)
+  const [showInternalBenchmarkModal, setShowInternalBenchmarkModal] = useState(false)
 
   const handleTriggerReport = async (fmt) => {
     if (isReportGenerating) return
@@ -127,6 +135,23 @@ export default function AnalysisTab({
         .finally(() => setSynthLoading(false))
     }
   }, [canonicalSmiles, fetchPredictions])
+
+  // Identify whether the current active molecule is a curated benchmark drug
+  useEffect(() => {
+    if (!canonicalSmiles) {
+      setActiveBenchmark(null)
+      return
+    }
+    api.post('/api/benchmarks/identify', { smiles: canonicalSmiles })
+      .then(res => {
+        if (res.is_benchmark && res.benchmark) {
+          setActiveBenchmark(res.benchmark)
+        } else {
+          setActiveBenchmark(null)
+        }
+      })
+      .catch(() => setActiveBenchmark(null))
+  }, [canonicalSmiles])
 
   /* ─── Phase 13: Handle Remediation Suggestion ─── */
   const handleRemediate = async (flaggedPred) => {
@@ -303,7 +328,7 @@ export default function AnalysisTab({
           <button
             onClick={() => setAnalysisView('2d')}
             style={{
-              padding: '6px 14px', fontSize: '13px', fontWeight: 600,
+              padding: '7px 16px', fontSize: '14.5px', fontWeight: 600,
               border: 'none', cursor: 'pointer', borderRadius: '6px',
               transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
               ...(analysisView === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
@@ -313,7 +338,7 @@ export default function AnalysisTab({
             onClick={handleAnalysis3D}
             disabled={is3dLoading}
             style={{
-              padding: '6px 14px', fontSize: '13px', fontWeight: 600,
+              padding: '7px 16px', fontSize: '14.5px', fontWeight: 600,
               border: 'none', cursor: is3dLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
               transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
               opacity: is3dLoading ? 0.3 : 1,
@@ -333,8 +358,8 @@ export default function AnalysisTab({
             }
           }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '6px 10px', fontSize: '13px',
+            display: 'flex', alignItems: 'center', gap: '7px',
+            padding: '7px 12px', fontSize: '14px', fontWeight: 500,
             borderRadius: '6px', border: '1px solid rgba(45,212,212,0.1)',
             background: 'rgba(255,255,255,0.02)', color: '#94a3b8',
             cursor: 'pointer', transition: 'all 0.2s',
@@ -348,8 +373,8 @@ export default function AnalysisTab({
         <button
           onClick={handleExportImage}
           style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '6px 10px', fontSize: '13px',
+            display: 'flex', alignItems: 'center', gap: '7px',
+            padding: '7px 12px', fontSize: '14px', fontWeight: 500,
             borderRadius: '6px', border: '1px solid rgba(45,212,212,0.1)',
             background: 'rgba(255,255,255,0.02)', color: '#94a3b8',
             cursor: 'pointer', transition: 'all 0.2s',
@@ -358,12 +383,43 @@ export default function AnalysisTab({
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)'; e.currentTarget.style.color = accentColor }}
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.color = '#94a3b8' }}
         >{Icons.download} Export Image</button>
+
+        {/* Benchmark Drugs Selector */}
+        <button
+          onClick={() => {
+            if (onOpenBenchmarkModal) onOpenBenchmarkModal()
+            else setShowInternalBenchmarkModal(true)
+          }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '7px 14px', fontSize: '14.5px', fontWeight: 600,
+            borderRadius: '6px', border: '1px solid rgba(45,212,212,0.3)',
+            background: 'rgba(45,212,212,0.08)', color: accentColor,
+            cursor: 'pointer', transition: 'all 0.2s',
+            fontFamily: 'Inter, system-ui, sans-serif',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.18)'; e.currentTarget.style.borderColor = accentColor }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)'; e.currentTarget.style.borderColor = 'rgba(45,212,212,0.3)' }}
+          title="Select and evaluate documented benchmark compounds"
+        >
+          {Icons.benchmark} Benchmark Drugs
+        </button>
       </div>
 
       {error && (
-        <div style={{ marginBottom: '16px', padding: '12px', fontSize: '13px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
+        <div style={{ marginBottom: '16px', padding: '12px 16px', fontSize: '14px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
           {error}
         </div>
+      )}
+
+      {/* ── BENCHMARK HISTORICAL EVIDENCE & MODEL ALIGNMENT CARD ── */}
+      {activeBenchmark && (
+        <BenchmarkContextCard
+          benchmark={activeBenchmark}
+          predictions={predictions}
+          onSendToCompare={onSendToCompare}
+          onSendToWarRoom={onSendToWarRoom}
+        />
       )}
 
       {/* ── MAIN THREE-COLUMN LAYOUT ── */}
@@ -441,7 +497,7 @@ export default function AnalysisTab({
         {/* ──── COLUMN 2: Molecular Properties (~28%) ──── */}
         <div style={{ gridColumn: '2 / 3', ...cardStyle, padding: '20px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Molecular Properties
             </h3>
             <div 
@@ -452,7 +508,7 @@ export default function AnalysisTab({
               {Icons.info}
               <div style={{
                 position: 'absolute', top: '100%', left: '0', marginTop: '8px',
-                background: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', fontSize: '12px',
+                background: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', fontSize: '13px',
                 whiteSpace: 'nowrap', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
                 boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400
               }}>
@@ -468,16 +524,16 @@ export default function AnalysisTab({
                 padding: '10px 0',
                 borderBottom: i < propRows.length - 1 ? '1px solid rgba(45,212,212,0.06)' : 'none',
               }}>
-                <span style={{ color: labelColor, fontSize: '13px', lineHeight: 1.3, whiteSpace: 'pre-line', maxWidth: '55%' }}>
+                <span style={{ color: labelColor, fontSize: '15px', lineHeight: 1.35, whiteSpace: 'pre-line', maxWidth: '55%' }}>
                   {row.label}
                 </span>
                 {row.html ? (
                   <span
                     dangerouslySetInnerHTML={{ __html: row.value || '—' }}
-                    style={{ color: '#fff', fontSize: '14px', fontWeight: 500, fontFamily: 'monospace', textAlign: 'right' }}
+                    style={{ color: '#fff', fontSize: '16px', fontWeight: 500, fontFamily: 'monospace', textAlign: 'right' }}
                   />
                 ) : (
-                  <span style={{ color: '#fff', fontSize: '14px', fontWeight: 500, fontFamily: 'monospace', textAlign: 'right' }}>
+                  <span style={{ color: '#fff', fontSize: '16px', fontWeight: 500, fontFamily: 'monospace', textAlign: 'right' }}>
                     {row.value}
                   </span>
                 )}
@@ -491,7 +547,7 @@ export default function AnalysisTab({
 
           {/* ─ Current Molecule Card ─ */}
           <div style={cardStyle}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: '0 0 12px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: '0 0 12px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               Current Molecule
             </h3>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -512,24 +568,24 @@ export default function AnalysisTab({
                     }}
                   />
                 ) : (
-                  <span style={{ color: '#475569', fontSize: '10px', fontStyle: 'italic' }}>No molecule</span>
+                  <span style={{ color: '#475569', fontSize: '12.5px', fontStyle: 'italic' }}>No molecule</span>
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px', minWidth: 0 }}>
                 <div
                   dangerouslySetInnerHTML={{ __html: currentMolecule?.formulaHtml || '-' }}
-                  style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, fontSize: '15px' }}
+                  style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, fontSize: '17px' }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', marginTop: '2px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.3 }}>Molecular Weight</span>
-                  <span style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, fontSize: '14px', lineHeight: 1.3 }}>
+                  <span style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.3 }}>Molecular Weight</span>
+                  <span style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, fontSize: '16px', lineHeight: 1.3 }}>
                     {currentMolecule?.mw && currentMolecule.mw !== '-' ? `${currentMolecule.mw} g/mol` : '-'}
                   </span>
                 </div>
                 {currentMolecule?.lastEdited && currentMolecule.lastEdited !== '-' && (
                   <div style={{ display: 'flex', flexDirection: 'column', marginTop: '2px' }}>
-                    <span style={{ color: '#64748b', fontSize: '11px', lineHeight: 1.3 }}>Last Edited</span>
-                    <span style={{ color: '#94a3b8', fontSize: '11px', lineHeight: 1.3 }}>{currentMolecule.lastEdited}</span>
+                    <span style={{ color: '#64748b', fontSize: '13px', lineHeight: 1.3 }}>Last Edited</span>
+                    <span style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.3 }}>{currentMolecule.lastEdited}</span>
                   </div>
                 )}
               </div>
@@ -540,7 +596,7 @@ export default function AnalysisTab({
           <div style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
               <span style={{ color: accentColor, display: 'flex' }}>{Icons.brain}</span>
-              <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif', flex: 1 }}>
+              <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif', flex: 1 }}>
                 ML Predictions
               </h3>
               <div 
@@ -551,8 +607,8 @@ export default function AnalysisTab({
                 {Icons.info}
                 <div style={{
                   position: 'absolute', top: '100%', right: '0', marginTop: '8px',
-                  background: '#1e293b', color: '#e2e8f0', padding: '8px 12px', borderRadius: '6px', fontSize: '12px',
-                  width: '220px', lineHeight: 1.4, opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
+                  background: '#1e293b', color: '#e2e8f0', padding: '8px 12px', borderRadius: '6px', fontSize: '13px',
+                  width: '240px', lineHeight: 1.4, opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
                   boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400
                 }}>
                   Predictions from trained ML models. Only models with available weights show real confidence scores.
@@ -561,30 +617,30 @@ export default function AnalysisTab({
             </div>
 
             {predLoading ? (
-              <div style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>Loading predictions...</div>
+              <div style={{ color: '#64748b', fontSize: '14.5px', fontStyle: 'italic', padding: '8px 0' }}>Loading predictions...</div>
             ) : predictions.length === 0 && !canonicalSmiles ? (
-              <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>Load a molecule to see predictions.</div>
+              <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', padding: '8px 0' }}>Load a molecule to see predictions.</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {predictions.map((pred, i) => {
                   const colors = getBadgeColors(pred.status_label)
                   return (
                     <div key={i}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <span style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 500 }}>
                           {pred.endpoint_name}
                         </span>
                         {pred.available ? (
                           <span style={{
-                            fontSize: '11px', fontWeight: 600,
-                            padding: '2px 8px', borderRadius: '4px',
+                            fontSize: '13px', fontWeight: 600,
+                            padding: '3px 9px', borderRadius: '4px',
                             background: colors.bg, color: colors.color,
                           }}>
                             {pred.status_label}
                           </span>
                         ) : (
                           <span style={{
-                            fontSize: '11px', fontWeight: 500, fontStyle: 'italic',
+                            fontSize: '13px', fontWeight: 500, fontStyle: 'italic',
                             color: '#64748b',
                           }}>
                             {pred.status_label}
@@ -594,18 +650,18 @@ export default function AnalysisTab({
                       {pred.available && pred.confidence !== null ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{
-                            flex: 1, height: '6px', borderRadius: '3px',
+                            flex: 1, height: '7px', borderRadius: '3.5px',
                             background: 'rgba(255,255,255,0.06)',
                             overflow: 'hidden',
                           }}>
                             <div style={{
                               width: `${Math.round(pred.confidence * 100)}%`,
-                              height: '100%', borderRadius: '3px',
+                              height: '100%', borderRadius: '3.5px',
                               background: colors.barColor,
                               transition: 'width 0.5s ease',
                             }} />
                           </div>
-                          <span style={{ color: colors.color, fontSize: '12px', fontWeight: 600, minWidth: '40px', textAlign: 'right' }}>
+                          <span style={{ color: colors.color, fontSize: '14px', fontWeight: 600, minWidth: '42px', textAlign: 'right' }}>
                             {Math.round(pred.confidence * 100)}%
                           </span>
                         </div>
@@ -632,14 +688,14 @@ export default function AnalysisTab({
                               display: 'inline-flex', alignItems: 'center', gap: '5px',
                               background: 'rgba(45,212,212,0.08)', color: accentColor,
                               border: '1px solid rgba(45,212,212,0.22)',
-                              borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 600,
+                              borderRadius: '4px', padding: '4px 10px', fontSize: '13px', fontWeight: 600,
                               cursor: 'pointer', transition: 'all 0.15s',
                             }}
                             onMouseOver={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.18)' }}
                             onMouseOut={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)' }}
                             title="Inspect atom and bond model attribution"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                             Explain Prediction
                           </button>
                         </div>
@@ -655,7 +711,7 @@ export default function AnalysisTab({
                                 display: 'flex', alignItems: 'center', gap: '6px',
                                 background: 'rgba(45,212,212,0.1)', color: accentColor,
                                 border: `1px solid rgba(45,212,212,0.3)`,
-                                borderRadius: '4px', padding: '4px 10px', fontSize: '11px', fontWeight: 600,
+                                borderRadius: '4px', padding: '5px 12px', fontSize: '13px', fontWeight: 600,
                                 cursor: 'pointer', transition: 'all 0.2s'
                               }}
                               onMouseOver={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.2)' }}
@@ -666,7 +722,7 @@ export default function AnalysisTab({
                           )}
                           
                           {remediationLoading[pred.endpoint_name] && (
-                            <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid rgba(45,212,212,0.3)', borderTopColor: accentColor, animation: 'spin 1s linear infinite' }} />
                               Searching for structural fixes...
                             </div>
@@ -675,16 +731,16 @@ export default function AnalysisTab({
                           {remediationResults[pred.endpoint_name] && (
                             <div style={{
                               marginTop: '6px', background: 'rgba(0,0,0,0.2)', 
-                              border: '1px solid rgba(45,212,212,0.2)', borderRadius: '6px', padding: '10px'
+                              border: '1px solid rgba(45,212,212,0.2)', borderRadius: '6px', padding: '12px'
                             }}>
                               {remediationResults[pred.endpoint_name].error ? (
-                                <div style={{ color: '#f87171', fontSize: '12px' }}>{remediationResults[pred.endpoint_name].error}</div>
+                                <div style={{ color: '#f87171', fontSize: '13px' }}>{remediationResults[pred.endpoint_name].error}</div>
                               ) : remediationResults[pred.endpoint_name].found ? (
                                 <div>
-                                  <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '6px', lineHeight: 1.4 }}>
+                                  <div style={{ fontSize: '13.5px', color: '#e2e8f0', marginBottom: '6px', lineHeight: 1.4 }}>
                                     <strong>Suggested Fix:</strong> {remediationResults[pred.endpoint_name].transforms_applied.join(' + ')}
                                   </div>
-                                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px', lineHeight: 1.4 }}>
+                                  <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '8px', lineHeight: 1.45 }}>
                                     {remediationResults[pred.endpoint_name].explanation}
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -692,19 +748,19 @@ export default function AnalysisTab({
                                       onClick={() => handleLoadSmiles(remediationResults[pred.endpoint_name].remediated_smiles)}
                                       style={{
                                         background: accentColor, color: '#000', border: 'none',
-                                        borderRadius: '4px', padding: '4px 10px', fontSize: '11px', fontWeight: 600,
+                                        borderRadius: '4px', padding: '5px 12px', fontSize: '13px', fontWeight: 600,
                                         cursor: 'pointer'
                                       }}
                                     >
                                       Apply to Editor
                                     </button>
-                                    <span style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic', maxWidth: '120px', textAlign: 'right' }}>
+                                    <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', maxWidth: '140px', textAlign: 'right' }}>
                                       Computational suggestion for further validation
                                     </span>
                                   </div>
                                 </div>
                               ) : (
-                                <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                                <div style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
                                   No structural fix found within search limits.
                                 </div>
                               )}
@@ -725,7 +781,7 @@ export default function AnalysisTab({
               <span style={{ color: accentColor, display: 'flex' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               </span>
-              <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif', flex: 1 }}>
+              <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif', flex: 1 }}>
                 Synthesizability
               </h3>
               <div 
@@ -736,7 +792,7 @@ export default function AnalysisTab({
                 {Icons.info}
                 <div style={{
                   position: 'absolute', top: '100%', right: '0', marginTop: '8px',
-                  background: '#1e293b', color: '#e2e8f0', padding: '8px 12px', borderRadius: '6px', fontSize: '12px',
+                  background: '#1e293b', color: '#e2e8f0', padding: '8px 12px', borderRadius: '6px', fontSize: '13px',
                   width: '240px', lineHeight: 1.4, opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
                   boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400
                 }}>
@@ -746,21 +802,21 @@ export default function AnalysisTab({
             </div>
 
             {synthLoading ? (
-              <div style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>Assessing synthesis feasibility...</div>
+              <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '8px 0' }}>Assessing synthesis feasibility...</div>
             ) : !synthData && !canonicalSmiles ? (
-              <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>Load a molecule to assess.</div>
+              <div style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', padding: '8px 0' }}>Load a molecule to assess.</div>
             ) : synthData ? (
               <div>
                 {/* SA_Score display */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <div>
-                    <span style={{ color: labelColor, fontSize: '13px' }}>SA_Score</span>
-                    <div style={{ color: '#fff', fontSize: '22px', fontWeight: 700, fontFamily: 'monospace', marginTop: '2px' }}>
+                    <span style={{ color: labelColor, fontSize: '14px' }}>SA_Score</span>
+                    <div style={{ color: '#fff', fontSize: '26px', fontWeight: 700, fontFamily: 'monospace', marginTop: '2px' }}>
                       {synthData.sa_score}
                     </div>
                   </div>
                   <span style={{
-                    fontSize: '12px', fontWeight: 600,
+                    fontSize: '13.5px', fontWeight: 600,
                     padding: '4px 12px', borderRadius: '6px',
                     background: synthData.difficulty_label === 'easy'
                       ? 'rgba(34,197,94,0.15)'
@@ -794,7 +850,7 @@ export default function AnalysisTab({
                 {/* Reactive group flags */}
                 {synthData.reactive_group_flags && synthData.reactive_group_flags.length > 0 && (
                   <div style={{ marginTop: '8px' }}>
-                    <span style={{ color: labelColor, fontSize: '12px', display: 'block', marginBottom: '6px' }}>Reactive Groups Detected</span>
+                    <span style={{ color: labelColor, fontSize: '13.5px', display: 'block', marginBottom: '6px' }}>Reactive Groups Detected</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {synthData.reactive_group_flags.map((flag, i) => (
                         <div
@@ -804,8 +860,8 @@ export default function AnalysisTab({
                           onMouseLeave={e => { const tip = e.currentTarget.querySelector('.synth-tip'); if (tip) tip.style.opacity = '0' }}
                         >
                           <span style={{
-                            fontSize: '11px', fontWeight: 600,
-                            padding: '3px 8px', borderRadius: '4px',
+                            fontSize: '13px', fontWeight: 600,
+                            padding: '3px 9px', borderRadius: '4px',
                             background: 'rgba(239,68,68,0.12)',
                             color: '#f87171',
                             cursor: 'help',
@@ -815,7 +871,7 @@ export default function AnalysisTab({
                           <div className="synth-tip" style={{
                             position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
                             marginBottom: '6px', background: '#1e293b', color: '#e2e8f0',
-                            padding: '6px 10px', borderRadius: '4px', fontSize: '11px',
+                            padding: '6px 10px', borderRadius: '4px', fontSize: '12.5px',
                             whiteSpace: 'nowrap', opacity: 0, transition: 'opacity 0.2s',
                             pointerEvents: 'none', zIndex: 100, boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
                           }}>
@@ -828,12 +884,12 @@ export default function AnalysisTab({
                 )}
 
                 {/* Caveat */}
-                <div style={{ marginTop: '10px', fontSize: '10px', color: '#64748b', fontStyle: 'italic', lineHeight: 1.4 }}>
+                <div style={{ marginTop: '10px', fontSize: '12px', color: '#64748b', fontStyle: 'italic', lineHeight: 1.4 }}>
                   Computational estimate for planning purposes
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>Could not assess synthesizability.</div>
+              <div style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', padding: '8px 0' }}>Could not assess synthesizability.</div>
             )}
           </div>
 
@@ -847,11 +903,11 @@ export default function AnalysisTab({
             overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               Report Generation
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px', lineHeight: 1.5 }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 16px', lineHeight: 1.5 }}>
               Generate a detailed report of your results.
             </p>
             <select 
@@ -860,7 +916,7 @@ export default function AnalysisTab({
               style={{
               width: '100%', background: '#081214',
               border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-              fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+              fontSize: '14.5px', borderRadius: '8px', padding: '10px 12px',
               marginBottom: '14px', outline: 'none', appearance: 'none',
               cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -876,7 +932,7 @@ export default function AnalysisTab({
               disabled={isReportGenerating}
               onClick={() => handleTriggerReport(reportFormat)}
               style={{
-                width: '100%', padding: '11px 0', fontWeight: 600, fontSize: '13px',
+                width: '100%', padding: '12px 0', fontWeight: 600, fontSize: '14.5px',
                 borderRadius: '8px', border: 'none',
                 cursor: isReportGenerating ? 'not-allowed' : 'pointer',
                 opacity: isReportGenerating ? 0.7 : 1,
@@ -909,7 +965,7 @@ export default function AnalysisTab({
             style={{
               width: '100%', padding: '14px 0', borderRadius: '8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              fontSize: '14px', fontWeight: 600,
+              fontSize: '15.5px', fontWeight: 600,
               background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.12)',
               color: accentColor, cursor: 'pointer',
               fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',
@@ -934,21 +990,81 @@ export default function AnalysisTab({
             onChange={(e) => setInputSmiles(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLoadSmiles()}
             placeholder="Enter SMILES (e.g. CC(=O)OC1=CC=CC=C1)"
-            style={{ flex: 1, background: 'transparent', fontSize: '14px', color: '#fff', border: 'none', outline: 'none', fontFamily: 'monospace', height: '100%' }}
+            style={{ flex: 1, background: 'transparent', fontSize: '15.5px', color: '#fff', border: 'none', outline: 'none', fontFamily: 'monospace', height: '100%' }}
           />
           {inputSmiles && (
             <button onClick={handleClearSmiles} style={{ padding: '0 8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', height: '100%', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#64748b'}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           )}
         </div>
         <button
           onClick={handleLoadSmiles}
-          style={{ padding: '0 32px', height: '100%', fontWeight: 700, fontSize: '14px', borderRadius: '0 8px 8px 0', border: 'none', cursor: 'pointer', background: accentColor, color: '#000', fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.2s', minWidth: '90px' }}
+          style={{ padding: '0 32px', height: '100%', fontWeight: 700, fontSize: '15.5px', borderRadius: '0 8px 8px 0', border: 'none', cursor: 'pointer', background: accentColor, color: '#000', fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.2s', minWidth: '90px' }}
           onMouseEnter={e => e.target.style.opacity = '0.85'}
           onMouseLeave={e => e.target.style.opacity = '1'}
         >Load</button>
+        <button
+          onClick={() => {
+            if (onOpenBenchmarkModal) onOpenBenchmarkModal()
+            else setShowInternalBenchmarkModal(true)
+          }}
+          style={{
+            marginLeft: '12px',
+            height: '100%',
+            padding: '0 20px',
+            borderRadius: '8px',
+            border: '1px solid rgba(45,212,212,0.3)',
+            background: 'rgba(45,212,212,0.08)',
+            color: accentColor,
+            fontSize: '14.5px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(45,212,212,0.18)'
+            e.currentTarget.style.borderColor = accentColor
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(45,212,212,0.08)'
+            e.currentTarget.style.borderColor = 'rgba(45,212,212,0.3)'
+          }}
+          title="Browse and load curated benchmark compounds into workspace"
+        >
+          {Icons.benchmark}
+          <span>Benchmark Drugs</span>
+        </button>
       </div>
+
+      {/* Internal Benchmark Selector Modal fallback */}
+      <BenchmarkSelectorModal
+        isOpen={showInternalBenchmarkModal}
+        onClose={() => setShowInternalBenchmarkModal(false)}
+        onSelectBenchmark={(smiles, benchmarkDetail) => {
+          handleLoadSmiles(smiles)
+        }}
+        onSelectCaseStudy={(caseStudy) => {
+          if (caseStudy?.compound_a?.canonical_smiles && caseStudy?.compound_b?.canonical_smiles) {
+            localStorage.setItem('rogveda_compare_mola_source', caseStudy.compound_a.canonical_smiles)
+            localStorage.setItem('rogveda_compare_target_molb', caseStudy.compound_b.canonical_smiles)
+            window.location.search = '?tab=compare'
+          }
+        }}
+        onSendToWarRoom={(smiles) => {
+          if (onSendToWarRoom) onSendToWarRoom(smiles)
+          else {
+            handleLoadSmiles(smiles)
+            window.location.search = '?tab=warroom'
+          }
+        }}
+        rdkit={rdkit}
+      />
 
       {/* Phase 2: Explainable Molecular Attribution Modal */}
       <AttributionViewer

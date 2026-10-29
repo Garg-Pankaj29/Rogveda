@@ -163,10 +163,10 @@ export default function AttributionViewer({
               </svg>
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
                 {title}
               </h2>
-              <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', marginTop: 2 }}>
+              <div style={{ fontSize: '13px', color: '#94a3b8', fontFamily: 'monospace', marginTop: 2 }}>
                 Target Molecule: <span style={{ color: '#cbd5e1' }}>{smiles?.length > 60 ? smiles.slice(0, 58) + '...' : smiles}</span>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function AttributionViewer({
                   color: isActive ? accentColor : '#94a3b8',
                   border: isActive ? '1px solid rgba(45,212,212,0.3)' : '1px solid transparent',
                   borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
+                  padding: '7px 14px',
+                  fontSize: '13.5px',
                   fontWeight: isActive ? 600 : 400,
                   cursor: 'pointer',
                   display: 'flex',
@@ -267,7 +267,7 @@ export default function AttributionViewer({
                   animation: 'spin 0.8s linear infinite',
                 }}
               />
-              <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+              <div style={{ fontSize: '14.5px', color: '#94a3b8' }}>
                 Computing atomic Morgan environment perturbations for <strong style={{ color: '#fff' }}>{currentEndpointDef.name}</strong>...
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function AttributionViewer({
                 color: '#f87171',
                 borderRadius: '8px',
                 padding: '16px',
-                fontSize: '13px',
+                fontSize: '14.5px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
@@ -294,9 +294,9 @@ export default function AttributionViewer({
                   color: '#fff',
                   border: 'none',
                   borderRadius: '4px',
-                  padding: '4px 8px',
+                  padding: '6px 12px',
                   cursor: 'pointer',
-                  fontSize: '11px',
+                  fontSize: '13px',
                 }}
               >
                 Retry
@@ -313,10 +313,10 @@ export default function AttributionViewer({
                 textAlign: 'center',
               }}
             >
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#fef08a' }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#fef08a' }}>
                 Attribution Method Unavailable
               </h3>
-              <p style={{ margin: 0, fontSize: '13px', color: '#e2e8f0', maxWidth: '500px', marginInline: 'auto' }}>
+              <p style={{ margin: 0, fontSize: '14.5px', color: '#e2e8f0', maxWidth: '500px', marginInline: 'auto' }}>
                 {attributionData?.unavailability_reason || 'No validated model estimator or attribution mapping is installed for this endpoint.'}
               </p>
             </div>
@@ -337,18 +337,18 @@ export default function AttributionViewer({
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <div style={{ fontSize: '12.5px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Model Prediction Context
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>
                       {attributionData.endpoint_name}
                     </span>
                     <span
                       style={{
-                        fontSize: '11px',
+                        fontSize: '13px',
                         fontWeight: 600,
-                        padding: '2px 8px',
+                        padding: '3px 9px',
                         borderRadius: 4,
                         background: currentEndpointDef.isLiability
                           ? (attributionData.probability >= attributionData.threshold ? 'rgba(244,63,94,0.18)' : 'rgba(16,185,129,0.15)')
@@ -363,10 +363,10 @@ export default function AttributionViewer({
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: '12px' }}>
+                <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: '13.5px' }}>
                   <div>
                     <span style={{ color: '#64748b' }}>Probability: </span>
-                    <strong style={{ color: accentColor, fontFamily: 'monospace', fontSize: '14px' }}>
+                    <strong style={{ color: accentColor, fontFamily: 'monospace', fontSize: '16px' }}>
                       {(attributionData.probability * 100).toFixed(1)}%
                     </strong>
                   </div>
@@ -406,10 +406,10 @@ export default function AttributionViewer({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff' }}>
                       Molecular Attribution Map
                     </div>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
                       Morgan Radius 2 (2048-bit)
                     </span>
                   </div>
@@ -440,7 +440,7 @@ export default function AttributionViewer({
                         dangerouslySetInnerHTML={{ __html: attributionData.highlighted_svg }}
                       />
                     ) : (
-                      <div style={{ color: '#64748b', fontSize: '12px' }}>Depiction unavailable</div>
+                      <div style={{ color: '#64748b', fontSize: '13.5px' }}>Depiction unavailable</div>
                     )}
                   </div>
 
@@ -452,10 +452,10 @@ export default function AttributionViewer({
                       background: 'rgba(7, 18, 20, 0.6)',
                       borderRadius: '6px',
                       border: '1px solid rgba(45,212,212,0.08)',
-                      fontSize: '11px',
+                      fontSize: '12.5px',
                     }}
                   >
-                    <div style={{ fontWeight: 600, color: '#cbd5e1', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 600, color: '#cbd5e1', marginBottom: 6, fontSize: '13px' }}>
                       Color Encoding Legend:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -518,9 +518,9 @@ export default function AttributionViewer({
                       background: 'rgba(15, 23, 42, 0.4)',
                       borderRadius: '6px',
                       border: '1px solid rgba(255,255,255,0.06)',
-                      fontSize: '10px',
+                      fontSize: '12px',
                       color: '#94a3b8',
-                      lineHeight: 1.4,
+                      lineHeight: 1.45,
                     }}
                   >
                     <strong style={{ color: '#cbd5e1' }}>Scientific Honesty Notice:</strong>{' '}
@@ -543,7 +543,7 @@ export default function AttributionViewer({
                   {/* Filter & Table Header */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff' }}>
                         Atom Contributions ({sortedAtoms.length})
                       </div>
 
@@ -558,8 +558,8 @@ export default function AttributionViewer({
                               color: filterDirection === dir ? accentColor : '#64748b',
                               border: 'none',
                               borderRadius: '4px',
-                              padding: '2px 8px',
-                              fontSize: '10px',
+                              padding: '3px 10px',
+                              fontSize: '12px',
                               fontWeight: 600,
                               cursor: 'pointer',
                               textTransform: 'capitalize',
@@ -581,14 +581,14 @@ export default function AttributionViewer({
                         background: '#071214',
                       }}
                     >
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
                         <thead>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#64748b', background: 'rgba(13,26,28,0.5)' }}>
-                            <th style={{ padding: '6px 8px' }}>Atom</th>
-                            <th style={{ padding: '6px 8px' }}>Delta (ΔP)</th>
-                            <th style={{ padding: '6px 8px' }}>Intensity</th>
-                            <th style={{ padding: '6px 8px' }}>Bits</th>
-                            <th style={{ padding: '6px 8px' }}>Collision</th>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8', background: 'rgba(13,26,28,0.5)' }}>
+                            <th style={{ padding: '8px 10px' }}>Atom</th>
+                            <th style={{ padding: '8px 10px' }}>Delta (ΔP)</th>
+                            <th style={{ padding: '8px 10px' }}>Intensity</th>
+                            <th style={{ padding: '8px 10px' }}>Bits</th>
+                            <th style={{ padding: '8px 10px' }}>Collision</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -609,13 +609,13 @@ export default function AttributionViewer({
                                   transition: 'background 0.1s',
                                 }}
                               >
-                                <td style={{ padding: '5px 8px', fontWeight: 600, color: '#e2e8f0' }}>
+                                <td style={{ padding: '7px 10px', fontWeight: 600, color: '#e2e8f0' }}>
                                   #{a.atom_index} {a.atom_symbol}
                                 </td>
-                                <td style={{ padding: '5px 8px', fontFamily: 'monospace', color, fontWeight: 600 }}>
+                                <td style={{ padding: '7px 10px', fontFamily: 'monospace', color, fontWeight: 600, fontSize: '13.5px' }}>
                                   {a.raw_contribution > 0 ? '+' : ''}{a.raw_contribution.toFixed(4)}
                                 </td>
-                                <td style={{ padding: '5px 8px', width: '70px' }}>
+                                <td style={{ padding: '7px 10px', width: '70px' }}>
                                   <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
                                     <div
                                       style={{
@@ -626,17 +626,17 @@ export default function AttributionViewer({
                                     />
                                   </div>
                                 </td>
-                                <td style={{ padding: '5px 8px', color: '#94a3b8', fontSize: '10px' }}>
+                                <td style={{ padding: '7px 10px', color: '#94a3b8', fontSize: '12px' }}>
                                   {a.bit_count}
                                 </td>
-                                <td style={{ padding: '5px 8px' }}>
+                                <td style={{ padding: '7px 10px' }}>
                                   {a.has_collision ? (
                                     <span
                                       style={{
-                                        fontSize: '9px',
+                                        fontSize: '12px',
                                         background: 'rgba(245,158,11,0.15)',
                                         color: '#f59e0b',
-                                        padding: '1px 4px',
+                                        padding: '2px 6px',
                                         borderRadius: 3,
                                       }}
                                       title="This atom overlaps a Morgan bit that maps to multiple disjoint atom environments (hash collision or symmetry)"
@@ -644,7 +644,7 @@ export default function AttributionViewer({
                                       Colliding
                                     </span>
                                   ) : (
-                                    <span style={{ fontSize: '9px', color: '#475569' }}>Unique</span>
+                                    <span style={{ fontSize: '12px', color: '#475569' }}>Unique</span>
                                   )}
                                 </td>
                               </tr>
@@ -665,7 +665,7 @@ export default function AttributionViewer({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#c084fc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#c084fc', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polygon points="12 2 2 22 22 22" />
                           <line x1="12" y1="9" x2="12" y2="13" />
@@ -673,11 +673,11 @@ export default function AttributionViewer({
                         </svg>
                         Independent Structural Alerts ({attributionData.structural_alerts?.length || 0})
                       </div>
-                      <span style={{ fontSize: '10px', color: '#64748b' }}>PAINS / BRENK / NIH</span>
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>PAINS / BRENK / NIH</span>
                     </div>
 
                     {!attributionData.structural_alerts?.length ? (
-                      <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '4px 0' }}>
+                      <div style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', padding: '6px 0' }}>
                         No PAINS or Brenk chemical alert motifs detected for this structure.
                       </div>
                     ) : (
@@ -690,16 +690,16 @@ export default function AttributionViewer({
                               border: '1px solid rgba(192,132,252,0.18)',
                               borderRadius: '4px',
                               padding: '6px 8px',
-                              fontSize: '11px',
+                              fontSize: '13px',
                             }}
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e9d5ff', fontWeight: 600 }}>
                               <span>{alert.alert_name}</span>
-                              <span style={{ fontSize: '9px', background: 'rgba(192,132,252,0.2)', padding: '1px 4px', borderRadius: 3 }}>
+                              <span style={{ fontSize: '12px', background: 'rgba(192,132,252,0.2)', padding: '2px 6px', borderRadius: 3 }}>
                                 {alert.rule_set}
                               </span>
                             </div>
-                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 2 }}>
+                            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: 2 }}>
                               Matched atoms: {alert.matched_atoms.join(', ')}
                             </div>
                           </div>

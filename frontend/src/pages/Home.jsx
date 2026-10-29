@@ -810,8 +810,8 @@ export default function Home() {
               {historyOpen && (
                 <div className="dropdown-popover history">
                   <div className="px-4 py-3 border-b border-[#00F5E9]/20 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#00F5E9]">Activity History</span>
-                    <span className="text-[10px] text-[#8BA8AA]">{history.length} logged</span>
+                    <span className="text-sm font-bold uppercase tracking-wider text-[#00F5E9]">Activity History</span>
+                    <span className="text-xs text-[#8BA8AA]">{history.length} logged</span>
                   </div>
                   <div className="overflow-y-auto max-h-[280px] p-2 flex flex-col gap-1">
                     {history.length === 0 ? (
@@ -822,8 +822,8 @@ export default function Home() {
                           key={item.id}
                           className="px-3 py-2 rounded-lg bg-[rgba(0,245,233,0.03)] hover:bg-[rgba(0,245,233,0.08)] transition-colors"
                         >
-                          <div className="text-sm font-medium text-[#E9FFFF] truncate">{item.label}</div>
-                          <div className="text-[10px] text-[#8BA8AA] mt-0.5">
+                          <div className="text-base font-medium text-[#E9FFFF] truncate">{item.label}</div>
+                          <div className="text-xs text-[#8BA8AA] mt-0.5">
                             {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -856,9 +856,9 @@ export default function Home() {
               {notificationsOpen && (
                 <div className="dropdown-popover notifications">
                   <div className="px-4 py-3 border-b border-[#00F5E9]/20 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#00F5E9]">Notifications</span>
+                    <span className="text-sm font-bold uppercase tracking-wider text-[#00F5E9]">Notifications</span>
                     {notifications.filter((n) => !n.read).length > 0 && (
-                      <span className="bg-[#00F5E9]/20 text-[#00F5E9] px-2 py-0.5 rounded-full text-[9px] font-bold">
+                      <span className="bg-[#00F5E9]/20 text-[#00F5E9] px-2 py-0.5 rounded-full text-[11px] font-bold">
                         {notifications.filter((n) => !n.read).length} NEW
                       </span>
                     )}
@@ -872,9 +872,9 @@ export default function Home() {
                           key={item.id}
                           className="p-3 rounded-lg bg-[rgba(0,245,233,0.04)] border border-[rgba(0,245,233,0.1)] hover:bg-[rgba(0,245,233,0.08)] transition-colors"
                         >
-                          <div className="text-sm font-semibold text-white mb-0.5">{item.title}</div>
-                          <div className="text-xs text-[#8BA8AA] leading-relaxed">{item.message}</div>
-                          <div className="text-[10px] text-[#00CFC8] mt-1.5 font-mono">
+                          <div className="text-base font-semibold text-white mb-0.5">{item.title}</div>
+                          <div className="text-sm text-[#8BA8AA] leading-relaxed">{item.message}</div>
+                          <div className="text-xs text-[#00CFC8] mt-1.5 font-mono">
                             {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -907,13 +907,13 @@ export default function Home() {
               {accountOpen && (
                 <div className="dropdown-popover account">
                   <div className="px-4 py-3 border-b border-[#00F5E9]/15">
-                    <div className="text-xs font-bold text-white truncate">{user?.display_name || 'Researcher'}</div>
-                    <div className="text-[11px] text-[#8BA8AA] truncate">{user?.email || 'user@rogveda.local'}</div>
+                    <div className="text-sm font-bold text-white truncate">{user?.display_name || 'Researcher'}</div>
+                    <div className="text-xs text-[#8BA8AA] truncate">{user?.email || 'user@rogveda.local'}</div>
                   </div>
                   <div className="p-1.5 flex flex-col">
                     <button
                       onClick={() => navigate('/draw?tab=Draw')}
-                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
                         <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -922,7 +922,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => navigate('/experiments')}
-                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
@@ -931,7 +931,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => navigate('/documents')}
-                      className="w-full text-left px-3 py-2 text-xs font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm font-medium text-[#E9FFFF] hover:bg-[#00F5E9]/10 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00F5E9" strokeWidth="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -942,7 +942,7 @@ export default function Home() {
                     <div className="h-px bg-[#00F5E9]/15 my-1" />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-500/15 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm font-bold text-red-400 hover:bg-red-500/15 rounded-md transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
@@ -1217,8 +1217,8 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white m-0">Rogveda AI Assistant</h3>
-                <span className="text-[11px] text-[#00CFC8] flex items-center gap-1.5">
+                <h3 className="text-base font-bold text-white m-0">Rogveda AI Assistant</h3>
+                <span className="text-xs text-[#00CFC8] flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#00F5E9] inline-block animate-pulse" />
                   Chemistry Intelligence
                 </span>
@@ -1242,7 +1242,7 @@ export default function Home() {
               <button
                 key={chip}
                 onClick={() => handleSendChat(chip)}
-                className="whitespace-nowrap px-2.5 py-1 text-[11px] bg-[rgba(0,245,233,0.08)] hover:bg-[rgba(0,245,233,0.18)] text-[#E9FFFF] border border-[rgba(0,245,233,0.25)] rounded-full transition-colors cursor-pointer"
+                className="whitespace-nowrap px-3 py-1.5 text-xs font-medium bg-[rgba(0,245,233,0.08)] hover:bg-[rgba(0,245,233,0.18)] text-[#E9FFFF] border border-[rgba(0,245,233,0.25)] rounded-full transition-colors cursor-pointer"
               >
                 {chip}
               </button>
@@ -1254,7 +1254,7 @@ export default function Home() {
             {chatMessages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`rounded-xl max-w-[88%] px-4 py-3 text-[13px] leading-relaxed ${
+                  className={`rounded-xl max-w-[88%] px-4 py-3 text-[14.5px] leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-[rgba(0,245,233,0.15)] text-[#E9FFFF] border border-[rgba(0,245,233,0.35)]'
                       : 'bg-[rgba(255,255,255,0.05)] text-[#cfe9ea] border border-white/10'
@@ -1269,7 +1269,7 @@ export default function Home() {
             ))}
             {isChatLoading && (
               <div className="flex justify-start">
-                <div className="rounded-xl px-4 py-2.5 bg-[rgba(255,255,255,0.05)] text-[#8BA8AA] text-xs flex items-center gap-2 border border-white/5">
+                <div className="rounded-xl px-4 py-2.5 bg-[rgba(255,255,255,0.05)] text-[#8BA8AA] text-sm flex items-center gap-2 border border-white/5">
                   <span className="w-2 h-2 rounded-full bg-[#00F5E9] animate-ping" />
                   Generating molecular insights...
                 </div>
@@ -1279,14 +1279,14 @@ export default function Home() {
 
           {/* Chat Input */}
           <div className="p-3 bg-[rgba(2,13,16,0.95)] border-t border-[#00F5E9]/20">
-            <div className="flex items-center rounded-full bg-[rgba(0,0,0,0.4)] border border-[#00F5E9]/30 pl-4 pr-1.5 py-1 focus-within:border-[#00F5E9] transition-colors">
+            <div className="flex items-center rounded-full bg-[rgba(0,0,0,0.4)] border border-[#00F5E9]/30 pl-4 pr-1.5 py-1.5 focus-within:border-[#00F5E9] transition-colors">
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
                 placeholder="Ask about molecules, descriptors, or drugs..."
-                className="flex-1 bg-transparent border-none outline-none text-[#E9FFFF] text-xs placeholder-[#8BA8AA]"
+                className="flex-1 bg-transparent border-none outline-none text-[#E9FFFF] text-sm placeholder-[#8BA8AA]"
               />
               <button
                 onClick={() => handleSendChat()}
