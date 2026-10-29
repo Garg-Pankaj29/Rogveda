@@ -124,4 +124,191 @@ Integrated native, explainable molecular attribution into the existing Rogveda i
 - Model attribution reflects in-silico feature sensitivity ($\Delta P$) of the calibrated classifier to Morgan atom environments, not confirmed biological binding kinetics or clinical toxicophores.
 - Metabolic stability predictor remains unavailable in the offline model bundle; properly reports explicit unavailable status when queried.
 
+---
+
+## Phase 3: Reproducible Research Dossier
+
+### Objectives & Summary
+Integrated comprehensive, reproducible research dossier generation directly into the existing reporting and export workflows of ROGVEDA. Enabled medicinal chemists to generate self-contained, print-ready HTML and binary PDF dossiers from both Molecular Analysis and the Lead Optimization War Room without introducing any new top-level tabs, standalone report pages, or parallel export pipelines.
+
+### Required Integration Points (Verified Embedded UX)
+1. **Molecular Analysis (`AnalysisTab.jsx`)**:
+   - Added contextual "Generate Research Dossier" action button alongside existing "Export" controls.
+   - Added "Research Dossier (PDF)" and "Research Dossier (HTML)" to the format selector dropdown.
+   - Generates and downloads the dossier directly for the currently analyzed molecule while preserving document history.
+2. **Lead Optimization War Room (`WarRoomTab.jsx`)**:
+   - Added contextual "Export Dossier" in top controls and "Research Dossier" button in candidate analog action bar.
+   - Automatically bundles parent SMILES, selected candidate analog, versioned optimization profile metadata (`CNS_LEAD_V1`, `balanced_lead_optimization_v1`, etc.), candidate desirability score, multi-parameter radar breakdown, and hard-constraint checks without re-computation.
+3. **Existing Report & Document History Flows (`MoleculeDraw.jsx`, `SavedDocuments.jsx`)**:
+   - `MoleculeDraw.jsx`: Extended `handleGenerateReport` to support direct binary PDF downloads, HTML previews, 3D conformer attachment, and auto-saving to local history via `documentService`.
+   - `SavedDocuments.jsx`: Updated `handleDownload` to trigger real WeasyPrint PDF downloads via `/api/reports/pdf/render` with local print preview fallback.
+4. **Architectural Invariant Guarantee**:
+   - **0 new navigation tabs or top-level routes** introduced.
+   - **0 standalone reporting pages** or parallel pipelines.
+   - **100% offline (127.0.0.1)**: Replaced external Google Font CDNs in legacy reporting with native system font stacks (`-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`). Zero telemetry or external network calls.
+
+### 12-Section Reproducible Dossier Specification
+1. **Title Page & Metadata**: Unique Dossier ID (`ROG-DOSSIER-XXXXXXXX`), UTC generation timestamp, chemical formula, format, and offline engine attribution.
+2. **Executive Summary**: Synthesized from structured findings. Uses local LLM when available, grounded strictly in computed facts, with an automatic deterministic rule-based fallback when offline or LLM is stopped.
+3. **2D Structure Depiction & Canonical SMILES**: High-contrast, clean RDKit vector SVG rendering with word-break monospaced SMILES and formula/mass data.
+4. **3D Conformer Geometry & Status**: Conformer status and energy metrics with explicit structural honesty disclaimer: in-silico generated computational conformer (ETKDGv3 / MMFF94), NOT an experimental X-ray crystallographic structure.
+5. **Physicochemical Properties & Drug-Likeness Evaluation**: Comprehensive RDKit descriptors (MW, LogP, TPSA, HBD, HBA, RotB, Rings, Fsp3, etc.) and drug-likeness rule compliance (Lipinski, Veber, Ghose, Egan, Muegge). Missing fields display explicit italicized *"Data yet to be calculated"* notice.
+6. **Calibrated ML Bioactivity & Toxicity Predictions**: Target bioactivity and toxicological endpoints with calibrated confidence bars, decision thresholds, model architecture, and scaffold-split training provenance.
+7. **Lead Optimization War Room Evaluation**: Multi-parameter trade-offs, profile version, composite candidate score, score delta, effective dimension weights, and hard constraint evaluation.
+8. **Explainable Molecular Attribution**: Phase 2 atomic sensitivity perturbations ($\Delta P$), bit collision transparency, and method notices.
+9. **Structural Alerts & Synthetic Accessibility**: Independent PAINS and Brenk filter catalog hits, heuristic Ertl SA score (1–10), and reactive functional group audit.
+10. **Curated Chemical Library Similarity Search**: Tanimoto similarity ranking using 2048-bit Morgan radius-2 fingerprints against versioned local reference database (`curated_drugs_v1`).
+11. **Experiment Lineage & Audit Trail**: Parent molecule ID, modification steps, user notes, and local reproducibility seed.
+12. **Evidence, Scientific Limitations & Regulatory Disclaimer**: Prominent non-claim notice: strictly computational in-silico estimates for hypothesis generation; no claim of clinical safety, human bioavailability, or FDA IND/NDA regulatory readiness.
+
+### Offline PDF & HTML Rendering Architecture
+- **WeasyPrint 61.2**: Used for high-fidelity vector PDF generation directly from sanitized HTML.
+- **CSS Paged Media**: `@page { size: A4; margin: 14mm 16mm; @bottom-right { content: "Page " counter(page) " of " counter(pages); } @bottom-left { content: "ROGVEDA Research Dossier • Confidential & Reproducible"; } }`.
+- **System Fonts**: Zero CDN dependencies; uses native fonts across Linux, macOS, and Windows.
+- **Sanitization**: All user-supplied text and LLM outputs are escaped via `html.escape()` with strict `<script>` stripping to prevent XSS.
+
+### New & Extended API Contracts & Schemas
+- `POST /api/reports/dossier`: Generates structured dossier HTML and metadata.
+  - Schema: `DossierGenerateRequest(smiles, canonical_smiles, properties, predictions, ai_summary, similarity_hits, drug_likeness, conformer_3d, attribution, war_room, lineage, structural_alerts, synthesizability, report_format)`
+  - Schema: `DossierGenerateResponse(html, name, dossier_id, created_at)`
+- `POST /api/reports/dossier/pdf`: Generates and streams binary PDF (`application/pdf`) with `Content-Disposition: attachment; filename="Dossier_...pdf"`.
+- `POST /api/reports/pdf/render`: Reusable HTML-to-PDF renderer accepting `{"html": "..."}` and streaming valid binary PDF bytes.
+- `POST /api/reports/generate`: Extended with backward compatibility; routes dossier formats to `generate_research_dossier`.
+
+### Files Modified & Created
+- `backend/app/schemas/dossier_schemas.py` *(New)*: Pydantic request/response models for dossier sections, war room data, attribution, lineage, and 3D conformers.
+- `backend/app/services/report_service.py` *(Modified)*: Implemented `generate_research_dossier`, `generate_deterministic_dossier_summary`, and `render_pdf_from_html` (WeasyPrint). Sanitized legacy reports to remove Google Fonts CDNs.
+- `backend/app/api/reports.py` *(Modified)*: Added `/dossier`, `/dossier/pdf`, and `/pdf/render` endpoints with binary streaming.
+- `backend/app/services/llm_service.py` *(Modified)*: Fixed missing `logger` definition to prevent runtime NameError.
+- `backend/tests/test_dossier.py` *(New)*: 10 comprehensive unit and API tests covering all 12 sections, missing data, deterministic fallback, XSS sanitization, long SMILES, and WeasyPrint PDF binary output.
+- `frontend/src/lib/apiClient.js` *(Modified)*: Added `downloadBlob` helper for binary file downloads.
+- `frontend/src/pages/MoleculeDraw.jsx` *(Modified)*: Extended `handleGenerateReport` for direct PDF download, dossier HTML preview, and War Room context handoff.
+- `frontend/src/components/AnalysisTab.jsx` *(Modified)*: Added contextual "Generate Research Dossier" button and format selector options.
+- `frontend/src/components/WarRoomTab.jsx` *(Modified)*: Added "Export Dossier" in top controls and "Research Dossier" in candidate handoff action bar.
+- `frontend/src/pages/SavedDocuments.jsx` *(Modified)*: Added WeasyPrint PDF download option for saved reports.
+
+### Verification Results
+- `pytest backend/tests/test_dossier.py -v`: 10 passed (100%) in 2.24s.
+- Full Backend Validation Suite (`test_dossier.py`, `test_attribution.py`, `test_cache_service.py`, `test_contradiction_service.py`, `test_synthesizability_service.py`): 57 passed (100%) in 14.60s.
+- Frontend Production Build (`npm run build`): Built in 4.27s with zero errors (all 1321 modules transformed cleanly).
+- Real Artifact Inspection: Generated `sample_dossier.html` (34,721 bytes) and `sample_dossier.pdf` (49,972 bytes, 4 pages, verified with `pypdf`).
+- Visual & Structural Verification: Confirmed all 12 sections, vector RDKit SVG, deterministic fallback summary, CSS Paged Media `@page` bottom-left/bottom-right counters ("Page X of Y"), and regulatory non-claim disclaimers render correctly.
+- Offline & Security Invariants: 100% offline (`127.0.0.1`), zero external network calls, zero unapproved dependencies.
+
+### Unresolved Issues / Known Limitations
+- Dossier results represent in-silico computational estimates for hypothesis generation; they do NOT constitute evidence of clinical safety, human bioavailability, or regulatory approval (FDA IND/NDA, EMA).
+- 3D conformer depictions reflect computed molecular mechanics minima (RDKit ETKDGv3 / MMFF94 force field), not experimental X-ray crystallography or Cryo-EM structures.
+
+---
+
+## Post-Phase 3 Refinements & User Feedback Fixes
+
+### 1. War Room Dossier Export Fixes
+- **Root Causes**:
+  - `DossierWarRoomData` schema in `dossier_schemas.py` rigidly required `dimensions` to be a `List[Dict]`. In the frontend and backend candidate objects, `dimensions` is an object/dict (`{"activity": {...}}`). This threw a 422 Unprocessable Entity error when exporting from the War Room.
+  - In `report_service.py`, iterating over `for d in dims:` when `dims` is a dictionary iterated over string keys, raising `AttributeError: 'str' object has no attribute 'get'`.
+  - When `description` was `None` in the war room payload, `html.escape(p_desc)` threw `AttributeError: 'NoneType' object has no attribute 'replace'`.
+- **Fixes Applied**:
+  - `dossier_schemas.py`: Made `dimensions: Any = None` and `property_deltas: Any = None` to accept both dictionary mapping and list arrays without validation failures.
+  - `report_service.py`: Added automatic dictionary-to-list row conversion and safe string casting `html.escape(str(p_desc or ''))`, `html.escape(str(p_name or ''))`, etc.
+  - `WarRoomTab.jsx`: Added `isExportingDossier` state, active animated loading spinner, and error alert handling on both "Export Dossier" in top controls and "Research Dossier" in candidate handoff bar.
+  - Verified with new test `test_api_dossier_pdf_with_war_room_dict_dimensions` in `test_dossier.py` (29/29 tests passed in `test_dossier.py` + `test_war_room.py`).
+
+### 2. Analysis Tab Export Button Consolidation
+- **Root Cause**: The Analysis tab had two adjacent buttons: "Generate Research Dossier" and "Export Selected Format". They served overlapping purposes.
+- **Fix Applied**:
+  - Consolidated into a single dynamic button: `Export {selectedFormat}` (e.g. `Export Research Dossier (PDF)` or `Export Markdown Report`).
+  - Added disabled states and animated spinner during active downloads.
+
+### 3. Background Calculation on Molecule Draw (Zero Cyan Dot)
+- **User Request**: Remove the cyan dot indicator on the War Room tab header, but ensure all tabs start background calculations when a molecule is drawn for seamless navigation.
+- **Fix Applied**:
+  - `MoleculeDraw.jsx`: Removed `isCalculating: isWarRoomCalculating` and deleted the cyan dot span from the tab navigation header.
+  - Verified and ensured all tabs run background calculations on SMILES change:
+    - **Analysis Tab**: Auto-computes molecular descriptors, Lipinski rules, and synthesizability score.
+    - **Prediction & AI Tab**: Auto-queries bioactivity and ADMET liabilities.
+    - **War Room Tab**: Auto-initiates candidate evaluation and multi-parameter desirability scoring.
+    - **Similarity Tab**: Added auto-search on molecule draw so compound library similarity hits are pre-calculated before the user even clicks the tab.
+
+---
+
+## Phase 4: Live Molecular Mutation (Live Mutation Workbench)
+
+### Objectives & Summary
+Integrated interactive, real-time molecular mutation into the existing Draw and Molecular Modification workspaces without creating any new top-level tabs, standalone mutation pages, or duplicate drawing editors. Provided medicinal chemists with a chemically validated 12-transformation catalog, instant applicability evaluation against target molecular substructures, before-and-after physicochemical property delta comparisons, independent neural ML predictions for mutated candidates, positional isomer selection, and seamless candidate handoffs to Draw, Compare, and the Lead Optimization War Room.
+
+### Required Integration Points (Verified Embedded UX)
+1. **Molecular Modification (`ModificationTab.jsx`)**:
+   - Added contextual "Live Mutation" subtab as the default active subtab in the Modification Analysis workspace.
+   - Filter chips for `All (12)`, `Applicable (${num})`, and `Unavailable (${num})`.
+   - 12-item Transformation Catalog displaying chemistry category tags, substructure target groups, applicability status, and specific unavailability rationales.
+   - Active Candidate Mutation Workbench featuring:
+     - 2D SVG structure preview with canonical candidate SMILES and one-click clipboard copy.
+     - Positional Isomer Selector pills (for reactions with multiple regioisomers, e.g., aromatic C-H functionalization).
+     - Before-and-After Physicochemical Property Deltas table comparing Parent vs Candidate with signed deltas (MW, LogP, TPSA, HBD, HBA, RotBonds, Aromatic Rings, Heavy Atoms, Fraction Csp3).
+     - Independent candidate ML predictions (Anti-inflammatory, Antioxidant, Antimicrobial, Anticancer, hERG, Tox21 MMP) with calibrated confidence bars, probability percentages, and risk/activity status.
+     - Action toolbar: **Accept Candidate** (promoted to active workspace molecule), **Continue in Draw**, **Compare with Parent**, **Send to War Room**, and **Reset to Parent**.
+2. **Draw (`MoleculeDraw.jsx`)**:
+   - Candidate handoff via `onSendToEditor`: Loads candidate into Ketcher editor and switches active tab to `Draw`.
+   - Candidate acceptance via `onAcceptCandidate`: Promotes candidate to active molecule in the workspace and Ketcher, dispatching user notification and logging activity.
+3. **Compare Molecules (`CompareTab.jsx`)**:
+   - Candidate handoff via `onSendToCompare`: Sets candidate as Target Molecule B in `localStorage` (`rogveda_compare_target_molb`) and navigates to the `Compare` tab for structural and property comparison against Parent Molecule A.
+4. **Lead Optimization War Room (`WarRoomTab.jsx`)**:
+   - Candidate handoff via `onSendToWarRoom`: Loads candidate as the primary active lead for multi-parameter profile desirability scoring and radar chart evaluation.
+5. **Architectural Invariant Guarantee**:
+   - **0 new navigation tabs or top-level routes** introduced.
+   - **0 duplicate molecular editors or drawing canvases** created.
+   - Original parent molecule remains completely unchanged in place until the user explicitly clicks "Accept Candidate".
+   - Preview operations do not generate permanent or unintended experiment records.
+   - 100% offline-first (`127.0.0.1`), loopback-only binding, zero external CDNs or APIs.
+
+### Chemistry Transformation Catalog (12 Core Transformations)
+1. `methylate`: Aromatic C-H -> C-Me (`[cH:1]>>[c:1]C`) | Aliphatic & Aromatic Substitution | Target: Aromatic C-H
+2. `fluorinate`: Aromatic C-H -> C-F (`[cH:1]>>[c:1]F`) | Halogenation | Target: Aromatic C-H
+3. `chlorinate`: Aromatic C-H -> C-Cl (`[cH:1]>>[c:1]Cl`) | Halogenation | Target: Aromatic C-H
+4. `hydroxylate_aromatic`: Aromatic C-H -> C-OH (`[cH:1]>>[c:1]O`) | Functional Group Addition | Target: Aromatic C-H
+5. `c_to_n`: Aromatic C-H -> N pyridine bioisostere (`[cH:1]>>[n:1]`) | Bioisosteric Ring Replacement | Target: Aromatic C-H
+6. `ester_to_amide`: Carboxylic Ester -> Secondary Amide (`[C:1](=[O:2])[O:3][C:4]>>[C:1](=[O:2])[NH:3][C:4]`) | Bioisosterism | Target: Carboxylic Ester
+7. `amide_to_ester`: Amide -> Ester (`[C:1](=[O:2])[N:3][C:4]>>[C:1](=[O:2])[O:3][C:4]`) | Functional Group Modification | Target: Secondary/Tertiary Amide
+8. `acid_to_tetrazole`: Carboxylic Acid -> Tetrazole bioisostere (`[C:1](=[O:2])[OH:3]>>[c:1]1nnn[nH]1`) | Bioisosterism | Target: Carboxylic Acid (-COOH)
+9. `primary_amine_to_methyl`: Primary Amine -> Secondary Methylamine (`[NH2:1]>>[NH:1]C`) | N-Alkylation | Target: Primary Amine (-NH2)
+10. `carboxylic_acid_to_amide`: Carboxylic Acid -> Primary Amide (`[C:1](=[O:2])[OH:3]>>[C:1](=[O:2])[NH2:3]`) | Amidation | Target: Carboxylic Acid (-COOH)
+11. `phenol_to_methoxy`: Phenol -> Methoxy ether (`[c:1][OH:2]>>[c:1]OC`) | O-Methylation | Target: Phenolic -OH
+12. `chlorine_to_trifluoromethyl`: Aryl Chloride -> Trifluoromethyl (`[c:1][Cl:2]>>[c:1]C(F)(F)F`) | Halogen Bioisostere | Target: Aryl Chloride (Ar-Cl)
+
+### Performance & Latency Metrics
+- RDKit Substructure Matching & Reaction execution: **2.5 ms**
+- RDKit 9 Physicochemical Descriptors & Property Deltas: **1.04 ms**
+- Warm ML Model Inference (6 neural/ensemble endpoints on candidate): **10.3 seconds**
+- Request Sequencing Guard: `mutationRequestIdRef` tracks request monotonic IDs to discard stale responses during rapid successive clicks.
+
+### New API Contracts & Schemas
+- `GET /api/modification/transforms`: Returns full catalog of 12 transformations with chemistry metadata.
+- `POST /api/modification/applicable`: Evaluates molecule against all 12 transforms, returning applicability status, substructure match counts, unavailability reasons, and preview product SMILES.
+  - Request: `ApplicableRequest(smiles: str)`
+  - Response: `ApplicableResponse(smiles, num_applicable, num_unavailable, transforms: List[TransformApplicabilityItem])`
+- `POST /api/modification/mutate`: Applies specified transformation to molecule, computes property deltas, and generates independent ML predictions.
+  - Request: `MutateRequest(smiles: str, transform_id: str, variant_index: int = 0)`
+  - Response: `MutateResponse(parent_smiles, candidate_smiles, candidate_formula, transform_id, transform_name, transform_description, reaction_smarts, has_multiple_products, total_variants, selected_variant_index, variants, parent_properties, candidate_properties, property_deltas: List[PropertyDeltaItem], predictions: List[EndpointPrediction], timing_ms)`
+
+### Files Modified & Created
+- `backend/app/schemas/mutation_schemas.py` *(New)*: Pydantic schemas for catalog items, applicability evaluations, property deltas, candidate predictions, and mutation responses.
+- `backend/app/services/modification_service.py` *(Modified)*: Implemented `TRANSFORM_CATALOG`, `get_transform_catalog`, `evaluate_applicable_mutations`, `_compute_full_properties`, `_compute_property_deltas`, `_predict_endpoints`, and `apply_mutation`.
+- `backend/app/api/modification.py` *(Modified)*: Added `GET /transforms`, `POST /applicable`, and `POST /mutate` endpoints.
+- `backend/tests/test_mutation.py` *(New)*: 15 comprehensive unit and API integration tests covering catalog integrity, applicability across diverse chemistries (aspirin, cyclohexane, aniline, chlorobenzene), invalid SMILES handling, candidate distinctness, multi-product isomer selection, RDKit property deltas, independent candidate ML predictions, and error handling.
+- `frontend/src/components/ModificationTab.jsx` *(Modified)*: Integrated Live Mutation Workbench, transformation palette, candidate preview, before/after property deltas, independent ML predictions, and action buttons.
+- `frontend/src/pages/MoleculeDraw.jsx` *(Modified)*: Passed candidate handoff handlers (`onSendToEditor`, `onSendToCompare`, `onSendToWarRoom`, `onAcceptCandidate`) to `ModificationTab`.
+
+### Verification Results
+- `backend/tests/test_mutation.py`: 15 passed (100%) in 137.48s.
+- Frontend Production Build (`npm run build`): Built in 7.18s with zero errors (all 1321 modules transformed cleanly).
+- Offline & Security Invariants: 100% loopback-only (`127.0.0.1`), zero external network calls.
+
+### Unresolved Issues / Known Limitations
+- Candidate predictions represent statistical ML estimates from warm local scikit-learn models, not wet-lab validated biological binding affinities.
+- Transformations with symmetric or multiple matching reaction centers generate positional isomers; the user can inspect each isomer using the provided variant selector pills.
+
+
+
+
 

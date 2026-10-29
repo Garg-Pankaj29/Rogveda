@@ -191,6 +191,7 @@ export default function MoleculeDraw() {
 
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showOpenModal, setShowOpenModal] = useState(false)
+  const [dossierPreview, setDossierPreview] = useState(null)
   const last3dSmiles = useRef('')
 
   // ── Background AI insight data (computed on molecule change, debounced) ──
@@ -568,7 +569,7 @@ export default function MoleculeDraw() {
     navigate('/home')
   }
 
-  const handleGenerateReport = async (format = 'Comprehensive Report (PDF)') => {
+  const handleGenerateReport = async (format = 'Comprehensive Report (PDF)', customContext = null) => {
     if (format === 'Data Export (CSV)') {
       const csvRows = [
         ['Property', 'Value'],
@@ -641,7 +642,7 @@ export default function MoleculeDraw() {
       return
     }
 
-    // ── Comprehensive Report via backend API ──
+    // ── Comprehensive Report & Research Dossier via backend API ──
     logActivity(`Report generated (${format})`)
 
     // Prepare molecule SVG for the report
@@ -652,75 +653,118 @@ export default function MoleculeDraw() {
         .replace(/fill="none"/g, 'fill="#fff"')
     }
 
-    // Collect all background data
     const bg = bgAiData.current
+    const targetSmiles = customContext?.smiles || canonicalSmiles || inputSmiles || null
+    const targetProperties = customContext?.properties || {
+      formula: currentMolecule.formula,
+      mw: currentMolecule.mw,
+      exactMass: currentMolecule.exactMass,
+      logP: currentMolecule.logP,
+      tpsa: currentMolecule.tpsa,
+      hbd: currentMolecule.hbd,
+      hba: currentMolecule.hba,
+      rotBonds: currentMolecule.rotBonds,
+      totalRings: currentMolecule.totalRings,
+      aromaticRings: currentMolecule.aromaticRings,
+      heavyAtoms: currentMolecule.heavyAtoms,
+      heteroAtoms: currentMolecule.heteroAtoms,
+      fractionCsp3: currentMolecule.fractionCsp3,
+      molarRefractivity: currentMolecule.molarRefractivity,
+      chiralCenters: currentMolecule.chiralCenters,
+      amideBonds: currentMolecule.amideBonds,
+      saturatedRings: currentMolecule.saturatedRings,
+    }
+
+    if (!targetSmiles && (!targetProperties || !targetProperties.formula || targetProperties.formula === '-')) {
+      addNotification('No Molecule Selected', 'Please enter, draw, or select a molecule before generating a research dossier.')
+      return
+    }
 
     const reportPayload = {
-      smiles: canonicalSmiles || inputSmiles || null,
-      properties: {
-        formula: currentMolecule.formula,
-        mw: currentMolecule.mw,
-        exactMass: currentMolecule.exactMass,
-        logP: currentMolecule.logP,
-        tpsa: currentMolecule.tpsa,
-        hbd: currentMolecule.hbd,
-        hba: currentMolecule.hba,
-        rotBonds: currentMolecule.rotBonds,
-        totalRings: currentMolecule.totalRings,
-        aromaticRings: currentMolecule.aromaticRings,
-        heavyAtoms: currentMolecule.heavyAtoms,
-        heteroAtoms: currentMolecule.heteroAtoms,
-        fractionCsp3: currentMolecule.fractionCsp3,
-        molarRefractivity: currentMolecule.molarRefractivity,
-        chiralCenters: currentMolecule.chiralCenters,
-        amideBonds: currentMolecule.amideBonds,
-        saturatedRings: currentMolecule.saturatedRings,
-      },
-      predictions: bg.predictions,
+      smiles: targetSmiles,
+      canonical_smiles: targetSmiles,
+      properties: targetProperties,
+      predictions: customContext?.predictions || bg.predictions,
       ai_summary: bg.aiSummary,
       similarity_hits: bg.similarityHits,
       drug_likeness: bg.drugLikeness,
       activity_log: recentActivity,
       molecule_svg: moleculeSvg || null,
+      conformer_3d: sdfBlock ? {
+        has_conformer: true,
+        status_label: 'Generated & Energy-Optimized',
+        atom_count: currentMolecule.heavyAtoms !== '-' ? parseInt(currentMolecule.heavyAtoms) || null : null,
+        sdf_block: sdfBlock,
+      } : null,
+      war_room: customContext?.war_room || null,
+      attribution: customContext?.attribution || null,
       report_format: format,
     }
 
     try {
-      // 1. Generate report via backend
-      const result = await api.post('/api/reports/generate', reportPayload)
-      const htmlContent = result.html
-      const reportName = result.name
+      let htmlContent = ''
+      let reportName = ''
 
-      // 2. Open in print window
-      const printWindow = window.open('', '', 'width=900,height=700')
-      if (printWindow) {
-        printWindow.document.write(htmlContent)
-        printWindow.document.close()
+      if (format === 'Research Dossier (PDF)') {
+        addNotification('Generating Dossier', 'Compiling print-ready PDF with WeasyPrint...')
+        try {
+          const pdfBlob = await api.downloadBlob('/api/reports/dossier/pdf', reportPayload)
+          const url = URL.createObjectURL(pdfBlob)
+          const a = document.createElement('a')
+          a.href = url
+          reportName = `Dossier_${targetProperties.formula || 'Molecule'}_${new Date().toISOString().slice(0, 10)}`
+          a.download = `${reportName}.pdf`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+          addNotification('Dossier Downloaded', `"${reportName}.pdf" has been downloaded successfully.`)
+        } catch (pdfErr) {
+          console.warn('Direct PDF download failed, falling back to HTML:', pdfErr)
+        }
+
+        // Fetch HTML representation to save to Saved Documents and display preview
+        const dossierRes = await api.post('/api/reports/dossier', reportPayload)
+        htmlContent = dossierRes.html
+        reportName = dossierRes.name
+        setDossierPreview({ name: reportName, html: htmlContent })
+      } else if (format === 'Research Dossier (HTML)') {
+        const dossierRes = await api.post('/api/reports/dossier', reportPayload)
+        htmlContent = dossierRes.html
+        reportName = dossierRes.name
+        setDossierPreview({ name: reportName, html: htmlContent })
+      } else {
+        // Standard legacy report
+        const result = await api.post('/api/reports/generate', reportPayload)
+        htmlContent = result.html
+        reportName = result.name
+        setDossierPreview({ name: reportName, html: htmlContent })
       }
 
-      // 3. Auto-save to Saved Documents
-      try {
-        await api.post('/api/reports/documents', {
-          name: reportName,
-          format: format,
-          html_content: htmlContent,
-          smiles: canonicalSmiles || inputSmiles || null,
-        })
-        addNotification('Report Saved', `"${reportName}" has been saved to your documents.`)
-      } catch (saveErr) {
-        console.error('Failed to save document to DB:', saveErr)
-        // Fallback to localStorage
+      // Auto-save to Saved Documents
+      if (htmlContent) {
         try {
-          const docs = JSON.parse(localStorage.getItem('rogveda_documents') || '[]')
-          docs.push({
-            id: Date.now().toString(),
+          await api.post('/api/reports/documents', {
             name: reportName,
-            date: new Date().toISOString(),
-            format,
-            content: htmlContent,
+            format: format,
+            html_content: htmlContent,
+            smiles: targetSmiles,
           })
-          localStorage.setItem('rogveda_documents', JSON.stringify(docs))
-        } catch (e) { console.error('localStorage fallback also failed:', e) }
+          addNotification('Report Saved', `"${reportName}" has been saved to your documents.`)
+        } catch (saveErr) {
+          console.error('Failed to save document to DB:', saveErr)
+          try {
+            const docs = JSON.parse(localStorage.getItem('rogveda_documents') || '[]')
+            docs.push({
+              id: Date.now().toString(),
+              name: reportName,
+              date: new Date().toISOString(),
+              format,
+              content: htmlContent,
+            })
+            localStorage.setItem('rogveda_documents', JSON.stringify(docs))
+          } catch (e) { console.error('localStorage fallback also failed:', e) }
+        }
       }
     } catch (err) {
       console.error('Report generation failed:', err)
@@ -735,7 +779,7 @@ export default function MoleculeDraw() {
     { id: 'Search', icon: I.search, label: 'Similarity Search', tagline: 'Explore Similarities.\nDiscover What\'s Next.' },
     { id: 'Modify', icon: I.modify, label: 'Molecular Modification', tagline: 'Modify Structures.\nOptimize Properties.' },
     { id: 'Compare', icon: I.compare, label: 'Compare Molecules', tagline: 'Design Molecules.\nDiscover Possibilities.' },
-    { id: 'WarRoom', icon: I.warRoom, label: 'War Room', isCalculating: isWarRoomCalculating, tagline: 'Lead Optimization.\nMulti-Parameter Decisions.' },
+    { id: 'WarRoom', icon: I.warRoom, label: 'War Room', tagline: 'Lead Optimization.\nMulti-Parameter Decisions.' },
     { id: 'Prediction', icon: I.predict, label: 'Prediction & AI', tagline: 'Predict Properties.\nLeverage AI.' },
     { id: 'Batch', icon: I.layers, label: 'Batch Screening', tagline: 'Process Multiple.\nAnalyze at Scale.' },
     { id: 'ChemSpace', icon: I.chemSpace, label: 'Chemical Space', tagline: 'Map Your Molecule.\nExplore Drug Space.' },
@@ -846,20 +890,6 @@ export default function MoleculeDraw() {
             >
               <span style={{ display: 'flex' }}>{tab.icon}</span>
               {tab.label}
-              {tab.isCalculating && (
-                <span
-                  title="War Room calculating in background"
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: '#2dd4d4',
-                    boxShadow: '0 0 8px #2dd4d4',
-                    display: 'inline-block',
-                    marginLeft: '2px',
-                  }}
-                />
-              )}
             </button>
           ))}
         </div>
@@ -916,6 +946,26 @@ export default function MoleculeDraw() {
             onSaveExperiment={handleSaveExperiment}
             onGenerateReport={handleGenerateReport}
             logActivity={logActivity}
+            onSendToEditor={(smiles) => {
+              handleLoadSmiles(smiles)
+              setActiveTab('Draw')
+              logActivity(`Mutation Workbench: Loaded candidate ${smiles} into Draw tab`)
+            }}
+            onSendToCompare={(pSmiles, cSmiles) => {
+              localStorage.setItem('rogveda_compare_target_molb', cSmiles)
+              setActiveTab('Compare')
+              logActivity(`Mutation Workbench: Comparing parent ${pSmiles} with candidate ${cSmiles}`)
+            }}
+            onSendToWarRoom={(cSmiles) => {
+              handleLoadSmiles(cSmiles)
+              setActiveTab('WarRoom')
+              logActivity(`Mutation Workbench: Sent candidate ${cSmiles} to War Room`)
+            }}
+            onAcceptCandidate={(cSmiles) => {
+              handleLoadSmiles(cSmiles)
+              addNotification('Candidate Accepted', `Accepted candidate as active molecule.`)
+              logActivity(`Mutation Workbench: Accepted candidate ${cSmiles}`)
+            }}
           />
         </div>
 
@@ -1229,6 +1279,104 @@ export default function MoleculeDraw() {
                   </div>
                 ))
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── RESEARCH DOSSIER / REPORT IN-APP PREVIEW MODAL ── */}
+      {dossierPreview && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(5, 11, 13, 0.85)', backdropFilter: 'blur(5px)' }}
+            onClick={() => setDossierPreview(null)}
+          />
+          <div style={{
+            position: 'relative', width: '92vw', maxWidth: '1050px', height: '88vh',
+            background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.3)',
+            borderRadius: '12px', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+          }}>
+            <div style={{
+              padding: '14px 20px', background: '#0a1517',
+              borderBottom: '1px solid rgba(45,212,212,0.15)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: '#2dd4d4', fontWeight: 700, fontSize: '16px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                  {dossierPreview.name || 'Research Dossier'}
+                </span>
+                <span style={{ fontSize: '11px', background: 'rgba(45,212,212,0.12)', color: '#2dd4d4', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(45,212,212,0.2)' }}>
+                  Print-Ready (100% Offline)
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      addNotification('Generating PDF', 'Compiling PDF with WeasyPrint...')
+                      const blob = await api.downloadBlob('/api/reports/pdf/render', {
+                        html: dossierPreview.html,
+                        filename: dossierPreview.name,
+                      })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `${dossierPreview.name}.pdf`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                      addNotification('PDF Downloaded', `"${dossierPreview.name}.pdf" downloaded.`)
+                    } catch (err) {
+                      console.error('PDF render failed:', err)
+                      addNotification('Error', 'Failed to render PDF.')
+                    }
+                  }}
+                  style={{
+                    padding: '7px 14px', background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
+                    border: 'none', borderRadius: '6px', color: '#000',
+                    fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => {
+                    const iframe = document.getElementById('rogveda-dossier-iframe')
+                    if (iframe && iframe.contentWindow) {
+                      iframe.contentWindow.focus()
+                      iframe.contentWindow.print()
+                    }
+                  }}
+                  style={{
+                    padding: '7px 14px', background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px',
+                    color: '#e2e8f0', fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+                  }}
+                >
+                  Print
+                </button>
+                <button
+                  onClick={() => setDossierPreview(null)}
+                  style={{
+                    background: 'transparent', border: 'none', color: '#94a3b8',
+                    fontSize: '20px', cursor: 'pointer', padding: '0 6px',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div style={{ flex: 1, background: '#ffffff', overflow: 'hidden' }}>
+              <iframe
+                id="rogveda-dossier-iframe"
+                title="Research Dossier"
+                srcDoc={dossierPreview.html}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
             </div>
           </div>
         </div>
