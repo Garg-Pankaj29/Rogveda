@@ -36,17 +36,23 @@ class TransformApplicabilityItem(BaseModel):
     category: str
     target_group: str
     is_applicable: bool
+    applicable: Optional[bool] = None
     match_count: int
+    substructure_matches: Optional[int] = None
     unavailability_reason: Optional[str] = None
     preview_smiles: Optional[str] = None
     has_multiple_products: bool = False
+    product_variants_count: Optional[int] = None
     variants: List[str] = Field(default_factory=list)
 
 
 class ApplicableResponse(BaseModel):
     parent_smiles: str
+    smiles: Optional[str] = None
     total_transforms: int
     applicable_count: int
+    num_applicable: Optional[int] = None
+    num_unavailable: Optional[int] = None
     transforms: List[TransformApplicabilityItem]
 
 
@@ -57,16 +63,22 @@ class MutateRequest(BaseModel):
 
 
 class PropertyDeltaItem(BaseModel):
+    label: Optional[str] = None
     parent: Any
+    parent_val: Optional[Any] = None
     candidate: Any
+    candidate_val: Optional[Any] = None
     delta: Any
+    unit: Optional[str] = None
 
 
 class EndpointPrediction(BaseModel):
     endpoint_id: str
     endpoint_name: str
+    category: Optional[str] = None
     status_label: str
     confidence: Optional[float] = None
+    probability: Optional[float] = None
     available: bool = True
     threshold: Optional[float] = None
 
@@ -74,6 +86,7 @@ class EndpointPrediction(BaseModel):
 class MutateResponse(BaseModel):
     parent_smiles: str
     candidate_smiles: str
+    candidate_formula: Optional[str] = None
     transform_id: str
     transform_name: str
     transform_description: str
@@ -81,12 +94,16 @@ class MutateResponse(BaseModel):
     match_count: int
     has_multiple_products: bool
     variant_index: int
+    selected_variant_index: Optional[int] = None
     total_variants: int
     variants: List[str]
     parent_properties: Dict[str, Any]
     candidate_properties: Dict[str, Any]
     property_deltas: Dict[str, PropertyDeltaItem]
+    property_deltas_list: Optional[List[PropertyDeltaItem]] = None
     parent_predictions: List[EndpointPrediction]
     candidate_predictions: List[EndpointPrediction]
+    predictions: Optional[List[EndpointPrediction]] = None
+    timing_ms: Optional[float] = None
     is_distinct: bool
 

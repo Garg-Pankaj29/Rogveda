@@ -14,6 +14,7 @@ These transforms are the single source of truth used by:
 """
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
@@ -291,10 +292,13 @@ def evaluate_applicable_mutations(smiles: str) -> Dict[str, Any]:
                 "category": category,
                 "target_group": target_group,
                 "is_applicable": False,
+                "applicable": False,
                 "match_count": 0,
+                "substructure_matches": 0,
                 "unavailability_reason": default_unavail,
                 "preview_smiles": None,
                 "has_multiple_products": False,
+                "product_variants_count": 0,
                 "variants": [],
             })
             continue
@@ -334,10 +338,13 @@ def evaluate_applicable_mutations(smiles: str) -> Dict[str, Any]:
                 "category": category,
                 "target_group": target_group,
                 "is_applicable": False,
+                "applicable": False,
                 "match_count": match_count,
+                "substructure_matches": match_count,
                 "unavailability_reason": "Target motif matched, but reaction produced no valid distinct sanitizable product.",
                 "preview_smiles": None,
                 "has_multiple_products": False,
+                "product_variants_count": 0,
                 "variants": [],
             })
         else:
@@ -349,17 +356,23 @@ def evaluate_applicable_mutations(smiles: str) -> Dict[str, Any]:
                 "category": category,
                 "target_group": target_group,
                 "is_applicable": True,
+                "applicable": True,
                 "match_count": match_count,
+                "substructure_matches": match_count,
                 "unavailability_reason": None,
                 "preview_smiles": unique_variants[0],
                 "has_multiple_products": len(unique_variants) > 1,
+                "product_variants_count": len(unique_variants),
                 "variants": unique_variants,
             })
 
     return {
         "parent_smiles": canonical_parent,
+        "smiles": canonical_parent,
         "total_transforms": len(TRANSFORM_CATALOG),
         "applicable_count": applicable_count,
+        "num_applicable": applicable_count,
+        "num_unavailable": len(TRANSFORM_CATALOG) - applicable_count,
         "transforms": evaluated_transforms,
     }
 
@@ -369,26 +382,26 @@ def evaluate_applicable_mutations(smiles: str) -> Dict[str, Any]:
 def _compute_property_deltas(parent_props: Dict[str, Any], candidate_props: Dict[str, Any]) -> Dict[str, Any]:
     """Compute signed before/after deltas for key physicochemical properties."""
     tracked = [
-        ("mw", "Molecular Weight (Da)", 2),
-        ("molecular_weight", "Molecular Weight (Da)", 2),
-        ("logp", "LogP", 2),
-        ("logP", "LogP", 2),
-        ("tpsa", "TPSA (Å²)", 2),
-        ("hbd", "H-Bond Donors", 0),
-        ("hba", "H-Bond Acceptors", 0),
-        ("rotatable_bonds", "Rotatable Bonds", 0),
-        ("rotBonds", "Rotatable Bonds", 0),
-        ("aromatic_rings", "Aromatic Rings", 0),
-        ("heavy_atoms", "Heavy Atoms", 0),
-        ("heavyAtoms", "Heavy Atoms", 0),
-        ("fraction_csp3", "Fraction Csp3", 3),
-        ("fractionCsp3", "Fraction Csp3", 3),
+        ("mw", "Molecular Weight", 2, "Da"),
+        ("molecular_weight", "Molecular Weight", 2, "Da"),
+        ("logp", "LogP", 2, ""),
+        ("logP", "LogP", 2, ""),
+        ("tpsa", "TPSA", 2, "Å²"),
+        ("hbd", "H-Bond Donors", 0, ""),
+        ("hba", "H-Bond Acceptors", 0, ""),
+        ("rotatable_bonds", "Rotatable Bonds", 0, ""),
+        ("rotBonds", "Rotatable Bonds", 0, ""),
+        ("aromatic_rings", "Aromatic Rings", 0, ""),
+        ("heavy_atoms", "Heavy Atoms", 0, ""),
+        ("heavyAtoms", "Heavy Atoms", 0, ""),
+        ("fraction_csp3", "Fraction Csp3", 3, ""),
+        ("fractionCsp3", "Fraction Csp3", 3, ""),
     ]
 
     deltas: Dict[str, Any] = {}
     seen_labels = set()
 
-    for key, label, dec in tracked:
+    for key, label, dec, unit in tracked:
         if label in seen_labels:
             continue
         p_val = parent_props.get(key)
@@ -398,11 +411,17 @@ def _compute_property_deltas(parent_props: Dict[str, Any], candidate_props: Dict
                 p_num = float(p_val)
                 c_num = float(c_val)
                 diff = round(c_num - p_num, dec) if dec > 0 else int(round(c_num - p_num))
+                delta_str = f"+{diff}" if diff > 0 else str(diff)
+                p_disp = round(p_num, dec) if dec > 0 else int(round(p_num))
+                c_disp = round(c_num, dec) if dec > 0 else int(round(c_num))
                 deltas[key] = {
                     "label": label,
-                    "parent": round(p_num, dec) if dec > 0 else int(round(p_num)),
-                    "candidate": round(c_num, dec) if dec > 0 else int(round(c_num)),
-                    "delta": diff,
+                    "parent": p_disp,
+                    "parent_val": p_disp,
+                    "candidate": c_disp,
+                    "candidate_val": c_disp,
+                    "delta": delta_str,
+                    "unit": unit,
                 }
                 seen_labels.add(label)
             except (ValueError, TypeError):
@@ -419,17 +438,22 @@ def _predict_endpoints(smiles: str) -> List[Dict[str, Any]]:
 
     predictions = []
     for ep in ALL_ENDPOINTS:
+        is_risk = ep["id"] in RISK_ENDPOINTS
+        category = "ADMET Risk" if is_risk else "Bioactivity"
         try:
             pred = ml_service.predict_endpoint(smiles, ep["id"])
-            if ep["id"] in RISK_ENDPOINTS:
+            if is_risk:
                 status = "High Risk" if "likely active" in pred.label else "Low Risk"
             else:
                 status = "Active" if "likely active" in pred.label else "Inactive"
+            prob = round(float(pred.probability_active), 4)
             predictions.append({
                 "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
+                "category": category,
                 "status_label": status,
-                "confidence": round(float(pred.probability_active), 4),
+                "confidence": prob,
+                "probability": prob,
                 "available": True,
                 "threshold": getattr(pred, "threshold", 0.5),
             })
@@ -437,8 +461,10 @@ def _predict_endpoints(smiles: str) -> List[Dict[str, Any]]:
             predictions.append({
                 "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
+                "category": category,
                 "status_label": "Model not installed",
                 "confidence": None,
+                "probability": None,
                 "available": False,
                 "threshold": None,
             })
@@ -447,8 +473,10 @@ def _predict_endpoints(smiles: str) -> List[Dict[str, Any]]:
             predictions.append({
                 "endpoint_id": ep["id"],
                 "endpoint_name": ep["name"],
+                "category": category,
                 "status_label": "Unavailable",
                 "confidence": None,
+                "probability": None,
                 "available": False,
                 "threshold": None,
             })
@@ -502,6 +530,7 @@ def apply_mutation(smiles: str, transform_id_or_name: str, variant_index: int = 
 
     Does not modify the parent in place.
     """
+    start_time = time.perf_counter()
     if not smiles or not isinstance(smiles, str) or not smiles.strip():
         raise ValueError("A valid non-empty SMILES string is required.")
 
@@ -585,9 +614,12 @@ def apply_mutation(smiles: str, transform_id_or_name: str, variant_index: int = 
     parent_preds = _predict_endpoints(canonical_parent)
     candidate_preds = _predict_endpoints(candidate_smiles)
 
+    timing_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
     return {
         "parent_smiles": canonical_parent,
         "candidate_smiles": candidate_smiles,
+        "candidate_formula": candidate_props.get("formula", ""),
         "transform_id": transform_item["id"],
         "transform_name": transform_item["name"],
         "transform_description": transform_item["description"],
@@ -595,12 +627,16 @@ def apply_mutation(smiles: str, transform_id_or_name: str, variant_index: int = 
         "match_count": match_count,
         "has_multiple_products": len(unique_variants) > 1,
         "variant_index": variant_index,
+        "selected_variant_index": variant_index,
         "total_variants": len(unique_variants),
         "variants": unique_variants,
         "parent_properties": parent_props,
         "candidate_properties": candidate_props,
         "property_deltas": property_deltas,
+        "property_deltas_list": list(property_deltas.values()),
         "parent_predictions": parent_preds,
         "candidate_predictions": candidate_preds,
+        "predictions": candidate_preds,
+        "timing_ms": timing_ms,
         "is_distinct": True,
     }

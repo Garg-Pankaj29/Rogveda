@@ -116,6 +116,12 @@ class TestMutationApplicability:
         data = resp.json()
         assert data["applicable_count"] >= 4
         assert data["total_transforms"] == 12
+        assert data["num_applicable"] == data["applicable_count"]
+        assert data["num_unavailable"] == 12 - data["applicable_count"]
+        for t in data["transforms"]:
+            assert t["applicable"] == t["is_applicable"]
+            assert t["substructure_matches"] == t["match_count"]
+            assert t["product_variants_count"] == len(t["variants"])
 
     def test_api_applicable_invalid_smiles(self):
         resp = client.post("/api/modification/applicable", json={"smiles": "NOT_A_SMILES"})
@@ -135,14 +141,24 @@ class TestMutationExecution:
         cand_mw = result["candidate_properties"]["mw"]
         assert cand_mw != parent_mw
         assert "mw" in result["property_deltas"] or "molecular_weight" in result["property_deltas"]
+        assert result["property_deltas"]["mw"]["label"] == "Molecular Weight"
+        assert result["property_deltas"]["mw"]["unit"] == "Da"
+        assert "parent_val" in result["property_deltas"]["mw"]
+        assert "candidate_val" in result["property_deltas"]["mw"]
+        assert "timing_ms" in result
+        assert result["candidate_formula"]
+        assert result["selected_variant_index"] == 0
 
         # Check predictions are populated
         assert len(result["candidate_predictions"]) == 6
         assert len(result["parent_predictions"]) == 6
+        assert len(result["predictions"]) == 6
         for pred in result["candidate_predictions"]:
             assert "endpoint_id" in pred
             assert "status_label" in pred
             assert "confidence" in pred
+            assert "category" in pred
+            assert "probability" in pred
 
     def test_apply_inapplicable_mutation_raises_error(self):
         with pytest.raises(ValueError) as exc:
