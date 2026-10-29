@@ -261,11 +261,11 @@ export default function BatchScreening({ isEmbedded = false }) {
               {Icons.back}
             </button>
             <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: accentColor }}>{Icons.beaker}</span>
                 Batch Screening
               </h1>
-              <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
+              <p style={{ fontSize: '15px', color: '#64748b', margin: '4px 0 0' }}>
                 Upload a CSV file with SMILES to screen up to 500 molecules at once
               </p>
             </div>
@@ -277,7 +277,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                 onClick={exportCsv}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                  padding: '10px 20px', borderRadius: '8px', fontSize: '14.5px', fontWeight: 600,
                   background: 'rgba(45,212,212,0.1)', border: '1px solid rgba(45,212,212,0.25)',
                   color: accentColor, cursor: 'pointer', transition: 'all 0.2s',
                   fontFamily: 'Inter, system-ui, sans-serif',
@@ -291,7 +291,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                 onClick={exportPdf}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                  padding: '10px 20px', borderRadius: '8px', fontSize: '14.5px', fontWeight: 600,
                   background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
                   border: 'none', color: '#000', cursor: 'pointer', transition: 'all 0.2s',
                   fontFamily: 'Inter, system-ui, sans-serif',
@@ -311,7 +311,7 @@ export default function BatchScreening({ isEmbedded = false }) {
           <div style={{
             padding: '14px 18px', marginBottom: '16px', borderRadius: '10px',
             background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.3)',
-            color: '#fca5a5', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px',
+            color: '#fca5a5', fontSize: '14.5px', display: 'flex', alignItems: 'center', gap: '10px',
           }}>
             {Icons.alert}
             {error}
@@ -330,7 +330,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                 background: powerStatus.is_throttled ? 'rgba(251,191,36,0.08)' : 'rgba(74,222,128,0.06)',
                 border: `1px solid ${powerStatus.is_throttled ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.15)'}`,
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14.5px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', color: powerStatus.is_throttled ? '#fbbf24' : '#4ade80' }}>
                     {powerStatus.power_source === 'plugged_in' ? Icons.plug : powerStatus.power_source === 'on_battery' ? Icons.battery : Icons.monitor}
                   </span>
@@ -345,7 +345,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                     }
                   </span>
                   {powerStatus.is_throttled && (
-                    <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '13px' }}>
                       Processing speed reduced to conserve battery
                     </span>
                   )}
@@ -355,7 +355,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                     onClick={(e) => { e.stopPropagation(); setShowPowerDropdown(p => !p) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '6px',
-                      padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                      padding: '6px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600,
                       background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                       color: '#94a3b8', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                     }}
@@ -383,7 +383,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                             display: 'flex', alignItems: 'flex-start', gap: '10px', width: '100%', padding: '10px 14px',
                             textAlign: 'left', border: 'none', cursor: 'pointer',
                             background: powerStatus.power_saver_setting === opt.mode ? 'rgba(45,212,212,0.1)' : 'transparent',
-                            color: '#e2e8f0', fontSize: '12px', fontFamily: 'Inter, system-ui, sans-serif',
+                            color: '#e2e8f0', fontSize: '13.5px', fontFamily: 'Inter, system-ui, sans-serif',
                             borderBottom: '1px solid rgba(255,255,255,0.05)',
                           }}
                           onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -394,7 +394,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                           </div>
                           <div>
                             <div style={{ fontWeight: 600 }}>{opt.label}</div>
-                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{opt.desc}</div>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{opt.desc}</div>
                           </div>
                         </button>
                       ))}
@@ -431,10 +431,10 @@ export default function BatchScreening({ isEmbedded = false }) {
                 <div style={{ color: accentColor, opacity: 0.6, marginBottom: '16px' }}>
                   {Icons.upload}
                 </div>
-                <h3 style={{ color: '#e2e8f0', fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>
+                <h3 style={{ color: '#e2e8f0', fontSize: '18px', fontWeight: 600, margin: '0 0 8px' }}>
                   {file ? file.name : 'Drop your CSV file here or click to browse'}
                 </h3>
-                <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
+                <p style={{ color: '#64748b', fontSize: '14.5px', margin: 0 }}>
                   CSV must contain a <code style={{ color: accentColor }}>smiles</code> column.
                   Optional: <code style={{ color: '#94a3b8' }}>name</code> column.
                   Max 500 rows, 5 MB.
@@ -448,10 +448,10 @@ export default function BatchScreening({ isEmbedded = false }) {
                   background: 'rgba(45,212,212,0.08)', border: '1px solid rgba(45,212,212,0.2)',
                 }}>
                   <span style={{ color: accentColor }}>{Icons.file}</span>
-                  <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500 }}>
+                  <span style={{ color: '#e2e8f0', fontSize: '14.5px', fontWeight: 500 }}>
                     {file.name}
                   </span>
-                  <span style={{ color: '#64748b', fontSize: '12px' }}>
+                  <span style={{ color: '#64748b', fontSize: '13px' }}>
                     ({(file.size / 1024).toFixed(1)} KB)
                   </span>
                 </div>
@@ -463,9 +463,9 @@ export default function BatchScreening({ isEmbedded = false }) {
                 onClick={handleSubmit}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  width: '100%', marginTop: '20px', padding: '14px 0',
+                  width: '100%', marginTop: '20px', padding: '15px 0',
                   borderRadius: '10px', border: 'none', cursor: 'pointer',
-                  fontWeight: 700, fontSize: '15px', letterSpacing: '0.02em',
+                  fontWeight: 700, fontSize: '16.5px', letterSpacing: '0.02em',
                   background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
                   color: '#000', fontFamily: 'Inter, system-ui, sans-serif',
                   boxShadow: '0 4px 20px rgba(45,212,212,0.3)',
@@ -494,10 +494,10 @@ export default function BatchScreening({ isEmbedded = false }) {
               animation: 'spin 1s linear infinite',
             }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <h3 style={{ color: '#e2e8f0', fontSize: '18px', fontWeight: 600, margin: '0 0 8px' }}>
+            <h3 style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 600, margin: '0 0 8px' }}>
               Processing molecules...
             </h3>
-            <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
+            <p style={{ color: '#64748b', fontSize: '14.5px', margin: 0 }}>
               ⚠️ Do not close this tab. This may take a minute for large files.
             </p>
           </div>
@@ -518,8 +518,8 @@ export default function BatchScreening({ isEmbedded = false }) {
               <div key={i} style={{
                 ...cardStyle, textAlign: 'center', padding: '16px',
               }}>
-                <div style={{ fontSize: '28px', fontWeight: 700, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{s.label}</div>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: '13px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -529,15 +529,15 @@ export default function BatchScreening({ isEmbedded = false }) {
         {results && results.length > 0 && (
           <div style={{ ...cardStyle, padding: '0', overflow: 'hidden', marginBottom: '20px' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(45,212,212,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h3 style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ color: '#e2e8f0', fontSize: '18px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {Icons.check}
                 Results ({results.length} molecules)
               </h3>
-              <span style={{ color: '#475569', fontSize: '12px' }}>Click column headers to sort</span>
+              <span style={{ color: '#94a3b8', fontSize: '13.5px' }}>Click column headers to sort</span>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{
-                width: '100%', borderCollapse: 'collapse', fontSize: '12px',
+                width: '100%', borderCollapse: 'collapse', fontSize: '14px',
                 minWidth: '1200px',
               }}>
                 <thead>
@@ -547,11 +547,11 @@ export default function BatchScreening({ isEmbedded = false }) {
                         key={col.key}
                         onClick={() => handleSort(col.key)}
                         style={{
-                          padding: '10px 8px', textAlign: 'left', whiteSpace: 'nowrap',
+                          padding: '12px 10px', textAlign: 'left', whiteSpace: 'nowrap',
                           background: '#081214', color: '#94a3b8', fontWeight: 600,
                           borderBottom: '1px solid rgba(45,212,212,0.1)',
                           cursor: 'pointer', userSelect: 'none', transition: 'color 0.2s',
-                          width: col.width, fontSize: '11px', letterSpacing: '0.02em',
+                          width: col.width, fontSize: '13px', letterSpacing: '0.02em',
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -583,11 +583,11 @@ export default function BatchScreening({ isEmbedded = false }) {
                           const status = row[col.statusKey] || ''
                           const color = getBadgeColor(status)
                           return (
-                            <td key={col.key} style={{ padding: '8px', color }}>
+                            <td key={col.key} style={{ padding: '10px 10px', color }}>
                               {val != null ? (
                                 <div>
-                                  <div style={{ fontWeight: 600, fontSize: '11px' }}>{Math.round(val * 100)}%</div>
-                                  <div style={{ fontSize: '10px', opacity: 0.7 }}>{status}</div>
+                                  <div style={{ fontWeight: 600, fontSize: '13px' }}>{Math.round(val * 100)}%</div>
+                                  <div style={{ fontSize: '12px', opacity: 0.8 }}>{status}</div>
                                 </div>
                               ) : (
                                 <span style={{ color: '#475569', fontStyle: 'italic' }}>N/A</span>
@@ -599,7 +599,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                         // SA difficulty
                         if (col.key === 'sa_difficulty') {
                           return (
-                            <td key={col.key} style={{ padding: '8px', color: getSaDiffColor(val), fontWeight: 600, fontSize: '11px' }}>
+                            <td key={col.key} style={{ padding: '10px 10px', color: getSaDiffColor(val), fontWeight: 600, fontSize: '13px' }}>
                               {val || '-'}
                             </td>
                           )
@@ -609,20 +609,20 @@ export default function BatchScreening({ isEmbedded = false }) {
                         if (col.key === 'canonical_smiles') {
                           const isCopied = copiedSmiles === val && val
                           return (
-                            <td key={col.key} style={{ padding: '6px 8px' }}>
+                            <td key={col.key} style={{ padding: '8px 10px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div
                                   style={{
                                     overflowX: 'auto',
                                     whiteSpace: 'nowrap',
                                     fontFamily: 'monospace',
-                                    fontSize: '11px',
+                                    fontSize: '13px',
                                     color: '#c0dede',
                                     background: 'rgba(0, 245, 233, 0.05)',
                                     border: '1px solid rgba(0, 245, 233, 0.15)',
                                     borderRadius: '5px',
-                                    padding: '4px 8px',
-                                    maxWidth: '230px',
+                                    padding: '5px 10px',
+                                    maxWidth: '240px',
                                     scrollbarWidth: 'thin',
                                     userSelect: 'all',
                                   }}
@@ -645,7 +645,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                                       border: `1px solid ${isCopied ? '#4ade80' : 'rgba(0, 245, 233, 0.25)'}`,
                                       borderRadius: '4px',
                                       color: isCopied ? '#4ade80' : '#00F5E9',
-                                      padding: '4px 6px',
+                                      padding: '5px 7px',
                                       cursor: 'pointer',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -674,7 +674,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                         // Contradiction flags
                         if (col.key === 'contradiction_flags') {
                           return (
-                            <td key={col.key} style={{ padding: '8px', textAlign: 'center', color: val > 0 ? '#fbbf24' : '#334155', fontWeight: val > 0 ? 700 : 400 }}>
+                            <td key={col.key} style={{ padding: '10px 10px', textAlign: 'center', color: val > 0 ? '#fbbf24' : '#334155', fontWeight: val > 0 ? 700 : 400 }}>
                               {val || 0}
                             </td>
                           )
@@ -682,7 +682,7 @@ export default function BatchScreening({ isEmbedded = false }) {
 
                         // Default
                         return (
-                          <td key={col.key} style={{ padding: '8px', color: '#c8d0d8' }}>
+                          <td key={col.key} style={{ padding: '10px 10px', color: '#c8d0d8' }}>
                             {val != null ? val : '-'}
                           </td>
                         )
@@ -700,19 +700,19 @@ export default function BatchScreening({ isEmbedded = false }) {
           <div style={{ ...cardStyle, padding: '0', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(220,38,38,0.15)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {Icons.alert}
-              <h3 style={{ color: '#f87171', fontSize: '15px', fontWeight: 600, margin: 0 }}>
+              <h3 style={{ color: '#f87171', fontSize: '18px', fontWeight: 600, margin: 0 }}>
                 Failed Rows ({errors.length})
               </h3>
             </div>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
                   <tr>
                     {['Row', 'Name', 'SMILES', 'Reason'].map(h => (
                       <th key={h} style={{
-                        padding: '10px 12px', textAlign: 'left', background: 'rgba(220,38,38,0.06)',
+                        padding: '12px 12px', textAlign: 'left', background: 'rgba(220,38,38,0.06)',
                         color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid rgba(220,38,38,0.1)',
-                        fontSize: '11px',
+                        fontSize: '13px',
                       }}>{h}</th>
                     ))}
                   </tr>
@@ -722,19 +722,19 @@ export default function BatchScreening({ isEmbedded = false }) {
                     <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
                       <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{err.row_index}</td>
                       <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{err.name || '-'}</td>
-                      <td style={{ padding: '6px 12px' }}>
+                      <td style={{ padding: '8px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <div style={{
                             overflowX: 'auto',
                             whiteSpace: 'nowrap',
                             fontFamily: 'monospace',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             color: '#94a3b8',
                             background: 'rgba(255, 255, 255, 0.03)',
                             border: '1px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '4px',
-                            padding: '3px 6px',
-                            maxWidth: '230px',
+                            padding: '4px 8px',
+                            maxWidth: '240px',
                             scrollbarWidth: 'thin',
                             userSelect: 'all',
                           }}>
@@ -755,7 +755,7 @@ export default function BatchScreening({ isEmbedded = false }) {
                                 border: `1px solid ${copiedSmiles === err.smiles ? '#4ade80' : 'rgba(255, 255, 255, 0.15)'}`,
                                 borderRadius: '4px',
                                 color: copiedSmiles === err.smiles ? '#4ade80' : '#cbd5e1',
-                                padding: '3px 5px',
+                                padding: '4px 6px',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -792,9 +792,9 @@ export default function BatchScreening({ isEmbedded = false }) {
             <button
               onClick={() => { setResults(null); setErrors([]); setSummary(null); setFile(null); setError('') }}
               style={{
-                padding: '12px 32px', borderRadius: '10px',
+                padding: '13px 34px', borderRadius: '10px',
                 background: 'rgba(45,212,212,0.08)', border: '1px solid rgba(45,212,212,0.2)',
-                color: accentColor, fontSize: '14px', fontWeight: 600,
+                color: accentColor, fontSize: '15.5px', fontWeight: 600,
                 cursor: 'pointer', transition: 'all 0.2s',
                 fontFamily: 'Inter, system-ui, sans-serif',
               }}

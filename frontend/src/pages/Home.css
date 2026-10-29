@@ -258,7 +258,7 @@ button:focus-visible {
   background: var(--green);
   color: var(--cy);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13.5px;
   letter-spacing: 0.04em;
   box-shadow: 0 0 12px rgba(0, 245, 233, 0.25);
 }
@@ -664,7 +664,7 @@ button:focus-visible {
 .stats span {
   display: block;
   margin-top: 6px;
-  font-size: 10.5px;
+  font-size: 12.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #cfe9ea;
@@ -819,7 +819,7 @@ button:focus-visible {
   }
   .nav a {
     white-space: nowrap;
-    font-size: 11.5px;
+    font-size: 13px;
   }
   .me span {
     display: none;
@@ -894,7 +894,7 @@ button:focus-visible {
     font-size: 26px;
   }
   .stats span {
-    font-size: 9.5px;
+    font-size: 12px;
   }
 }
 

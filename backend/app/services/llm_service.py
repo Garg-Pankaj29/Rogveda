@@ -9,6 +9,7 @@ import httpx
 
 from app.core.config import LLM_ENDPOINT
 
+logger = logging.getLogger(__name__)
 def generate_insight(
     smiles: str,
     properties: dict,

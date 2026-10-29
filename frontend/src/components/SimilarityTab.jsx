@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../lib/apiClient'
 import { computeProperties } from '../lib/chemistry'
@@ -45,7 +45,7 @@ function Tooltip({ text, children, style = {} }) {
       {children}
       <div style={{
         position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px',
-        background: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', fontSize: '12px',
+        background: '#1e293b', color: '#e2e8f0', padding: '7px 12px', borderRadius: '4px', fontSize: '13px',
         whiteSpace: 'nowrap', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none', zIndex: 100,
         boxShadow: '0 4px 6px rgba(0,0,0,0.3)', fontWeight: 400,
       }}>
@@ -66,7 +66,7 @@ function ActionButton({ icon, label, onClick, disabled = false, disabledTooltip 
       disabled={disabled}
       style={{
         display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '6px 12px', fontSize: '12px', fontWeight: 500,
+        padding: '7px 14px', fontSize: '13.5px', fontWeight: 500,
         borderRadius: '6px',
         border: disabled ? '1px solid rgba(100,116,139,0.15)' : '1px solid rgba(45,212,212,0.15)',
         background: disabled ? 'rgba(100,116,139,0.05)' : 'rgba(45,212,212,0.05)',
@@ -186,6 +186,15 @@ export default function SimilarityTab({
     }
   }, [effectiveSmiles, threshold, maxResults, searchType, metric, logActivity])
 
+  /* ─── Auto-search on molecule change ─── */
+  useEffect(() => {
+    if (!effectiveSmiles) {
+      setResults(null)
+      return
+    }
+    handleSearch()
+  }, [effectiveSmiles, handleSearch])
+
   /* ─── Compute properties for query and top match ─── */
   const queryProps = useMemo(() => {
     if (!rdkit || !effectiveSmiles) return null
@@ -277,7 +286,7 @@ export default function SimilarityTab({
         <div style={{ gridColumn: '1 / 2', ...cardStyle, display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Query Molecule
             </h3>
             <Tooltip text="The molecule you're searching similar compounds for">
@@ -314,21 +323,21 @@ export default function SimilarityTab({
             ) : (
               <div style={{ textAlign: 'center', color: '#475569', padding: '20px' }}>
                 <svg style={{ width: '48px', height: '48px', margin: '0 auto 12px', opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                <p style={{ fontSize: '13px', margin: 0 }}>No molecule loaded.<br/>Switch to the Draw tab to draw or load a molecule.</p>
+                <p style={{ fontSize: '14.5px', margin: 0 }}>No molecule loaded.<br/>Switch to the Draw tab to draw or load a molecule.</p>
               </div>
             )}
           </div>
 
           {/* SMILES Input (optional) */}
           <div>
-            <label style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+            <label style={{ color: '#94a3b8', fontSize: '13.5px', marginBottom: '6px', display: 'block', fontWeight: 500 }}>
               SMILES Input (optional)
             </label>
             <div style={{
               display: 'flex', alignItems: 'center',
               background: '#081214', borderRadius: '6px',
               border: '1px solid rgba(45,212,212,0.1)',
-              padding: '0 12px', height: '36px',
+              padding: '0 12px', height: '40px',
             }}>
               <input
                 type="text"
@@ -337,7 +346,7 @@ export default function SimilarityTab({
                 placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                  color: '#fff', fontSize: '13px', fontFamily: 'Inter, system-ui, sans-serif',
+                  color: '#fff', fontSize: '14.5px', fontFamily: 'Inter, system-ui, sans-serif',
                 }}
               />
               {customSmiles && (
@@ -354,18 +363,18 @@ export default function SimilarityTab({
 
         {/* ──── COLUMN 2: Search Options (~28%) ──── */}
         <div style={{ flex: '0 0 28%', ...cardStyle, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
             Search Options
           </h3>
 
           {/* Search Type */}
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', display: 'block' }}>Search Type</label>
+            <label style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px', display: 'block', fontWeight: 500 }}>Search Type</label>
             <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(45,212,212,0.15)', background: '#050b0d' }}>
               <button
                 onClick={() => setSearchType('structural')}
                 style={{
-                  flex: 1, padding: '8px 12px', fontSize: '13px', fontWeight: 600,
+                  flex: 1, padding: '9px 12px', fontSize: '14px', fontWeight: 600,
                   border: 'none', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                   transition: 'all 0.2s',
                   ...(searchType === 'structural'
@@ -376,7 +385,7 @@ export default function SimilarityTab({
               <button
                 onClick={() => setSearchType('substructure')}
                 style={{
-                  flex: 1, padding: '8px 12px', fontSize: '13px', fontWeight: 600,
+                  flex: 1, padding: '9px 12px', fontSize: '14px', fontWeight: 600,
                   border: 'none', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                   transition: 'all 0.2s',
                   ...(searchType === 'substructure'
@@ -393,7 +402,7 @@ export default function SimilarityTab({
               {/* Similarity Metric */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <label style={{ color: '#94a3b8', fontSize: '13px' }}>Similarity Metric</label>
+                  <label style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 500 }}>Similarity Metric</label>
                   <Tooltip text="Select a fingerprint representation (Morgan ECFP4/ECFP6, MACCS) and comparison algorithm (Tanimoto, Dice).">
                     {Icons.info}
                   </Tooltip>
@@ -404,7 +413,7 @@ export default function SimilarityTab({
                   style={{
                     width: '100%', background: '#081214',
                     border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                    fontSize: '13px', borderRadius: '6px', padding: '10px 12px',
+                    fontSize: '14.5px', borderRadius: '6px', padding: '10px 14px',
                     outline: 'none', appearance: 'none', cursor: 'pointer',
                     fontFamily: 'Inter, system-ui, sans-serif',
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -420,7 +429,7 @@ export default function SimilarityTab({
 
               {/* Similarity Threshold */}
               <div>
-                <label style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', display: 'block' }}>Similarity Threshold</label>
+                <label style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px', display: 'block', fontWeight: 500 }}>Similarity Threshold</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <input
                     type="range"
@@ -439,9 +448,9 @@ export default function SimilarityTab({
                     value={threshold}
                     onChange={e => handleThresholdInput(e.target.value)}
                     style={{
-                      width: '60px', background: '#081214',
+                      width: '64px', background: '#081214',
                       border: '1px solid rgba(45,212,212,0.15)', color: '#fff',
-                      fontSize: '13px', borderRadius: '6px', padding: '6px 8px',
+                      fontSize: '14px', borderRadius: '6px', padding: '6px 8px',
                       textAlign: 'center', outline: 'none',
                       fontFamily: 'Inter, system-ui, sans-serif',
                     }}
@@ -453,14 +462,14 @@ export default function SimilarityTab({
 
           {/* Max Results */}
           <div>
-            <label style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', display: 'block' }}>Max Results</label>
+            <label style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px', display: 'block', fontWeight: 500 }}>Max Results</label>
             <select
               value={maxResults}
               onChange={e => setMaxResults(parseInt(e.target.value))}
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '6px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '6px', padding: '10px 14px',
                 outline: 'none', appearance: 'none', cursor: 'pointer',
                 fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -482,7 +491,7 @@ export default function SimilarityTab({
             onClick={handleSearch}
             disabled={isSearching || !effectiveSmiles}
             style={{
-              width: '100%', padding: '14px 0', fontWeight: 700, fontSize: '14px',
+              width: '100%', padding: '14px 0', fontWeight: 700, fontSize: '15.5px',
               borderRadius: '8px', border: 'none',
               cursor: isSearching || !effectiveSmiles ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
@@ -509,12 +518,12 @@ export default function SimilarityTab({
         <div style={{ gridColumn: '3 / 4', ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
           {/* Title + score bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Similarity Results
             </h3>
             {topMatch && (
               <div style={{ textAlign: 'right', minWidth: '140px' }}>
-                <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>
+                <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>
                   Overall {searchType === 'substructure' ? 'Match' : 'Similarity'}: <span style={{ color: accentColor, fontWeight: 600 }}>
                     {searchType === 'substructure' ? 'Substructure Match' : Number(topMatch.tanimoto ?? 0).toFixed(2)}
                   </span>
@@ -529,7 +538,7 @@ export default function SimilarityTab({
                         transition: 'width 0.5s ease',
                       }} />
                     </div>
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', textAlign: 'right' }}>
+                    <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '2px', textAlign: 'right' }}>
                       {Number(topMatch.tanimoto ?? 0).toFixed(2)}
                     </div>
                   </>
@@ -549,7 +558,7 @@ export default function SimilarityTab({
                 key={tab.id}
                 onClick={() => setResultsSubTab(tab.id)}
                 style={{
-                  padding: '8px 12px', fontSize: '12px', fontWeight: 500,
+                  padding: '9px 16px', fontSize: '14px', fontWeight: 500,
                   border: 'none', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                   transition: 'all 0.2s', background: 'transparent',
                   ...(resultsSubTab === tab.id
@@ -565,11 +574,11 @@ export default function SimilarityTab({
             {resultsSubTab === 'matched' ? (
               /* ── Matched Properties table ── */
               results === null ? (
-                <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+                <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
                   Run a search to see property comparisons.
                 </div>
               ) : results.length === 0 ? (
-                <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+                <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
                   No matches found above the threshold.
                 </div>
               ) : (
@@ -582,13 +591,13 @@ export default function SimilarityTab({
                   scrollbarWidth: 'thin',
                   scrollbarColor: 'rgba(45,212,212,0.3) transparent',
                 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                     <thead style={{ position: 'sticky', top: 0, background: '#0a1618', zIndex: 2, boxShadow: '0 1px 0 rgba(45,212,212,0.1)' }}>
                       <tr>
                         {['Property', 'Query Molecule', 'Top Match (1)', 'Match'].map(h => (
                           <th key={h} style={{
-                            textAlign: 'left', padding: '8px 10px', color: '#94a3b8', fontWeight: 600,
-                            borderBottom: '1px solid rgba(45,212,212,0.1)', fontSize: '11px',
+                            textAlign: 'left', padding: '10px 12px', color: '#94a3b8', fontWeight: 600,
+                            borderBottom: '1px solid rgba(45,212,212,0.1)', fontSize: '13px',
                             letterSpacing: '0.04em', textTransform: 'uppercase',
                           }}>{h}</th>
                         ))}
@@ -607,16 +616,16 @@ export default function SimilarityTab({
                         
                         return (
                           <tr key={i} style={{ borderBottom: '1px solid rgba(45,212,212,0.05)' }}>
-                            <td style={{ padding: '7px 10px', color: '#94a3b8' }}>{row.label}</td>
+                            <td style={{ padding: '8px 12px', color: '#94a3b8' }}>{row.label}</td>
                             <td 
-                              style={{ padding: '7px 10px', color: '#fff', fontFamily: 'monospace', fontWeight: 500 }}
+                              style={{ padding: '8px 12px', color: '#fff', fontFamily: 'monospace', fontWeight: 500 }}
                               dangerouslySetInnerHTML={{ __html: formatVal(qVal) }}
                             />
                             <td 
-                              style={{ padding: '7px 10px', color: '#fff', fontFamily: 'monospace', fontWeight: 500 }}
+                              style={{ padding: '8px 12px', color: '#fff', fontFamily: 'monospace', fontWeight: 500 }}
                               dangerouslySetInnerHTML={{ __html: formatVal(mVal) }}
                             />
-                            <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {isMatch ? Icons.check : null}
                             </td>
                           </tr>
@@ -629,7 +638,7 @@ export default function SimilarityTab({
             ) : resultsSubTab === 'comparison' ? (
               /* ── Property Comparison ── */
               results === null || results.length === 0 ? (
-                <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+                <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
                   Run a search to see property comparisons.
                 </div>
               ) : (
@@ -665,7 +674,7 @@ export default function SimilarityTab({
 
                     return (
                       <div key={row.qKey} style={{ marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#94a3b8', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                           <span>{row.label}</span>
                           <span style={{ color: '#cbd5e1', display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <span style={{ color: '#fff' }}>{formatDisplay(qNum, row.isInt)}</span>
@@ -689,13 +698,13 @@ export default function SimilarityTab({
             ) : resultsSubTab === 'alignment' ? (
               /* ── Structural Alignment ── */
               results === null || results.length === 0 ? (
-                <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
+                <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
                   Run a search to see structural alignments.
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: '16px', padding: '16px', height: '100%', boxSizing: 'border-box', maxHeight: '280px' }}>
                   <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', letterSpacing: '0.04em' }}>
+                    <div style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 600, color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', letterSpacing: '0.04em' }}>
                       QUERY MOLECULE
                     </div>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflow: 'hidden' }}>
@@ -707,7 +716,7 @@ export default function SimilarityTab({
                   </div>
                   
                   <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: `1px solid rgba(45,212,212,0.15)`, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: 'inset 0 0 20px rgba(45,212,212,0.02)' }}>
-                    <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: accentColor, borderBottom: '1px solid rgba(45,212,212,0.1)', background: 'rgba(45,212,212,0.05)', letterSpacing: '0.04em' }}>
+                    <div style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 600, color: accentColor, borderBottom: '1px solid rgba(45,212,212,0.1)', background: 'rgba(45,212,212,0.05)', letterSpacing: '0.04em' }}>
                       TOP MATCH <span style={{ opacity: 0.6, fontWeight: 500, marginLeft: '6px' }}>({searchType === 'substructure' ? 'SUBSTRUCTURE' : `SIMILARITY: ${Number(topMatch?.tanimoto ?? 0).toFixed(2)}`})</span>
                     </div>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflow: 'hidden' }}>
@@ -729,7 +738,7 @@ export default function SimilarityTab({
                 onClick={handleDownloadResults}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 14px', fontSize: '12px', fontWeight: 500,
+                  padding: '9px 16px', fontSize: '13.5px', fontWeight: 500,
                   borderRadius: '6px', border: '1px solid rgba(45,212,212,0.15)',
                   background: 'rgba(45,212,212,0.05)', color: '#e2e8f0',
                   cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
@@ -743,7 +752,7 @@ export default function SimilarityTab({
                 onClick={() => setShowAllResults(true)}
                 style={{
                   background: 'none', border: 'none',
-                  color: accentColor, fontSize: '12px', fontWeight: 600,
+                  color: accentColor, fontSize: '14px', fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                   display: 'flex', alignItems: 'center', gap: '4px',
                 }}
@@ -755,7 +764,7 @@ export default function SimilarityTab({
         </div>
       {/* Error message */}
       {searchError && (
-        <div style={{ gridColumn: '1 / 4', padding: '12px', fontSize: '13px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
+        <div style={{ gridColumn: '1 / 4', padding: '12px', fontSize: '14px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
           {searchError}
         </div>
       )}
@@ -764,7 +773,7 @@ export default function SimilarityTab({
         {/* ── LEFT: Similar Compounds (~65%) ── */}
         <div style={{ gridColumn: '1 / 3', ...cardStyle }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Similar Compounds
             </h3>
             {results && results.length > 5 && (
@@ -772,7 +781,7 @@ export default function SimilarityTab({
                 onClick={() => setShowAllResults(true)}
                 style={{
                   background: 'none', border: 'none', color: accentColor,
-                  fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                  fontSize: '14px', fontWeight: 600, cursor: 'pointer',
                   fontFamily: 'Inter, system-ui, sans-serif',
                   display: 'flex', alignItems: 'center', gap: '4px',
                 }}
@@ -783,7 +792,7 @@ export default function SimilarityTab({
           </div>
 
           {!results || results.length === 0 ? (
-            <div style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
               {results === null
                 ? 'Run a similarity search to see matching compounds.'
                 : 'No similar compounds found above the threshold.'}
@@ -819,14 +828,14 @@ export default function SimilarityTab({
                         }}
                       />
                     ) : (
-                      <span style={{ color: '#475569', fontSize: '10px' }}>No structure</span>
+                      <span style={{ color: '#475569', fontSize: '12px' }}>No structure</span>
                     )}
                   </div>
                   <div style={{ width: '100%', textAlign: 'center' }}>
-                    <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ color: '#fff', fontSize: '14px', fontWeight: 600, marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {card.name || 'Unnamed compound'}
                     </div>
-                    <div style={{ color: accentColor, fontSize: '11px', fontWeight: 500 }}>
+                    <div style={{ color: accentColor, fontSize: '13px', fontWeight: 500 }}>
                       {searchType === 'substructure' ? 'Substructure Match' : `Similarity: ${Number(card.tanimoto ?? 0).toFixed(2)}`}
                     </div>
                   </div>
@@ -848,11 +857,11 @@ export default function SimilarityTab({
             overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               Report Generation
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px', lineHeight: 1.5 }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 16px', lineHeight: 1.5 }}>
               Generate a detailed report of your results.
             </p>
             <select
@@ -861,7 +870,7 @@ export default function SimilarityTab({
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '8px', padding: '10px 14px',
                 marginBottom: '14px', outline: 'none', appearance: 'none',
                 cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -875,7 +884,7 @@ export default function SimilarityTab({
             <button
               onClick={() => onGenerateReport?.(reportFormat)}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
+                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '15px',
                 borderRadius: '8px', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
@@ -897,7 +906,7 @@ export default function SimilarityTab({
             style={{
               width: '100%', padding: '14px 0', borderRadius: '8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              fontSize: '14px', fontWeight: 600,
+              fontSize: '15.5px', fontWeight: 600,
               background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.12)',
               color: accentColor, cursor: 'pointer',
               fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',
@@ -933,7 +942,7 @@ export default function SimilarityTab({
             }}
           >
             <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid rgba(45,212,212,0.1)' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 Similar Compounds ({results.length})
               </h2>
@@ -974,10 +983,10 @@ export default function SimilarityTab({
                     />
                   </div>
                   <div style={{ width: '100%', textAlign: 'center' }}>
-                    <div style={{ color: '#fff', fontSize: '13px', fontWeight: 600, marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={hit.name}>
+                    <div style={{ color: '#fff', fontSize: '14.5px', fontWeight: 600, marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={hit.name}>
                       {hit.name || 'Unnamed compound'}
                     </div>
-                    <div style={{ color: accentColor, fontSize: '11px', fontWeight: 500 }}>
+                    <div style={{ color: accentColor, fontSize: '13px', fontWeight: 500 }}>
                       {searchType === 'substructure' ? 'Substructure Match' : `Similarity: ${Number(hit.tanimoto ?? 0).toFixed(2)}`}
                     </div>
                   </div>

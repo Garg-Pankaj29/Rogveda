@@ -138,4 +138,28 @@ export async function upload(path, formData) {
   return res.json()
 }
 
-export default { get, post, patch, delete: del, upload, setToken, getToken, clearToken, clearUserData, isAuthenticated }
+/** POST request returning a binary Blob for direct file downloads */
+export async function downloadBlob(path, data) {
+  const token = getToken()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const error = new Error(body.detail || `Download failed: ${res.status}`)
+    error.status = res.status
+    throw error
+  }
+
+  return res.blob()
+}
+
+export default { get, post, patch, delete: del, upload, downloadBlob, setToken, getToken, clearToken, clearUserData, isAuthenticated }

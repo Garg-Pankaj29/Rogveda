@@ -11,6 +11,8 @@ import ModificationTab from '../components/ModificationTab'
 import CompareTab from '../components/CompareTab'
 import PredictionTab from '../components/PredictionTab'
 import ChemicalSpaceTab from '../components/ChemicalSpaceTab'
+import WarRoomTab from '../components/WarRoomTab'
+import BenchmarkSelectorModal from '../components/BenchmarkSelectorModal'
 import BatchScreening from './BatchScreening'
 import { computeProperties } from '../lib/chemistry'
 import { experimentService } from '../lib/experimentService'
@@ -60,25 +62,27 @@ async function loadMoleculeWhenReady(ketcherRef, molData) {
    ══════════════════════════════════════════════ */
 
 const I = {
-  // Tab icons
+  // Tab icons (16x16 standard balanced tab size)
   drawTab: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>,
   analysis: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
   search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
   modify: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="12" r="3" /><line x1="8.7" y1="7.5" x2="15.3" y2="10.5" /><line x1="8.7" y1="16.5" x2="15.3" y2="13.5" /></svg>,
   compare: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="9" height="9" rx="1" /><rect x="13" y="13" width="9" height="9" rx="1" /><path d="M13 2h4a2 2 0 0 1 2 2v4" /><path d="M2 13v4a2 2 0 0 0 2 2h4" /></svg>,
+  warRoom: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
   predict: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><circle cx="8" cy="16" r="1" /><circle cx="16" cy="16" r="1" /></svg>,
   chemSpace: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" strokeDasharray="4 4" /><circle cx="12" cy="12" r="3" /><circle cx="7" cy="8" r="1.5" fill="currentColor" /><circle cx="16" cy="7" r="1.5" fill="currentColor" /><circle cx="17" cy="15" r="1.5" fill="currentColor" /><circle cx="8" cy="16" r="1.5" fill="currentColor" /></svg>,
   layers: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>,
   // Sub-toolbar icons
-  sun: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>,
-  moon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
-  fileNew: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>,
-  folderOpen: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>,
-  save: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>,
-  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
-  clock: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-  trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
-  code: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
+  sun: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>,
+  moon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
+  fileNew: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>,
+  folderOpen: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>,
+  save: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>,
+  download: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+  clock: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+  trash: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
+  code: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
+  benchmark: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
 }
 
 /* ══════════════════════════════════════════════
@@ -113,6 +117,7 @@ export default function MoleculeDraw() {
     if (lower === 'search' || lower === 'similarity') return 'Search'
     if (lower === 'modify' || lower === 'modification') return 'Modify'
     if (lower === 'compare') return 'Compare'
+    if (lower === 'warroom' || lower === 'war-room' || lower === 'leadopt') return 'WarRoom'
     if (lower === 'batch') return 'Batch'
     if (lower === 'chemspace' || lower === 'chemicalspace') return 'ChemSpace'
     if (lower === 'draw') return 'Draw'
@@ -174,6 +179,7 @@ export default function MoleculeDraw() {
   }, [])
 
   const [canonicalSmiles, setCanonicalSmiles] = useState('')
+  const [isWarRoomCalculating, setIsWarRoomCalculating] = useState(false)
   const [sdfBlock, setSdfBlock] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -187,6 +193,8 @@ export default function MoleculeDraw() {
 
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showOpenModal, setShowOpenModal] = useState(false)
+  const [showBenchmarkModal, setShowBenchmarkModal] = useState(false)
+  const [dossierPreview, setDossierPreview] = useState(null)
   const last3dSmiles = useRef('')
 
   // ── Background AI insight data (computed on molecule change, debounced) ──
@@ -564,7 +572,7 @@ export default function MoleculeDraw() {
     navigate('/home')
   }
 
-  const handleGenerateReport = async (format = 'Comprehensive Report (PDF)') => {
+  const handleGenerateReport = async (format = 'Comprehensive Report (PDF)', customContext = null) => {
     if (format === 'Data Export (CSV)') {
       const csvRows = [
         ['Property', 'Value'],
@@ -637,7 +645,7 @@ export default function MoleculeDraw() {
       return
     }
 
-    // ── Comprehensive Report via backend API ──
+    // ── Comprehensive Report & Research Dossier via backend API ──
     logActivity(`Report generated (${format})`)
 
     // Prepare molecule SVG for the report
@@ -648,75 +656,118 @@ export default function MoleculeDraw() {
         .replace(/fill="none"/g, 'fill="#fff"')
     }
 
-    // Collect all background data
     const bg = bgAiData.current
+    const targetSmiles = customContext?.smiles || canonicalSmiles || inputSmiles || null
+    const targetProperties = customContext?.properties || {
+      formula: currentMolecule.formula,
+      mw: currentMolecule.mw,
+      exactMass: currentMolecule.exactMass,
+      logP: currentMolecule.logP,
+      tpsa: currentMolecule.tpsa,
+      hbd: currentMolecule.hbd,
+      hba: currentMolecule.hba,
+      rotBonds: currentMolecule.rotBonds,
+      totalRings: currentMolecule.totalRings,
+      aromaticRings: currentMolecule.aromaticRings,
+      heavyAtoms: currentMolecule.heavyAtoms,
+      heteroAtoms: currentMolecule.heteroAtoms,
+      fractionCsp3: currentMolecule.fractionCsp3,
+      molarRefractivity: currentMolecule.molarRefractivity,
+      chiralCenters: currentMolecule.chiralCenters,
+      amideBonds: currentMolecule.amideBonds,
+      saturatedRings: currentMolecule.saturatedRings,
+    }
+
+    if (!targetSmiles && (!targetProperties || !targetProperties.formula || targetProperties.formula === '-')) {
+      addNotification('No Molecule Selected', 'Please enter, draw, or select a molecule before generating a research dossier.')
+      return
+    }
 
     const reportPayload = {
-      smiles: canonicalSmiles || inputSmiles || null,
-      properties: {
-        formula: currentMolecule.formula,
-        mw: currentMolecule.mw,
-        exactMass: currentMolecule.exactMass,
-        logP: currentMolecule.logP,
-        tpsa: currentMolecule.tpsa,
-        hbd: currentMolecule.hbd,
-        hba: currentMolecule.hba,
-        rotBonds: currentMolecule.rotBonds,
-        totalRings: currentMolecule.totalRings,
-        aromaticRings: currentMolecule.aromaticRings,
-        heavyAtoms: currentMolecule.heavyAtoms,
-        heteroAtoms: currentMolecule.heteroAtoms,
-        fractionCsp3: currentMolecule.fractionCsp3,
-        molarRefractivity: currentMolecule.molarRefractivity,
-        chiralCenters: currentMolecule.chiralCenters,
-        amideBonds: currentMolecule.amideBonds,
-        saturatedRings: currentMolecule.saturatedRings,
-      },
-      predictions: bg.predictions,
+      smiles: targetSmiles,
+      canonical_smiles: targetSmiles,
+      properties: targetProperties,
+      predictions: customContext?.predictions || bg.predictions,
       ai_summary: bg.aiSummary,
       similarity_hits: bg.similarityHits,
       drug_likeness: bg.drugLikeness,
       activity_log: recentActivity,
       molecule_svg: moleculeSvg || null,
+      conformer_3d: sdfBlock ? {
+        has_conformer: true,
+        status_label: 'Generated & Energy-Optimized',
+        atom_count: currentMolecule.heavyAtoms !== '-' ? parseInt(currentMolecule.heavyAtoms) || null : null,
+        sdf_block: sdfBlock,
+      } : null,
+      war_room: customContext?.war_room || null,
+      attribution: customContext?.attribution || null,
       report_format: format,
     }
 
     try {
-      // 1. Generate report via backend
-      const result = await api.post('/api/reports/generate', reportPayload)
-      const htmlContent = result.html
-      const reportName = result.name
+      let htmlContent = ''
+      let reportName = ''
 
-      // 2. Open in print window
-      const printWindow = window.open('', '', 'width=900,height=700')
-      if (printWindow) {
-        printWindow.document.write(htmlContent)
-        printWindow.document.close()
+      if (format === 'Research Dossier (PDF)') {
+        addNotification('Generating Dossier', 'Compiling print-ready PDF with WeasyPrint...')
+        try {
+          const pdfBlob = await api.downloadBlob('/api/reports/dossier/pdf', reportPayload)
+          const url = URL.createObjectURL(pdfBlob)
+          const a = document.createElement('a')
+          a.href = url
+          reportName = `Dossier_${targetProperties.formula || 'Molecule'}_${new Date().toISOString().slice(0, 10)}`
+          a.download = `${reportName}.pdf`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+          addNotification('Dossier Downloaded', `"${reportName}.pdf" has been downloaded successfully.`)
+        } catch (pdfErr) {
+          console.warn('Direct PDF download failed, falling back to HTML:', pdfErr)
+        }
+
+        // Fetch HTML representation to save to Saved Documents and display preview
+        const dossierRes = await api.post('/api/reports/dossier', reportPayload)
+        htmlContent = dossierRes.html
+        reportName = dossierRes.name
+        setDossierPreview({ name: reportName, html: htmlContent })
+      } else if (format === 'Research Dossier (HTML)') {
+        const dossierRes = await api.post('/api/reports/dossier', reportPayload)
+        htmlContent = dossierRes.html
+        reportName = dossierRes.name
+        setDossierPreview({ name: reportName, html: htmlContent })
+      } else {
+        // Standard legacy report
+        const result = await api.post('/api/reports/generate', reportPayload)
+        htmlContent = result.html
+        reportName = result.name
+        setDossierPreview({ name: reportName, html: htmlContent })
       }
 
-      // 3. Auto-save to Saved Documents
-      try {
-        await api.post('/api/reports/documents', {
-          name: reportName,
-          format: format,
-          html_content: htmlContent,
-          smiles: canonicalSmiles || inputSmiles || null,
-        })
-        addNotification('Report Saved', `"${reportName}" has been saved to your documents.`)
-      } catch (saveErr) {
-        console.error('Failed to save document to DB:', saveErr)
-        // Fallback to localStorage
+      // Auto-save to Saved Documents
+      if (htmlContent) {
         try {
-          const docs = JSON.parse(localStorage.getItem('rogveda_documents') || '[]')
-          docs.push({
-            id: Date.now().toString(),
+          await api.post('/api/reports/documents', {
             name: reportName,
-            date: new Date().toISOString(),
-            format,
-            content: htmlContent,
+            format: format,
+            html_content: htmlContent,
+            smiles: targetSmiles,
           })
-          localStorage.setItem('rogveda_documents', JSON.stringify(docs))
-        } catch (e) { console.error('localStorage fallback also failed:', e) }
+          addNotification('Report Saved', `"${reportName}" has been saved to your documents.`)
+        } catch (saveErr) {
+          console.error('Failed to save document to DB:', saveErr)
+          try {
+            const docs = JSON.parse(localStorage.getItem('rogveda_documents') || '[]')
+            docs.push({
+              id: Date.now().toString(),
+              name: reportName,
+              date: new Date().toISOString(),
+              format,
+              content: htmlContent,
+            })
+            localStorage.setItem('rogveda_documents', JSON.stringify(docs))
+          } catch (e) { console.error('localStorage fallback also failed:', e) }
+        }
       }
     } catch (err) {
       console.error('Report generation failed:', err)
@@ -731,6 +782,7 @@ export default function MoleculeDraw() {
     { id: 'Search', icon: I.search, label: 'Similarity Search', tagline: 'Explore Similarities.\nDiscover What\'s Next.' },
     { id: 'Modify', icon: I.modify, label: 'Molecular Modification', tagline: 'Modify Structures.\nOptimize Properties.' },
     { id: 'Compare', icon: I.compare, label: 'Compare Molecules', tagline: 'Design Molecules.\nDiscover Possibilities.' },
+    { id: 'WarRoom', icon: I.warRoom, label: 'War Room', tagline: 'Lead Optimization.\nMulti-Parameter Decisions.' },
     { id: 'Prediction', icon: I.predict, label: 'Prediction & AI', tagline: 'Predict Properties.\nLeverage AI.' },
     { id: 'Batch', icon: I.layers, label: 'Batch Screening', tagline: 'Process Multiple.\nAnalyze at Scale.' },
     { id: 'ChemSpace', icon: I.chemSpace, label: 'Chemical Space', tagline: 'Map Your Molecule.\nExplore Drug Space.' },
@@ -748,6 +800,7 @@ export default function MoleculeDraw() {
       visible: !!localStorage.getItem('rogveda_autosave_dbId') 
     },
     { icon: I.code, label: 'Get SMILES', handler: handleGenerateSmiles },
+    { icon: I.benchmark, label: 'Benchmark Drugs', handler: () => setShowBenchmarkModal(true) },
     { icon: I.clock, label: 'History', handler: () => setShowHistoryModal(true) },
     { icon: I.trash, label: 'Clear', handler: handleClear },
   ]
@@ -793,19 +846,19 @@ export default function MoleculeDraw() {
                 Molecular Workspace
               </h1>
               {activeExpName && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 14px', borderRadius: '20px', background: 'rgba(45,212,212,0.1)', border: '1px solid rgba(45,212,212,0.25)' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 16px', borderRadius: '20px', background: 'rgba(45,212,212,0.1)', border: '1px solid rgba(45,212,212,0.25)' }}>
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2dd4d4', boxShadow: '0 0 6px rgba(45,212,212,0.6)' }} />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#2dd4d4', letterSpacing: '0.03em' }}>{activeExpName}</span>
+                  <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#2dd4d4', letterSpacing: '0.03em' }}>{activeExpName}</span>
                 </div>
               )}
             </div>
-            <p style={{ fontSize: '14px', color: '#94a3b8', margin: '4px 0 20px', fontWeight: 400 }}>
+            <p style={{ fontSize: '15px', color: '#94a3b8', margin: '4px 0 20px', fontWeight: 400 }}>
               {activeExpName ? `Editing: ${activeExpName}` : 'Create, edit and visualize molecules. Switch between tools using the tabs above.'}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '1px', height: '32px', background: 'rgba(45,212,212,0.3)' }} />
-            <div style={{ textAlign: 'right', fontStyle: 'italic', fontSize: '14px', fontFamily: '"Playfair Display", Georgia, serif', color: '#2dd4d4', whiteSpace: 'pre-line' }}>
+            <div style={{ width: '1px', height: '36px', background: 'rgba(45,212,212,0.3)' }} />
+            <div style={{ textAlign: 'right', fontStyle: 'italic', fontSize: '15px', fontFamily: '"Playfair Display", Georgia, serif', color: '#2dd4d4', whiteSpace: 'pre-line' }}>
               {(tabs.find(t => t.id === activeTab)?.tagline || 'Design Molecules.\nDiscover Possibilities.').split('\n').map((line, i) => (
                 <span key={i}>{line}{i === 0 && <br />}</span>
               ))}
@@ -813,21 +866,35 @@ export default function MoleculeDraw() {
           </div>
         </div>
 
-        {/* ── TAB BAR ── */}
-        <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(45,212,212,0.1)', marginBottom: '20px' }}>
+        {/* ── TAB BAR (Symmetrical & Aligned across all 9 tools) ── */}
+        <div style={{
+          display: 'flex',
+          gap: '2px',
+          borderBottom: '1px solid rgba(45,212,212,0.15)',
+          marginBottom: '20px',
+          width: '100%',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                flex: 1, justifyContent: 'center',
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '12px 16px',
-                fontSize: '14px', fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif',
+                flex: 1,
+                justifyContent: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '7px',
+                padding: '11px 10px',
+                fontSize: '14px',
+                fontWeight: activeTab === tab.id ? 600 : 500,
+                fontFamily: 'Inter, system-ui, sans-serif',
                 whiteSpace: 'nowrap',
-                border: 'none', cursor: 'pointer',
+                border: 'none',
+                cursor: 'pointer',
                 borderRadius: '6px 6px 0 0',
-                transition: 'all 0.2s',
+                transition: 'all 0.18s ease-in-out',
                 ...(activeTab === tab.id ? {
                   background: 'rgba(45,212,212,0.1)',
                   color: '#2dd4d4',
@@ -839,8 +906,22 @@ export default function MoleculeDraw() {
                 })
               }}
             >
-              <span style={{ display: 'flex' }}>{tab.icon}</span>
-              {tab.label}
+              <span style={{ display: 'flex', alignItems: 'center' }}>{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.isCalculating && (
+                <span
+                  title="War Room calculating in background"
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#2dd4d4',
+                    boxShadow: '0 0 8px #2dd4d4',
+                    display: 'inline-block',
+                    marginLeft: '2px',
+                  }}
+                />
+              )}
             </button>
           ))}
         </div>
@@ -871,6 +952,22 @@ export default function MoleculeDraw() {
             handleLoadSmiles={handleLoadSmiles}
             handleClearSmiles={handleClearSmiles}
             last3dSmiles={last3dSmiles}
+            onOpenBenchmarkModal={() => setShowBenchmarkModal(true)}
+            onSendToCompare={(b) => {
+              if (b?.case_study?.pair_benchmark_id) {
+                api.get(`/api/benchmarks/${b.case_study.pair_benchmark_id}`).then(pair => {
+                  localStorage.setItem('rogveda_compare_mola_source', b.canonical_smiles)
+                  localStorage.setItem('rogveda_compare_target_molb', pair.canonical_smiles)
+                  setActiveTab('Compare')
+                  logActivity(`Benchmark Gallery: Comparing ${b.name} with ${pair.name}`)
+                }).catch(e => console.error('Failed to load pair benchmark:', e))
+              }
+            }}
+            onSendToWarRoom={(smiles) => {
+              handleLoadSmiles(smiles)
+              setActiveTab('WarRoom')
+              logActivity(`Benchmark Gallery: Loaded benchmark into War Room`)
+            }}
           />
         </div>
 
@@ -897,6 +994,26 @@ export default function MoleculeDraw() {
             onSaveExperiment={handleSaveExperiment}
             onGenerateReport={handleGenerateReport}
             logActivity={logActivity}
+            onSendToEditor={(smiles) => {
+              handleLoadSmiles(smiles)
+              setActiveTab('Draw')
+              logActivity(`Mutation Workbench: Loaded candidate ${smiles} into Draw tab`)
+            }}
+            onSendToCompare={(pSmiles, cSmiles) => {
+              localStorage.setItem('rogveda_compare_target_molb', cSmiles)
+              setActiveTab('Compare')
+              logActivity(`Mutation Workbench: Comparing parent ${pSmiles} with candidate ${cSmiles}`)
+            }}
+            onSendToWarRoom={(cSmiles) => {
+              handleLoadSmiles(cSmiles)
+              setActiveTab('WarRoom')
+              logActivity(`Mutation Workbench: Sent candidate ${cSmiles} to War Room`)
+            }}
+            onAcceptCandidate={(cSmiles) => {
+              handleLoadSmiles(cSmiles)
+              addNotification('Candidate Accepted', `Accepted candidate as active molecule.`)
+              logActivity(`Mutation Workbench: Accepted candidate ${cSmiles}`)
+            }}
           />
         </div>
 
@@ -910,6 +1027,34 @@ export default function MoleculeDraw() {
             onSaveExperiment={handleSaveExperiment}
             onGenerateReport={handleGenerateReport}
             logActivity={logActivity}
+          />
+        </div>
+
+        {/* ── Lead Optimization War Room Tab ── */}
+        <div style={{ display: activeTab === 'WarRoom' ? 'block' : 'none' }}>
+          <WarRoomTab
+            isActive={activeTab === 'WarRoom'}
+            rdkit={rdkit}
+            canonicalSmiles={canonicalSmiles}
+            currentMolecule={currentMolecule}
+            onCalculatingChange={setIsWarRoomCalculating}
+            onSaveExperiment={handleSaveExperiment}
+            onGenerateReport={handleGenerateReport}
+            logActivity={logActivity}
+            onSendToCompare={(pSmiles, aSmiles) => {
+              localStorage.setItem('rogveda_compare_target_molb', aSmiles)
+              setActiveTab('Compare')
+              logActivity(`War Room: Handoff candidate ${aSmiles} to Compare Tab`)
+            }}
+            onSendToEditor={(aSmiles) => {
+              handleLoadSmiles(aSmiles)
+              setActiveTab('Draw')
+              logActivity(`War Room: Loaded analog ${aSmiles} into editor`)
+            }}
+            onSelectBenchmarkParent={(smiles) => {
+              handleLoadSmiles(smiles)
+              logActivity(`War Room: Loaded benchmark lead ${smiles}`)
+            }}
           />
         </div>
 
@@ -946,7 +1091,7 @@ export default function MoleculeDraw() {
           <BatchScreening isEmbedded={true} />
         </div>
 
-        {activeTab !== 'Draw' && activeTab !== 'Analysis' && activeTab !== 'Search' && activeTab !== 'Modify' && activeTab !== 'Compare' && activeTab !== 'Prediction' && activeTab !== 'ChemSpace' && activeTab !== 'Batch' && (
+        {activeTab !== 'Draw' && activeTab !== 'Analysis' && activeTab !== 'Search' && activeTab !== 'Modify' && activeTab !== 'Compare' && activeTab !== 'WarRoom' && activeTab !== 'Prediction' && activeTab !== 'ChemSpace' && activeTab !== 'Batch' && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(45,212,212,0.1)', background: '#0d1a1c', height: '650px' }}>
             <div style={{ textAlign: 'center' }}>
               <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', color: '#2dd4d4', opacity: 0.3 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
@@ -996,7 +1141,7 @@ export default function MoleculeDraw() {
               <button
                 onClick={() => setShow3d(false)}
                 style={{
-                  padding: '6px 14px', fontSize: '13px', fontWeight: 600,
+                  padding: '7px 16px', fontSize: '14.5px', fontWeight: 600,
                   border: 'none', cursor: 'pointer', borderRadius: '6px',
                   transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                   ...(show3d ? { background: 'transparent', color: '#94a3b8' } : { background: '#2dd4d4', color: '#000' })
@@ -1008,7 +1153,7 @@ export default function MoleculeDraw() {
                 onClick={handleGenerate3D}
                 disabled={is3dLoading}
                 style={{
-                  padding: '6px 14px', fontSize: '13px', fontWeight: 600,
+                  padding: '7px 16px', fontSize: '14.5px', fontWeight: 600,
                   border: 'none', cursor: is3dLoading ? 'not-allowed' : 'pointer', borderRadius: '6px',
                   transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                   opacity: is3dLoading ? 0.3 : 1,
@@ -1048,8 +1193,8 @@ export default function MoleculeDraw() {
                 key={i}
                 onClick={btn.handler}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 10px', fontSize: '13px',
+                  display: 'flex', alignItems: 'center', gap: '7px',
+                  padding: '7px 12px', fontSize: '14px', fontWeight: 500,
                   borderRadius: '6px', border: '1px solid rgba(45,212,212,0.1)',
                   background: 'rgba(255,255,255,0.02)', color: '#94a3b8',
                   cursor: 'pointer', transition: 'all 0.2s',
@@ -1064,7 +1209,7 @@ export default function MoleculeDraw() {
           </div>
 
           {error && (
-            <div style={{ marginBottom: '16px', padding: '12px', fontSize: '13px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
+            <div style={{ marginBottom: '16px', padding: '12px 16px', fontSize: '14px', borderRadius: '8px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>
               {error}
             </div>
           )}
@@ -1108,21 +1253,54 @@ export default function MoleculeDraw() {
                 onChange={(e) => setInputSmiles(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLoadSmiles()}
                 placeholder="Enter SMILES (e.g. CC(=O)OC1=CC=CC=C1)"
-                style={{ flex: 1, background: 'transparent', fontSize: '14px', color: '#fff', border: 'none', outline: 'none', fontFamily: 'monospace', height: '100%' }}
+                style={{ flex: 1, background: 'transparent', fontSize: '15.5px', color: '#fff', border: 'none', outline: 'none', fontFamily: 'monospace', height: '100%' }}
               />
               {inputSmiles && (
                 <button onClick={handleClearSmiles} style={{ padding: '0 8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', height: '100%', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#64748b'}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               )}
             </div>
             <button
               onClick={handleLoadSmiles}
-              style={{ padding: '0 32px', height: '100%', fontWeight: 700, fontSize: '14px', borderRadius: '0 8px 8px 0', border: 'none', cursor: 'pointer', background: '#2dd4d4', color: '#000', fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.2s', minWidth: '90px' }}
+              style={{ padding: '0 32px', height: '100%', fontWeight: 700, fontSize: '15.5px', borderRadius: '0 8px 8px 0', border: 'none', cursor: 'pointer', background: '#2dd4d4', color: '#000', fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.2s', minWidth: '90px' }}
               onMouseEnter={e => e.target.style.opacity = '0.85'}
               onMouseLeave={e => e.target.style.opacity = '1'}
             >
               Load
+            </button>
+            <button
+              onClick={() => setShowBenchmarkModal(true)}
+              style={{
+                marginLeft: '12px',
+                height: '100%',
+                padding: '0 20px',
+                borderRadius: '8px',
+                border: '1px solid rgba(45,212,212,0.3)',
+                background: 'rgba(45,212,212,0.08)',
+                color: '#2dd4d4',
+                fontSize: '14.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(45,212,212,0.18)'
+                e.currentTarget.style.borderColor = '#2dd4d4'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(45,212,212,0.08)'
+                e.currentTarget.style.borderColor = 'rgba(45,212,212,0.3)'
+              }}
+              title="Browse and load curated benchmark compounds into workspace"
+            >
+              {I.benchmark}
+              <span>Benchmark Drugs</span>
             </button>
           </div>
         </div>
@@ -1137,21 +1315,21 @@ export default function MoleculeDraw() {
             style={{ position: 'absolute', inset: 0, background: 'rgba(5, 11, 13, 0.8)', backdropFilter: 'blur(4px)' }}
             onClick={() => setShowHistoryModal(false)}
           />
-          <div style={{ position: 'relative', width: '400px', maxHeight: '70vh', background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.2)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+          <div style={{ position: 'relative', width: '420px', maxHeight: '70vh', background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.2)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(45,212,212,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>All Activity History</h2>
-              <button onClick={() => setShowHistoryModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>All Activity History</h2>
+              <button onClick={() => setShowHistoryModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '22px', cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {recentActivity.length === 0 ? (
-                <p style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>No activity recorded yet.</p>
+                <p style={{ color: '#475569', fontSize: '15px', fontStyle: 'italic', margin: 0 }}>No activity recorded yet.</p>
               ) : (
                 recentActivity.map((log, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', marginTop: '6px', flexShrink: 0, background: '#2dd4d4', boxShadow: '0 0 6px #2dd4d4' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 500 }}>{log.action}</span>
-                      <span style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>{log.timestamp}</span>
+                      <span style={{ color: '#e2e8f0', fontSize: '15.5px', fontWeight: 500 }}>{log.action}</span>
+                      <span style={{ color: '#64748b', fontSize: '13.5px', marginTop: '4px' }}>{log.timestamp}</span>
                     </div>
                   </div>
                 ))
@@ -1168,21 +1346,21 @@ export default function MoleculeDraw() {
             style={{ position: 'absolute', inset: 0, background: 'rgba(5, 11, 13, 0.8)', backdropFilter: 'blur(4px)' }}
             onClick={() => setShowOpenModal(false)}
           />
-          <div style={{ position: 'relative', width: '500px', maxHeight: '70vh', background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.2)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+          <div style={{ position: 'relative', width: '520px', maxHeight: '70vh', background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.2)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(45,212,212,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>Saved Experiments</h2>
-              <button onClick={() => setShowOpenModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>Saved Experiments</h2>
+              <button onClick={() => setShowOpenModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '22px', cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {(() => {
                 let exps = experimentService.getLocalExperiments()
                 if (exps.length === 0) {
-                  return <p style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>No saved experiments found.</p>
+                  return <p style={{ color: '#475569', fontSize: '15px', fontStyle: 'italic', margin: 0 }}>No saved experiments found.</p>
                 }
                 return exps.map(exp => (
-                  <div key={exp.id} onClick={() => { setShowOpenModal(false); window.location.href = '/draw?expId=' + exp.id; }} style={{ padding: '12px 16px', background: 'rgba(45,212,212,0.05)', border: '1px solid rgba(45,212,212,0.15)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.05)'}>
-                    <div style={{ fontSize: '15px', color: '#fff', fontWeight: 500, marginBottom: '4px' }}>{exp.name}</div>
-                    <div style={{ fontSize: '13px', color: '#94a3b8' }}>Last modified: {new Date(exp.date).toLocaleString()}</div>
+                  <div key={exp.id} onClick={() => { setShowOpenModal(false); window.location.href = '/draw?expId=' + exp.id; }} style={{ padding: '14px 18px', background: 'rgba(45,212,212,0.05)', border: '1px solid rgba(45,212,212,0.15)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.05)'}>
+                    <div style={{ fontSize: '16.5px', color: '#fff', fontWeight: 600, marginBottom: '4px' }}>{exp.name}</div>
+                    <div style={{ fontSize: '14px', color: '#94a3b8' }}>Last modified: {new Date(exp.date).toLocaleString()}</div>
                   </div>
                 ))
               })()}
@@ -1190,6 +1368,131 @@ export default function MoleculeDraw() {
           </div>
         </div>
       )}
+
+      {/* ── RESEARCH DOSSIER / REPORT IN-APP PREVIEW MODAL ── */}
+      {dossierPreview && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(5, 11, 13, 0.85)', backdropFilter: 'blur(5px)' }}
+            onClick={() => setDossierPreview(null)}
+          />
+          <div style={{
+            position: 'relative', width: '92vw', maxWidth: '1050px', height: '88vh',
+            background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.3)',
+            borderRadius: '12px', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+          }}>
+            <div style={{
+              padding: '14px 20px', background: '#0a1517',
+              borderBottom: '1px solid rgba(45,212,212,0.15)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: '#2dd4d4', fontWeight: 700, fontSize: '18px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                  {dossierPreview.name || 'Research Dossier'}
+                </span>
+                <span style={{ fontSize: '13px', background: 'rgba(45,212,212,0.12)', color: '#2dd4d4', padding: '3px 10px', borderRadius: '4px', border: '1px solid rgba(45,212,212,0.2)' }}>
+                  Print-Ready (100% Offline)
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      addNotification('Generating PDF', 'Compiling PDF with WeasyPrint...')
+                      const blob = await api.downloadBlob('/api/reports/pdf/render', {
+                        html: dossierPreview.html,
+                        filename: dossierPreview.name,
+                      })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `${dossierPreview.name}.pdf`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                      addNotification('PDF Downloaded', `"${dossierPreview.name}.pdf" downloaded.`)
+                    } catch (err) {
+                      console.error('PDF render failed:', err)
+                      addNotification('Error', 'Failed to render PDF.')
+                    }
+                  }}
+                  style={{
+                    padding: '8px 16px', background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
+                    border: 'none', borderRadius: '6px', color: '#000',
+                    fontWeight: 600, fontSize: '13.5px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => {
+                    const iframe = document.getElementById('rogveda-dossier-iframe')
+                    if (iframe && iframe.contentWindow) {
+                      iframe.contentWindow.focus()
+                      iframe.contentWindow.print()
+                    }
+                  }}
+                  style={{
+                    padding: '7px 14px', background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px',
+                    color: '#e2e8f0', fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+                  }}
+                >
+                  Print
+                </button>
+                <button
+                  onClick={() => setDossierPreview(null)}
+                  style={{
+                    background: 'transparent', border: 'none', color: '#94a3b8',
+                    fontSize: '20px', cursor: 'pointer', padding: '0 6px',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div style={{ flex: 1, background: '#ffffff', overflow: 'hidden' }}>
+              <iframe
+                id="rogveda-dossier-iframe"
+                title="Research Dossier"
+                srcDoc={dossierPreview.html}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── BENCHMARK DRUG GALLERY SELECTOR MODAL ── */}
+      <BenchmarkSelectorModal
+        isOpen={showBenchmarkModal}
+        onClose={() => setShowBenchmarkModal(false)}
+        onSelectBenchmark={(smiles, benchmarkDetail) => {
+          handleLoadSmiles(smiles)
+          addNotification('Benchmark Drug Loaded', `Loaded "${benchmarkDetail?.name || 'Benchmark'}" into workspace.`)
+          logActivity(`Benchmark Gallery: Loaded ${benchmarkDetail?.name || smiles}`)
+        }}
+        onSelectCaseStudy={(caseStudy) => {
+          if (caseStudy?.compound_a?.canonical_smiles && caseStudy?.compound_b?.canonical_smiles) {
+            localStorage.setItem('rogveda_compare_mola_source', caseStudy.compound_a.canonical_smiles)
+            localStorage.setItem('rogveda_compare_target_molb', caseStudy.compound_b.canonical_smiles)
+            setActiveTab('Compare')
+            addNotification('Case Study Loaded', `Comparing ${caseStudy.compound_a.name} vs ${caseStudy.compound_b.name}`)
+            logActivity(`Benchmark Gallery: Case Study "${caseStudy.title}" loaded into Compare Tab`)
+          }
+        }}
+        onSendToWarRoom={(smiles) => {
+          handleLoadSmiles(smiles)
+          setActiveTab('WarRoom')
+          addNotification('Lead Optimization Started', `Loaded benchmark into War Room as parent lead.`)
+          logActivity(`Benchmark Gallery: Sent ${smiles} to War Room`)
+        }}
+        rdkit={rdkit}
+      />
 
     </div>
   )

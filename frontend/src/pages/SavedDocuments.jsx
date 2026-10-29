@@ -86,7 +86,7 @@ export default function SavedDocuments() {
     }
   }
 
-  // Download (print) a document
+  // Download a document (direct WeasyPrint PDF download with print preview fallback)
   const handleDownload = async (doc) => {
     try {
       let html = doc.html_content
@@ -95,6 +95,22 @@ export default function SavedDocuments() {
         html = full.html_content
       }
       if (html) {
+        try {
+          const blob = await api.downloadBlob('/api/reports/pdf/render', {
+            html,
+            filename: doc.name || 'Rogveda_Document',
+          })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${(doc.name || 'Rogveda_Document').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
+          a.click()
+          URL.revokeObjectURL(url)
+          return
+        } catch (pdfErr) {
+          console.warn('Direct PDF rendering failed, falling back to print window:', pdfErr)
+        }
+
         const win = window.open('', '', 'width=900,height=700')
         if (win) {
           win.document.write(html)
@@ -148,10 +164,10 @@ export default function SavedDocuments() {
           <button
             onClick={() => navigate('/home')}
             style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', borderRadius: '8px',
-              background: 'rgba(45,212,212,0.08)', border: '1px solid rgba(45,212,212,0.15)',
-              color: accentColor, cursor: 'pointer', fontSize: '13px', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '9px 18px', borderRadius: '8px',
+              background: 'rgba(45,212,212,0.08)', border: '1px solid rgba(45,212,212,0.2)',
+              color: accentColor, cursor: 'pointer', fontSize: '14.5px', fontWeight: 500,
               fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.15)' }}
@@ -162,14 +178,14 @@ export default function SavedDocuments() {
 
           <div style={{ flex: 1 }}>
             <h1 style={{
-              color: '#fff', fontSize: '24px', fontWeight: 700,
+              color: '#fff', fontSize: '28px', fontWeight: 700,
               fontFamily: 'Inter, system-ui, sans-serif', margin: 0,
               display: 'flex', alignItems: 'center', gap: '12px',
             }}>
               <span style={{ color: accentColor, display: 'flex' }}>{Icons.doc}</span>
               Saved Documents
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '4px 0 0' }}>
+            <p style={{ color: '#64748b', fontSize: '15px', margin: '4px 0 0' }}>
               {documents.length} document{documents.length !== 1 ? 's' : ''} saved
             </p>
           </div>
@@ -177,7 +193,7 @@ export default function SavedDocuments() {
 
         {/* Loading state */}
         {loading && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b', fontSize: '14px' }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b', fontSize: '15px' }}>
             Loading documents...
           </div>
         )}
@@ -190,18 +206,18 @@ export default function SavedDocuments() {
             border: '1px solid rgba(45,212,212,0.08)',
           }}>
             <div style={{ color: '#2dd4d4', marginBottom: '16px' }}>{Icons.empty}</div>
-            <h2 style={{ color: '#e2e8f0', fontSize: '18px', fontWeight: 600, marginBottom: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 600, marginBottom: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               No Documents Yet
             </h2>
-            <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '400px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+            <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '400px', margin: '0 auto 24px', lineHeight: 1.6 }}>
               Generated reports are automatically saved here when you click "Generate Report" in your workspace.
             </p>
             <button
               onClick={() => navigate('/draw')}
               style={{
-                padding: '10px 24px', borderRadius: '8px', border: 'none',
+                padding: '11px 26px', borderRadius: '8px', border: 'none',
                 background: accentColor, color: '#000', fontWeight: 600,
-                fontSize: '14px', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
+                fontSize: '15px', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                 transition: 'opacity 0.2s',
               }}
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
@@ -239,16 +255,16 @@ export default function SavedDocuments() {
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ color: '#e2e8f0', fontSize: '17px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {doc.name}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                    <span style={{ color: '#64748b', fontSize: '12px' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '13.5px' }}>
                       {formatDate(doc.created_at)}
                     </span>
                     {doc.format && (
                       <span style={{
-                        fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                        fontSize: '13px', padding: '3px 9px', borderRadius: '4px',
                         background: 'rgba(45,212,212,0.1)', color: accentColor, fontWeight: 500,
                       }}>
                         {doc.format}
@@ -257,8 +273,8 @@ export default function SavedDocuments() {
                     {doc.smiles && (
                       <span style={{
                         display: 'flex', alignItems: 'center', gap: '4px',
-                        fontSize: '11px', color: '#475569', fontFamily: 'monospace',
-                        maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        fontSize: '13px', color: '#64748b', fontFamily: 'monospace',
+                        maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {Icons.molecule} {doc.smiles}
                       </span>

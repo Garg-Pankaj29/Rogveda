@@ -38,16 +38,16 @@ function MapTooltip({ active, payload }) {
   return (
     <div style={{
       background: 'rgba(5,11,13,0.95)', border: '1px solid rgba(45,212,212,0.3)',
-      borderRadius: 8, padding: '10px 14px', maxWidth: 280,
-      fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12
+      borderRadius: 8, padding: '12px 16px', maxWidth: 300,
+      fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13.5
     }}>
-      <div style={{ color: '#2dd4d4', fontWeight: 600, marginBottom: 4 }}>
+      <div style={{ color: '#2dd4d4', fontWeight: 600, marginBottom: 4, fontSize: 14.5 }}>
         {d.name || 'Query Molecule'}
       </div>
-      <div style={{ color: '#94a3b8', wordBreak: 'break-all', fontSize: 11 }}>
+      <div style={{ color: '#94a3b8', wordBreak: 'break-all', fontSize: 12.5 }}>
         {d.smiles?.length > 60 ? d.smiles.slice(0, 60) + '…' : d.smiles}
       </div>
-      <div style={{ color: '#64748b', marginTop: 4, fontSize: 10 }}>
+      <div style={{ color: '#64748b', marginTop: 6, fontSize: 12 }}>
         x: {d.x?.toFixed(2)}, y: {d.y?.toFixed(2)}
       </div>
     </div>
@@ -122,11 +122,11 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ color: '#2dd4d4', display: 'flex' }}>{MapIcon}</span>
             Chemical Space Map
           </h2>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 15, color: '#64748b', margin: '4px 0 0' }}>
             UMAP projection of a 10,000-molecule representative subset (from 354k+ total) with your molecule highlighted
           </p>
         </div>
@@ -135,11 +135,11 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
           disabled={!canonicalSmiles || isLoading}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 18px', borderRadius: 8,
+            padding: '10px 20px', borderRadius: 8,
             border: '1px solid rgba(45,212,212,0.3)',
             background: canonicalSmiles && !isLoading ? 'rgba(45,212,212,0.1)' : 'rgba(255,255,255,0.03)',
             color: canonicalSmiles && !isLoading ? '#2dd4d4' : '#475569',
-            fontSize: 13, fontWeight: 600, cursor: canonicalSmiles && !isLoading ? 'pointer' : 'not-allowed',
+            fontSize: 15, fontWeight: 600, cursor: canonicalSmiles && !isLoading ? 'pointer' : 'not-allowed',
             transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif'
           }}
         >
@@ -149,7 +149,7 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
 
       {error && (
         <div style={{
-          marginBottom: 16, padding: 12, fontSize: 13, borderRadius: 8,
+          marginBottom: 16, padding: 12, fontSize: 14.5, borderRadius: 8,
           background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5'
         }}>
           {error}
@@ -174,10 +174,10 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
                     <circle cx="12" cy="12" r="10" strokeDasharray="4 4" />
                   </svg>
                 </div>
-                <h3 style={{ color: '#d1d5db', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                <h3 style={{ color: '#d1d5db', fontSize: 18, fontWeight: 600, marginBottom: 6 }}>
                   Chemical Space Explorer
                 </h3>
-                <p style={{ color: '#64748b', fontSize: 13 }}>
+                <p style={{ color: '#64748b', fontSize: 14.5 }}>
                   Draw a molecule on the canvas, then click <span style={{ color: '#2dd4d4' }}>Locate on Map</span> to see where it lives in drug space.
                 </p>
               </div>
@@ -188,20 +188,20 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
                 <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
                   <XAxis
                   type="number" dataKey="x" name="Similarity X"
-                  tick={{ fill: '#475569', fontSize: 10 }}
+                  tick={{ fill: '#475569', fontSize: 12 }}
                   tickFormatter={(val) => val.toFixed(1)}
                   axisLine={{ stroke: '#1e293b' }}
                   tickLine={{ stroke: '#1e293b' }}
-                  label={{ value: 'Similarity X', position: 'bottom', fill: '#64748b', fontSize: 11, offset: 0 }}
+                  label={{ value: 'Similarity X', position: 'bottom', fill: '#64748b', fontSize: 13, offset: 0 }}
                   domain={['dataMin - 1', 'dataMax + 1']}
                 />
                 <YAxis
                   type="number" dataKey="y" name="Similarity Y"
-                  tick={{ fill: '#475569', fontSize: 10 }}
+                  tick={{ fill: '#475569', fontSize: 12 }}
                   tickFormatter={(val) => val.toFixed(1)}
                   axisLine={{ stroke: '#1e293b' }}
                   tickLine={{ stroke: '#1e293b' }}
-                  label={{ value: 'Similarity Y', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 11 }}
+                  label={{ value: 'Similarity Y', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 13 }}
                   domain={['dataMin - 1', 'dataMax + 1']}
                 />
                 <ZAxis range={[12, 12]} />
@@ -227,7 +227,7 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
         </div>
 
         {/* Right sidebar — query info + nearest neighbors */}
-        <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Query position card */}
           {queryPoint && (
@@ -235,22 +235,22 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
               borderRadius: 10, padding: 16,
               border: '1px solid rgba(45,212,212,0.2)', background: 'rgba(45,212,212,0.05)'
             }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#2dd4d4', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#2dd4d4', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Your Molecule
               </div>
-              <div style={{ fontSize: 12, color: '#94a3b8', wordBreak: 'break-all', marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, color: '#94a3b8', wordBreak: 'break-all', marginBottom: 8 }}>
                 {queryPoint.smiles?.length > 50 ? queryPoint.smiles.slice(0, 50) + '…' : queryPoint.smiles}
               </div>
               <div style={{ display: 'flex', gap: 16 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Map Region (X, Y)</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>
+                  <div style={{ fontSize: 12, color: '#64748b', textTransform: 'uppercase' }}>Map Region (X, Y)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>
                     {queryPoint.x?.toFixed(1)}, {queryPoint.y?.toFixed(1)}
                   </div>
                 </div>
               </div>
               {currentMolecule?.formula && currentMolecule.formula !== '-' && (
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
+                <div style={{ marginTop: 8, fontSize: 13, color: '#64748b' }}>
                   {currentMolecule.formula} · MW {currentMolecule.mw}
                 </div>
               )}
@@ -262,13 +262,13 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
             borderRadius: 10, padding: 16,
             border: '1px solid rgba(45,212,212,0.1)', background: 'rgba(255,255,255,0.02)'
           }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d5db', marginBottom: 8 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 600, color: '#d1d5db', marginBottom: 8 }}>
               💡 How to read this map
             </div>
-            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, margin: '0 0 8px 0' }}>
+            <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.5, margin: '0 0 8px 0' }}>
               Think of this as a map of the "chemical universe". Every faint dot is a known, existing drug or compound.
             </p>
-            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
+            <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
               The layout is based purely on structural similarity. If your molecule is <strong>clustered with others</strong>, it shares structural features with known drugs. If it sits in an <strong>empty area</strong>, your molecule is highly novel and unique.
             </p>
           </div>
@@ -279,7 +279,7 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
               borderRadius: 10, padding: 16,
               border: '1px solid rgba(45,212,212,0.1)', background: '#0a1214'
             }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#94a3b8', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Nearest on Map
               </div>
               {nearest.map((n, i) => (
@@ -289,9 +289,9 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
                   borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none'
                 }}>
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                    width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 700,
+                    fontSize: 12, fontWeight: 700,
                     background: i === 0 ? 'rgba(45,212,212,0.15)' : 'rgba(255,255,255,0.05)',
                     color: i === 0 ? '#2dd4d4' : '#64748b',
                     border: `1px solid ${i === 0 ? 'rgba(45,212,212,0.3)' : 'rgba(255,255,255,0.08)'}`
@@ -299,10 +299,10 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
                     {i + 1}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: '#d1d5db', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#d1d5db', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {n.name}
                     </div>
-                    <div style={{ fontSize: 10, color: '#475569' }}>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>
                       Map Distance: {n.dist.toFixed(3)}
                     </div>
                   </div>
@@ -316,12 +316,12 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
             borderRadius: 10, padding: 14,
             border: '1px solid rgba(45,212,212,0.1)', background: '#0a1214'
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Legend
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#475569', opacity: 0.5 }} />
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>Representative subset (~10k)</span>
+              <span style={{ fontSize: 13.5, color: '#94a3b8' }}>Representative subset (~10k)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
@@ -329,7 +329,7 @@ export default function ChemicalSpaceTab({ canonicalSmiles, currentMolecule, isA
                 boxShadow: '0 0 8px rgba(45,212,212,0.6)',
                 animation: 'glow-ring 2s ease-in-out infinite'
               }} />
-              <span style={{ fontSize: 11, color: '#2dd4d4' }}>Your molecule</span>
+              <span style={{ fontSize: 13.5, color: '#2dd4d4' }}>Your molecule</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Viewer3D from './Viewer3D'
+import AttributionViewer from './AttributionViewer'
 import api from '../lib/apiClient'
 import { computeProperties } from '../lib/chemistry'
 
@@ -160,6 +161,9 @@ export default function PredictionTab({
 
   // 2D SVG for the 2D view
   const [svgHtml, setSvgHtml] = useState('')
+
+  // Phase 2 Attribution state
+  const [explainingEndpoint, setExplainingEndpoint] = useState(null)
 
   // Track last fetched smiles to avoid redundant calls
   const lastFetchedSmiles = useRef('')
@@ -410,7 +414,7 @@ Instructions:
         {/* ── COLUMN 1: Molecule Viewer ── */}
         <div style={cardStyle} ref={viewerContainerRef}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Molecule Viewer
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -419,7 +423,7 @@ Instructions:
                 <button
                   onClick={() => setViewMode('2d')}
                   style={{
-                    padding: '4px 14px', fontSize: '12px', fontWeight: 600,
+                    padding: '5px 14px', fontSize: '13.5px', fontWeight: 600,
                     border: 'none', cursor: 'pointer', borderRadius: '5px',
                     transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                     ...(viewMode === '2d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
@@ -428,7 +432,7 @@ Instructions:
                 <button
                   onClick={() => setViewMode('3d')}
                   style={{
-                    padding: '4px 14px', fontSize: '12px', fontWeight: 600,
+                    padding: '5px 14px', fontSize: '13.5px', fontWeight: 600,
                     border: 'none', cursor: 'pointer', borderRadius: '5px',
                     transition: 'all 0.2s', fontFamily: 'Inter, system-ui, sans-serif',
                     ...(viewMode === '3d' ? { background: accentColor, color: '#000' } : { background: 'transparent', color: '#94a3b8' })
@@ -447,7 +451,7 @@ Instructions:
                   title={btn.label}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: '30px', height: '30px', borderRadius: '6px',
+                    width: '32px', height: '32px', borderRadius: '6px',
                     border: '1px solid rgba(45,212,212,0.1)',
                     background: 'rgba(255,255,255,0.02)', color: '#94a3b8',
                     cursor: 'pointer', transition: 'all 0.2s',
@@ -470,20 +474,20 @@ Instructions:
             position: 'relative',
           }}>
             {noMolecule ? (
-              <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Load a molecule to visualize</p>
+              <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>Load a molecule to visualize</p>
             ) : viewMode === '3d' ? (
               is3dLoading ? (
-                <p style={{ color: '#64748b', fontSize: '13px' }}>Generating 3D structure...</p>
+                <p style={{ color: '#64748b', fontSize: '14.5px' }}>Generating 3D structure...</p>
               ) : localSdf ? (
                 <Viewer3D sdfBlock={localSdf} height="100%" bgColor={viewerBg === 'dark' ? '#0a0e12' : '#e8ecf0'} />
               ) : (
-                <p style={{ color: '#64748b', fontSize: '13px' }}>3D structure unavailable</p>
+                <p style={{ color: '#64748b', fontSize: '14.5px' }}>3D structure unavailable</p>
               )
             ) : (
               svgHtml ? (
                 <div dangerouslySetInnerHTML={{ __html: svgHtml }} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
               ) : (
-                <p style={{ color: '#64748b', fontSize: '13px' }}>2D view unavailable</p>
+                <p style={{ color: '#64748b', fontSize: '14.5px' }}>2D view unavailable</p>
               )
             )}
           </div>
@@ -498,7 +502,7 @@ Instructions:
                     background: getElementColor(el),
                     border: el === 'H' ? '1px solid #666' : 'none',
                   }} />
-                  <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 500 }}>{el}</span>
+                  <span style={{ color: '#94a3b8', fontSize: '13.5px', fontWeight: 500 }}>{el}</span>
                 </div>
               ))}
             </div>
@@ -507,7 +511,7 @@ Instructions:
 
         {/* ── COLUMN 2: Molecular Information ── */}
         <div style={cardStyle}>
-          <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: '0 0 14px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '18px', margin: '0 0 14px', fontFamily: 'Inter, system-ui, sans-serif' }}>
             Molecular Information
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -528,17 +532,17 @@ Instructions:
                 padding: '8px 0',
                 borderBottom: i < 9 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               }}>
-                <span style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 500 }}>{row.label}</span>
+                <span style={{ color: '#94a3b8', fontSize: '14.5px', fontWeight: 500 }}>{row.label}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {row.isFormula ? (
                     <span
-                      style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500 }}
+                      style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 500 }}
                       dangerouslySetInnerHTML={{ __html: formulaToHtml(row.value) }}
                     />
                   ) : (
                     <span style={{
-                      color: '#e2e8f0', fontSize: '13px', fontWeight: 500,
-                      ...(row.isSMILES ? { maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: '12px' } : {})
+                      color: '#e2e8f0', fontSize: '15px', fontWeight: 500,
+                      ...(row.isSMILES ? { maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: '13.5px' } : {})
                     }}>{row.value}</span>
                   )}
                   {row.isSMILES && canonicalSmiles && (
@@ -566,17 +570,17 @@ Instructions:
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{ color: accentColor, display: 'flex' }}>{Icons.lightbulb}</span>
-            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               AI Insight
             </h3>
           </div>
 
           {noMolecule ? (
-            <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.6 }}>
+            <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', lineHeight: 1.6 }}>
               Load a molecule to generate AI insights.
             </p>
           ) : aiLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', padding: '12px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '14px', padding: '12px 0' }}>
               <div style={{
                 width: '16px', height: '16px', border: '2px solid rgba(45,212,212,0.3)',
                 borderTopColor: accentColor, borderRadius: '50%',
@@ -586,7 +590,7 @@ Instructions:
             </div>
           ) : (
             <p style={{
-              color: '#c8d0d8', fontSize: '13px', lineHeight: 1.7, margin: '0 0 16px',
+              color: '#c8d0d8', fontSize: '14.5px', lineHeight: 1.7, margin: '0 0 16px',
               minHeight: '80px',
             }}>
               {aiSummary?.summary || 'AI insight unavailable.'}
@@ -612,7 +616,7 @@ Instructions:
           >
             <span style={{ color: accentColor, display: 'flex', flexShrink: 0 }}>{Icons.chat}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ color: accentColor, fontWeight: 600, fontSize: '14px', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ color: accentColor, fontWeight: 600, fontSize: '15px', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {chatLoading ? (
                   <>
                     <div style={{
@@ -626,7 +630,7 @@ Instructions:
                   'Ask More'
                 )}
               </div>
-              <div style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>
+              <div style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.4 }}>
                 Have more questions about this molecule? Chat with AI to explore deeper insights, alternatives or predictions.
               </div>
             </div>
@@ -642,7 +646,7 @@ Instructions:
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{ color: accentColor, display: 'flex' }}>{Icons.gear}</span>
-            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Bioactivity Predictions
             </h3>
           </div>
@@ -651,7 +655,7 @@ Instructions:
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 150px 1fr',
             padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)',
-            fontSize: '12px', fontWeight: 600, color: '#94a3b8',
+            fontSize: '13.5px', fontWeight: 600, color: '#94a3b8',
             textTransform: 'uppercase', letterSpacing: '0.05em',
           }}>
             <span>Target / Activity</span>
@@ -660,11 +664,11 @@ Instructions:
           </div>
 
           {noMolecule ? (
-            <div style={{ padding: '20px 0', color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>
+            <div style={{ padding: '20px 0', color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>
               Load a molecule to see predictions.
             </div>
           ) : predLoading ? (
-            <div style={{ padding: '20px 0', color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>
+            <div style={{ padding: '20px 0', color: '#64748b', fontSize: '14.5px', fontStyle: 'italic' }}>
               Loading predictions...
             </div>
           ) : (
@@ -673,16 +677,16 @@ Instructions:
                 const colors = getBadgeColors(pred.status_label)
                 return (
                   <div key={i} style={{
-                    display: 'grid', gridTemplateColumns: '1fr 150px 1fr',
+                    display: 'grid', gridTemplateColumns: '1.2fr 130px 1fr auto',
                     alignItems: 'center', padding: '12px 0',
                     borderBottom: i < predictions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                   }}>
-                    <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 500 }}>
+                    <span style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 500 }}>
                       {pred.endpoint_name}
                     </span>
                     {pred.available ? (
                       <span style={{
-                        fontSize: '11px', fontWeight: 600,
+                        fontSize: '13px', fontWeight: 600,
                         padding: '4px 12px', borderRadius: '4px',
                         background: colors.bg, color: colors.color,
                         display: 'inline-block', textAlign: 'center',
@@ -692,7 +696,7 @@ Instructions:
                       </span>
                     ) : (
                       <span style={{
-                        fontSize: '11px', fontWeight: 500, fontStyle: 'italic',
+                        fontSize: '13px', fontWeight: 500, fontStyle: 'italic',
                         color: '#64748b',
                       }}>
                         {pred.status_label}
@@ -700,7 +704,7 @@ Instructions:
                     )}
                     {pred.available && pred.confidence !== null ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: colors.color, fontSize: '13px', fontWeight: 600, minWidth: '36px' }}>
+                        <span style={{ color: colors.color, fontSize: '14.5px', fontWeight: 600, minWidth: '36px' }}>
                           {pred.confidence.toFixed(2)}
                         </span>
                         <div style={{
@@ -718,6 +722,39 @@ Instructions:
                       </div>
                     ) : (
                       <div style={{ height: '8px' }} />
+                    )}
+
+                    {/* Phase 2: Explain button */}
+                    {pred.available ? (
+                      <button
+                        onClick={() => {
+                          const mapping = {
+                            'hERG Cardiotoxicity': 'herg',
+                            'Anti-inflammatory': 'antiinflammatory',
+                            'Antioxidant': 'antioxidant',
+                            'Antimicrobial': 'antimicrobial',
+                            'Anticancer': 'anticancer',
+                            'Tox21 Mitochondrial Toxicity': 'tox21_mmp',
+                          }
+                          setExplainingEndpoint(pred.endpoint_id || mapping[pred.endpoint_name] || 'herg')
+                        }}
+                        style={{
+                          marginLeft: '12px',
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          background: 'rgba(45,212,212,0.08)', color: accentColor,
+                          border: '1px solid rgba(45,212,212,0.22)',
+                          borderRadius: '4px', padding: '4px 10px', fontSize: '12.5px', fontWeight: 600,
+                          cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                        onMouseOver={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.18)' }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'rgba(45,212,212,0.08)' }}
+                        title="Explain prediction attribution and structural alerts"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        Explain
+                      </button>
+                    ) : (
+                      <div style={{ width: 68 }} />
                     )}
                   </div>
                 )
@@ -738,11 +775,11 @@ Instructions:
             overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(45,212,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Inter, system-ui, sans-serif' }}>
               {Icons.report}
               Report Generation
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px', lineHeight: 1.5 }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 16px', lineHeight: 1.5 }}>
               Generate a detailed report of your results.
             </p>
             <select
@@ -751,7 +788,7 @@ Instructions:
               style={{
                 width: '100%', background: '#081214',
                 border: '1px solid rgba(45,212,212,0.15)', color: '#e2e8f0',
-                fontSize: '13px', borderRadius: '8px', padding: '10px 12px',
+                fontSize: '14.5px', borderRadius: '8px', padding: '10px 12px',
                 marginBottom: '14px', outline: 'none', appearance: 'none',
                 cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -765,7 +802,7 @@ Instructions:
             <button
               onClick={() => onGenerateReport?.(reportFormat)}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
+                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '15px',
                 borderRadius: '8px', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
@@ -786,11 +823,11 @@ Instructions:
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 <span style={{ color: accentColor, display: 'flex' }}>{Icons.save}</span>
-                <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                <h3 style={{ color: accentColor, fontWeight: 700, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   Save & Exit
                 </h3>
               </div>
-              <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 14px', lineHeight: 1.4 }}>
+              <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 14px', lineHeight: 1.4 }}>
                 Save your current workspace and exit.
               </p>
             </div>
@@ -799,7 +836,7 @@ Instructions:
               style={{
                 width: '100%', padding: '12px 0', borderRadius: '8px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                fontSize: '14px', fontWeight: 600,
+                fontSize: '15px', fontWeight: 600,
                 background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.12)',
                 color: accentColor, cursor: 'pointer',
                 fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 0.2s',
@@ -822,18 +859,18 @@ Instructions:
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: accentColor, display: 'flex' }}>{Icons.molecule}</span>
-              <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+              <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
                 Similar Molecules
               </h3>
             </div>
           </div>
 
           {noMolecule ? (
-            <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Load a molecule to find similar compounds.</p>
+            <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>Load a molecule to find similar compounds.</p>
           ) : simLoading ? (
-            <p style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>Searching similar molecules...</p>
+            <p style={{ color: '#64748b', fontSize: '14.5px', fontStyle: 'italic' }}>Searching similar molecules...</p>
           ) : similarMols.length === 0 ? (
-            <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>No similar molecules found.</p>
+            <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>No similar molecules found.</p>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               {similarSvgs.map((item, i) => (
@@ -854,9 +891,9 @@ Instructions:
                       style={{ width: '100%', height: '80px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     />
                   ) : (
-                    <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '11px' }}>No image</div>
+                    <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '12px' }}>No image</div>
                   )}
-                  <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '6px', fontWeight: 500 }}>
+                  <div style={{ color: '#94a3b8', fontSize: '13px', marginTop: '6px', fontWeight: 500 }}>
                     Similarity: {Number(item.tanimoto ?? 0).toFixed(2)}
                   </div>
                 </div>
@@ -869,15 +906,15 @@ Instructions:
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{ color: accentColor, display: 'flex' }}>{Icons.document}</span>
-            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '16px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h3 style={{ color: accentColor, fontWeight: 600, fontSize: '18px', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
               Key Insights
             </h3>
           </div>
 
           {noMolecule ? (
-            <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>Load a molecule to see key insights.</p>
+            <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>Load a molecule to see key insights.</p>
           ) : aiLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '14.5px' }}>
               <div style={{
                 width: '16px', height: '16px', border: '2px solid rgba(45,212,212,0.3)',
                 borderTopColor: accentColor, borderRadius: '50%',
@@ -890,12 +927,12 @@ Instructions:
               {aiSummary.key_insights.map((insight, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <span style={{ display: 'flex', flexShrink: 0, marginTop: '1px' }}>{Icons.checkCircle}</span>
-                  <span style={{ color: '#c8d0d8', fontSize: '13px', lineHeight: 1.5 }}>{insight}</span>
+                  <span style={{ color: '#c8d0d8', fontSize: '14.5px', lineHeight: 1.5 }}>{insight}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic' }}>
+            <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic' }}>
               {aiSummary?.summary?.includes('not available') ? 'Local AI not available — start LM Studio to generate insights.' : 'No key insights available.'}
             </p>
           )}
@@ -922,7 +959,7 @@ Instructions:
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: accentColor, display: 'flex' }}>{Icons.chat}</span>
-                <h2 style={{ margin: 0, color: '#fff', fontSize: '16px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                <h2 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   Ask More — AI Chat
                 </h2>
               </div>
@@ -937,7 +974,7 @@ Instructions:
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '200px', maxHeight: '50vh' }}>
               {chatMessages.length === 0 && (
-                <p style={{ color: '#475569', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', margin: 'auto 0' }}>
+                <p style={{ color: '#475569', fontSize: '14.5px', fontStyle: 'italic', textAlign: 'center', margin: 'auto 0' }}>
                   Ask anything about this molecule. The AI knows its computed properties and prediction results.
                 </p>
               )}
@@ -947,7 +984,7 @@ Instructions:
                 }}>
                   <div style={{
                     maxWidth: '80%', padding: '10px 14px', borderRadius: '10px',
-                    fontSize: '13px', lineHeight: 1.6,
+                    fontSize: '14.5px', lineHeight: 1.6,
                     ...(msg.role === 'user' ? {
                       background: 'rgba(45,212,212,0.15)', color: '#e2e8f0',
                       borderBottomRightRadius: '4px',
@@ -965,7 +1002,7 @@ Instructions:
                   <div style={{
                     padding: '10px 14px', borderRadius: '10px',
                     background: 'rgba(255,255,255,0.05)', color: '#64748b',
-                    fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
+                    fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px',
                   }}>
                     <div style={{
                       width: '14px', height: '14px', border: '2px solid rgba(45,212,212,0.3)',
@@ -993,7 +1030,7 @@ Instructions:
                 style={{
                   flex: 1, background: '#081214', border: '1px solid rgba(45,212,212,0.15)',
                   borderRadius: '8px', padding: '10px 14px', color: '#fff',
-                  fontSize: '13px', outline: 'none', fontFamily: 'Inter, system-ui, sans-serif',
+                  fontSize: '14.5px', outline: 'none', fontFamily: 'Inter, system-ui, sans-serif',
                 }}
               />
               <button
@@ -1017,6 +1054,14 @@ Instructions:
 
       {/* Spin animation keyframe */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* Phase 2: Explainable Molecular Attribution Modal */}
+      <AttributionViewer
+        isOpen={!!explainingEndpoint}
+        onClose={() => setExplainingEndpoint(null)}
+        smiles={canonicalSmiles}
+        initialEndpoint={explainingEndpoint || 'herg'}
+      />
     </>
   )
 }
