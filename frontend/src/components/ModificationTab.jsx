@@ -1071,7 +1071,7 @@ export default function ModificationTab({
           </div>
 
           {/* Sub-tab bar */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '18px', flexWrap: 'wrap' }}>
             {[
               { id: 'mutation', label: 'Live Mutation' },
               { id: 'insights', label: 'Insights' },
@@ -1082,7 +1082,7 @@ export default function ModificationTab({
                 key={tab.id}
                 onClick={() => setAnalysisSubTab(tab.id)}
                 style={{
-                  padding: '8px 20px', fontSize: '13px', fontWeight: 500,
+                  padding: '9px 22px', fontSize: '14px', fontWeight: 600,
                   border: '1px solid rgba(45,212,212,0.15)', borderRadius: '6px',
                   cursor: 'pointer', transition: 'all 0.2s',
                   fontFamily: 'Inter, system-ui, sans-serif',
@@ -1096,18 +1096,18 @@ export default function ModificationTab({
 
           {/* ── Live Mutation sub-tab (Phase 4) ── */}
           {analysisSubTab === 'mutation' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* Toolbar & Filter Chips */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
                     Targeted Structural Transformations
                   </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#94a3b8', lineHeight: 1.5 }}>
                     Select a transformation to mutate the parent molecule, view physicochemical property deltas, and compute independent ML predictions.
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   {[
                     { id: 'all', label: `All (${applicabilityData?.transforms?.length || 12})` },
                     { id: 'applicable', label: `Applicable (${applicabilityData?.num_applicable ?? 0})` },
@@ -1117,10 +1117,10 @@ export default function ModificationTab({
                       key={f.id}
                       onClick={() => setPaletteFilter(f.id)}
                       style={{
-                        padding: '4px 12px', fontSize: '11px', fontWeight: 600, borderRadius: '4px',
+                        padding: '6px 14px', fontSize: '13px', fontWeight: 600, borderRadius: '6px',
                         cursor: 'pointer', transition: 'all 0.15s',
-                        border: paletteFilter === f.id ? `1px solid ${accentColor}` : '1px solid rgba(45,212,212,0.1)',
-                        background: paletteFilter === f.id ? 'rgba(45,212,212,0.15)' : '#081214',
+                        border: paletteFilter === f.id ? `1px solid ${accentColor}` : '1px solid rgba(45,212,212,0.15)',
+                        background: paletteFilter === f.id ? 'rgba(45,212,212,0.18)' : '#081214',
                         color: paletteFilter === f.id ? accentColor : '#94a3b8',
                       }}
                     >
@@ -1132,22 +1132,22 @@ export default function ModificationTab({
 
               {/* Transform Catalog Cards Grid */}
               {applicabilityLoading && !applicabilityData ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '13px', padding: '24px 0' }}>
-                  <div style={{ width: '16px', height: '16px', border: '2px solid rgba(45,212,212,0.3)', borderTop: `2px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: accentColor, fontSize: '14px', padding: '24px 0' }}>
+                  <div style={{ width: '18px', height: '18px', border: '2px solid rgba(45,212,212,0.3)', borderTop: `2px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                   Evaluating molecular substructures across transformation catalog…
                 </div>
               ) : applicabilityError ? (
-                <div style={{ color: '#f87171', fontSize: '13px', padding: '12px', background: 'rgba(239,68,68,0.1)', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div style={{ color: '#f87171', fontSize: '14px', padding: '14px', background: 'rgba(239,68,68,0.1)', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)' }}>
                   {applicabilityError}
                 </div>
               ) : (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                  gap: '10px',
-                  maxHeight: '320px',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))',
+                  gap: '14px',
+                  maxHeight: '460px',
                   overflowY: 'auto',
-                  paddingRight: '4px',
+                  paddingRight: '6px',
                 }}>
                   {(applicabilityData?.transforms || []).filter(item => {
                     if (paletteFilter === 'applicable') return item.applicable
@@ -1164,65 +1164,67 @@ export default function ModificationTab({
                           }
                         }}
                         style={{
-                          background: isSelected ? 'rgba(45,212,212,0.12)' : '#081214',
+                          background: isSelected ? 'rgba(45,212,212,0.14)' : '#081214',
                           border: isSelected
                             ? `1px solid ${accentColor}`
                             : item.applicable
-                              ? '1px solid rgba(45,212,212,0.15)'
-                              : '1px solid rgba(100,116,139,0.12)',
+                              ? '1px solid rgba(45,212,212,0.18)'
+                              : '1px solid rgba(100,116,139,0.15)',
                           borderRadius: '8px',
-                          padding: '12px',
+                          padding: '16px',
                           cursor: item.applicable ? 'pointer' : 'not-allowed',
                           opacity: item.applicable ? 1 : 0.65,
                           transition: 'all 0.15s ease',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
-                          boxShadow: isSelected ? '0 0 12px rgba(45,212,212,0.2)' : 'none',
+                          boxShadow: isSelected ? '0 0 14px rgba(45,212,212,0.25)' : 'none',
                         }}
                         onMouseEnter={e => {
                           if (item.applicable && !isSelected) {
-                            e.currentTarget.style.borderColor = 'rgba(45,212,212,0.4)'
+                            e.currentTarget.style.borderColor = 'rgba(45,212,212,0.45)'
                             e.currentTarget.style.background = '#0c1b1e'
                           }
                         }}
                         onMouseLeave={e => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = item.applicable ? 'rgba(45,212,212,0.15)' : 'rgba(100,116,139,0.12)'
+                            e.currentTarget.style.borderColor = item.applicable ? 'rgba(45,212,212,0.18)' : 'rgba(100,116,139,0.15)'
                             e.currentTarget.style.background = '#081214'
                           }
                         }}
                       >
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(45,212,212,0.08)', color: accentColor, fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(45,212,212,0.08)', color: accentColor, fontWeight: 600 }}>
                               {item.category}
                             </span>
                             <span style={{
-                              fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 600,
+                              fontSize: '11px', padding: '3px 9px', borderRadius: '4px', fontWeight: 600,
                               background: item.applicable ? 'rgba(74,222,128,0.12)' : 'rgba(148,163,184,0.1)',
                               color: item.applicable ? '#4ade80' : '#64748b',
                             }}>
                               {item.applicable ? `✓ ${item.substructure_matches} site${item.substructure_matches > 1 ? 's' : ''}` : 'Unavailable'}
                             </span>
                           </div>
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px', lineHeight: 1.35 }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, marginBottom: '6px' }}>
+                          <div style={{ fontSize: '13px', color: '#a1a1aa', lineHeight: 1.5, marginBottom: '10px' }}>
                             {item.description}
                           </div>
                         </div>
 
                         <div>
-                          <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span>Target: <strong style={{ color: '#cbd5e1' }}>{item.target_group}</strong></span>
+                          <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>Target: <strong style={{ color: '#e2e8f0' }}>{item.target_group}</strong></span>
                             {item.has_multiple_products && (
-                              <span style={{ color: '#facc15', fontWeight: 600 }}>{item.product_variants_count} isomers</span>
+                              <span style={{ color: '#facc15', fontWeight: 600, background: 'rgba(250,204,21,0.1)', padding: '2px 7px', borderRadius: '4px', fontSize: '11px' }}>
+                                {item.product_variants_count} isomers
+                              </span>
                             )}
                           </div>
                           {!item.applicable && item.unavailability_reason && (
-                            <div style={{ fontSize: '10px', color: '#f87171', marginTop: '4px', fontStyle: 'italic' }}>
+                            <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px', fontStyle: 'italic', lineHeight: 1.45 }}>
                               {item.unavailability_reason}
                             </div>
                           )}
@@ -1237,13 +1239,13 @@ export default function ModificationTab({
               {mutationLoading && (
                 <div style={{
                   background: '#081214', border: '1px solid rgba(45,212,212,0.2)', borderRadius: '8px',
-                  padding: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+                  padding: '28px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px',
                 }}>
-                  <div style={{ width: '28px', height: '28px', border: '3px solid rgba(45,212,212,0.2)', borderTop: `3px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                  <div style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>
+                  <div style={{ width: '32px', height: '32px', border: '3px solid rgba(45,212,212,0.2)', borderTop: `3px solid ${accentColor}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  <div style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 600 }}>
                     Simulating transformation & computing candidate properties...
                   </div>
-                  <div style={{ color: '#64748b', fontSize: '12px' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '13px' }}>
                     Computing 9 RDKit physicochemical descriptors and generating 6 independent neural ML endpoint predictions.
                   </div>
                 </div>
@@ -1252,12 +1254,12 @@ export default function ModificationTab({
               {mutationError && !mutationLoading && (
                 <div style={{
                   background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px',
-                  padding: '14px', color: '#fca5a5', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '16px', color: '#fca5a5', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <span>{mutationError}</span>
                   <button
                     onClick={() => handleSelectMutation(selectedTransformId, selectedVariantIndex)}
-                    style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', color: '#fca5a5', padding: '4px 10px', cursor: 'pointer', fontSize: '11px' }}
+                    style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', color: '#fca5a5', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}
                   >Retry</button>
                 </div>
               )}
@@ -1267,26 +1269,26 @@ export default function ModificationTab({
                   background: 'linear-gradient(180deg, #091719 0%, #061012 100%)',
                   border: '1px solid rgba(45,212,212,0.3)',
                   borderRadius: '10px',
-                  padding: '16px',
+                  padding: '18px',
                   boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
                 }}>
                   {/* Candidate Header & Lineage */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: accentColor, display: 'flex' }}>{Icons.flask}</span>
-                        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#fff' }}>
+                        <h4 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>
                           Candidate Analogue: {mutationResult.transform_name}
                         </h4>
-                        <span style={{ fontSize: '11px', background: 'rgba(74,222,128,0.12)', color: '#4ade80', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                        <span style={{ fontSize: '12px', background: 'rgba(74,222,128,0.12)', color: '#4ade80', padding: '3px 9px', borderRadius: '4px', fontWeight: 600 }}>
                           Validated Product
                         </span>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                        Lineage: <span style={{ fontFamily: 'monospace', color: '#64748b' }}>{canonicalSmiles}</span>
-                        <span style={{ margin: '0 6px', color: accentColor }}>→</span>
-                        <strong style={{ color: '#e2e8f0' }}>Candidate</strong>
-                        <span style={{ marginLeft: '10px', color: '#64748b' }}>({(mutationResult.timing_ms / 1000).toFixed(2)}s inference)</span>
+                      <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>
+                        Lineage: <span style={{ fontFamily: 'monospace', color: '#cbd5e1' }}>{canonicalSmiles}</span>
+                        <span style={{ margin: '0 8px', color: accentColor }}>→</span>
+                        <strong style={{ color: '#fff' }}>Candidate</strong>
+                        <span style={{ marginLeft: '12px', color: '#64748b' }}>({(mutationResult.timing_ms / 1000).toFixed(2)}s inference)</span>
                       </div>
                     </div>
 
@@ -1295,8 +1297,8 @@ export default function ModificationTab({
                       <button
                         onClick={handleAcceptCandidate}
                         style={{
-                          padding: '8px 16px', background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
-                          border: 'none', borderRadius: '6px', color: '#000', fontWeight: 700, fontSize: '12px',
+                          padding: '10px 18px', background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
+                          border: 'none', borderRadius: '6px', color: '#000', fontWeight: 700, fontSize: '13px',
                           cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                           boxShadow: '0 2px 10px rgba(45,212,212,0.3)',
                           transition: 'all 0.15s ease',
@@ -1310,9 +1312,9 @@ export default function ModificationTab({
                       <button
                         onClick={handleContinueInDraw}
                         style={{
-                          padding: '8px 12px', background: 'rgba(45,212,212,0.08)',
+                          padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1323,9 +1325,9 @@ export default function ModificationTab({
                       <button
                         onClick={handleCompareWithParent}
                         style={{
-                          padding: '8px 12px', background: 'rgba(45,212,212,0.08)',
+                          padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1336,9 +1338,9 @@ export default function ModificationTab({
                       <button
                         onClick={handleSendToWarRoom}
                         style={{
-                          padding: '8px 12px', background: 'rgba(45,212,212,0.08)',
+                          padding: '10px 14px', background: 'rgba(45,212,212,0.08)',
                           border: '1px solid rgba(45,212,212,0.25)', borderRadius: '6px', color: '#e2e8f0',
-                          fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.15)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.08)'}
@@ -1349,9 +1351,9 @@ export default function ModificationTab({
                       <button
                         onClick={handleResetToParent}
                         style={{
-                          padding: '8px 12px', background: 'transparent',
+                          padding: '10px 14px', background: 'transparent',
                           border: '1px solid rgba(148,163,184,0.2)', borderRadius: '6px', color: '#94a3b8',
-                          fontWeight: 500, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: 500, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                         }}
                         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                         onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
@@ -1365,8 +1367,8 @@ export default function ModificationTab({
                   {actionFeedback && (
                     <div style={{
                       background: 'rgba(45,212,212,0.12)', border: '1px solid rgba(45,212,212,0.3)',
-                      borderRadius: '6px', padding: '8px 12px', marginBottom: '12px',
-                      color: accentColor, fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
+                      borderRadius: '6px', padding: '10px 14px', marginBottom: '14px',
+                      color: accentColor, fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px',
                     }}>
                       {Icons.check} {actionFeedback}
                     </div>
@@ -1375,20 +1377,20 @@ export default function ModificationTab({
                   {/* Isomer Selector Pills (if multiple positional isomers exist) */}
                   {mutationResult.has_multiple_products && mutationResult.total_variants > 1 && (
                     <div style={{
-                      display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px',
+                      display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px',
                       background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
-                      borderRadius: '6px', padding: '8px 12px', flexWrap: 'wrap',
+                      borderRadius: '6px', padding: '10px 14px', flexWrap: 'wrap',
                     }}>
-                      <span style={{ fontSize: '12px', color: '#facc15', fontWeight: 600 }}>
+                      <span style={{ fontSize: '13px', color: '#facc15', fontWeight: 600 }}>
                         Multiple Positional Isomers ({mutationResult.total_variants} products):
                       </span>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         {mutationResult.variants.map((vSmiles, vIdx) => (
                           <button
                             key={vIdx}
                             onClick={() => handleSelectMutation(mutationResult.transform_id, vIdx)}
                             style={{
-                              padding: '3px 10px', fontSize: '11px', fontWeight: 600, borderRadius: '4px',
+                              padding: '5px 12px', fontSize: '12px', fontWeight: 600, borderRadius: '5px',
                               cursor: 'pointer', transition: 'all 0.15s',
                               border: mutationResult.selected_variant_index === vIdx ? '1px solid #facc15' : '1px solid rgba(245,158,11,0.2)',
                               background: mutationResult.selected_variant_index === vIdx ? '#facc15' : 'transparent',
@@ -1403,39 +1405,39 @@ export default function ModificationTab({
                   )}
 
                   {/* 2-Column Section: 2D Preview + Property Deltas */}
-                  <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '18px', marginBottom: '18px', flexWrap: 'wrap' }}>
                     {/* Candidate 2D SVG Box */}
                     <div style={{
-                      flex: '1', minWidth: '260px', background: '#050c0e',
+                      flex: '1', minWidth: '280px', background: '#050c0e',
                       border: '1px solid rgba(45,212,212,0.15)', borderRadius: '8px',
-                      padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center',
                     }}>
-                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0' }}>2D Structure Preview</span>
-                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>Formula: <span dangerouslySetInnerHTML={{ __html: formulaToHtml(mutationResult.candidate_formula) }} /></span>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>2D Structure Preview</span>
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>Formula: <span dangerouslySetInnerHTML={{ __html: formulaToHtml(mutationResult.candidate_formula) }} /></span>
                       </div>
 
                       <div style={{
-                        width: '100%', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: '100%', height: '230px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         overflow: 'hidden', background: '#030809', borderRadius: '6px',
                       }}>
-                        {generateSvg(rdkit, mutationResult.candidate_smiles, 280, 190) ? (
+                        {generateSvg(rdkit, mutationResult.candidate_smiles, 300, 210) ? (
                           <div
-                            dangerouslySetInnerHTML={{ __html: generateSvg(rdkit, mutationResult.candidate_smiles, 280, 190) }}
+                            dangerouslySetInnerHTML={{ __html: generateSvg(rdkit, mutationResult.candidate_smiles, 300, 210) }}
                             style={{ filter: 'invert(0.85) hue-rotate(180deg) brightness(1.2)' }}
                           />
                         ) : (
-                          <span style={{ color: '#64748b', fontSize: '12px', fontStyle: 'italic' }}>Structure preview</span>
+                          <span style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>Structure preview</span>
                         )}
                       </div>
 
                       {/* SMILES Box with Copy */}
                       <div style={{
-                        width: '100%', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px',
-                        background: '#0a1618', border: '1px solid rgba(45,212,212,0.1)', borderRadius: '4px',
-                        padding: '4px 8px',
+                        width: '100%', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px',
+                        background: '#0a1618', border: '1px solid rgba(45,212,212,0.12)', borderRadius: '6px',
+                        padding: '6px 10px',
                       }}>
-                        <span style={{ flex: 1, fontFamily: 'monospace', fontSize: '11px', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ flex: 1, fontFamily: 'monospace', fontSize: '12px', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {mutationResult.candidate_smiles}
                         </span>
                         <button
@@ -1443,7 +1445,7 @@ export default function ModificationTab({
                           title="Copy Candidate SMILES"
                           style={{
                             background: 'transparent', border: 'none', color: copiedSmiles ? '#4ade80' : '#94a3b8',
-                            cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center',
+                            cursor: 'pointer', padding: '3px', display: 'flex', alignItems: 'center',
                           }}
                         >
                           {copiedSmiles ? Icons.check : Icons.copy}
@@ -1452,17 +1454,17 @@ export default function ModificationTab({
                     </div>
 
                     {/* Physicochemical Property Deltas Table */}
-                    <div style={{ flex: '1.4', minWidth: '320px', overflowX: 'auto' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>
+                    <div style={{ flex: '1.4', minWidth: '340px', overflowX: 'auto' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: '10px' }}>
                         Before-and-After Property Deltas
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid rgba(45,212,212,0.15)' }}>
-                            <th style={{ textAlign: 'left', padding: '6px 8px', color: accentColor, fontWeight: 600 }}>Property</th>
-                            <th style={{ textAlign: 'left', padding: '6px 8px', color: '#94a3b8', fontWeight: 600 }}>Parent</th>
-                            <th style={{ textAlign: 'left', padding: '6px 8px', color: '#e2e8f0', fontWeight: 600 }}>Candidate</th>
-                            <th style={{ textAlign: 'left', padding: '6px 8px', color: accentColor, fontWeight: 600 }}>Δ (Delta)</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', color: accentColor, fontWeight: 600 }}>Property</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', color: '#94a3b8', fontWeight: 600 }}>Parent</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', color: '#e2e8f0', fontWeight: 600 }}>Candidate</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', color: accentColor, fontWeight: 600 }}>Δ (Delta)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1471,15 +1473,15 @@ export default function ModificationTab({
                             const isNegative = typeof row.delta === 'string' && row.delta.startsWith('-')
                             return (
                               <tr key={rIdx} style={{ borderBottom: '1px solid rgba(45,212,212,0.06)' }}>
-                                <td style={{ padding: '6px 8px', color: '#cbd5e1', fontWeight: 500 }}>{row.label}</td>
-                                <td style={{ padding: '6px 8px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                                <td style={{ padding: '8px 10px', color: '#e2e8f0', fontWeight: 500 }}>{row.label}</td>
+                                <td style={{ padding: '8px 10px', color: '#94a3b8', fontFamily: 'monospace' }}>
                                   {row.parent_val !== undefined ? `${row.parent_val}${row.unit ? ` ${row.unit}` : ''}` : '-'}
                                 </td>
-                                <td style={{ padding: '6px 8px', color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>
+                                <td style={{ padding: '8px 10px', color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>
                                   {row.candidate_val !== undefined ? `${row.candidate_val}${row.unit ? ` ${row.unit}` : ''}` : '-'}
                                 </td>
                                 <td style={{
-                                  padding: '6px 8px', fontFamily: 'monospace', fontWeight: 700,
+                                  padding: '8px 10px', fontFamily: 'monospace', fontWeight: 700,
                                   color: isPositive ? '#4ade80' : isNegative ? '#f87171' : '#94a3b8',
                                 }}>
                                   {row.delta !== undefined ? `${row.delta}${row.unit ? ` ${row.unit}` : ''}` : '-'}
@@ -1494,21 +1496,21 @@ export default function ModificationTab({
 
                   {/* Independent Candidate ML Predictions */}
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>
                           Candidate ML Predictions (Independent Inference)
                         </span>
-                        <span style={{ fontSize: '10px', background: 'rgba(45,212,212,0.1)', color: accentColor, padding: '2px 6px', borderRadius: '4px' }}>
+                        <span style={{ fontSize: '11px', background: 'rgba(45,212,212,0.1)', color: accentColor, padding: '3px 8px', borderRadius: '4px', fontWeight: 500 }}>
                           Ensemble Warm Models
                         </span>
                       </div>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
                         Not reused from parent
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
                       {(mutationResult.predictions || []).map((pred, pIdx) => {
                         const isBio = pred.category === 'Bioactivity'
                         const isActive = pred.status_label === 'Active'
@@ -1521,15 +1523,15 @@ export default function ModificationTab({
                             key={pIdx}
                             style={{
                               background: '#050c0e',
-                              border: '1px solid rgba(45,212,212,0.1)',
-                              borderRadius: '6px',
-                              padding: '10px',
+                              border: '1px solid rgba(45,212,212,0.12)',
+                              borderRadius: '8px',
+                              padding: '12px',
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                              <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600 }}>{pred.category}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{pred.category}</span>
                               <span style={{
-                                fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 700,
+                                fontSize: '11px', padding: '3px 8px', borderRadius: '4px', fontWeight: 700,
                                 background: isFavorable ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
                                 color: isFavorable ? '#4ade80' : '#f87171',
                               }}>
@@ -1537,20 +1539,20 @@ export default function ModificationTab({
                               </span>
                             </div>
 
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>
                               {pred.endpoint_name}
                             </div>
 
                             {/* Progress bar */}
-                            <div style={{ height: '6px', background: '#0a1618', borderRadius: '3px', overflow: 'hidden', marginBottom: '6px' }}>
+                            <div style={{ height: '7px', background: '#0a1618', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
                               <div style={{
                                 height: '100%', width: `${pct}%`,
                                 background: isFavorable ? '#4ade80' : '#f87171',
-                                borderRadius: '3px', transition: 'width 0.4s ease',
+                                borderRadius: '4px', transition: 'width 0.4s ease',
                               }} />
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
                               <span>Prob: <strong style={{ color: '#fff' }}>{pct}%</strong></span>
                               <span>Conf: <strong style={{ color: '#cbd5e1' }}>{Math.round(pred.confidence * 100)}%</strong></span>
                             </div>
