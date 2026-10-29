@@ -308,6 +308,186 @@ Integrated interactive, real-time molecular mutation into the existing Draw and 
 - Candidate predictions represent statistical ML estimates from warm local scikit-learn models, not wet-lab validated biological binding affinities.
 - Transformations with symmetric or multiple matching reaction centers generate positional isomers; the user can inspect each isomer using the provided variant selector pills.
 
+---
+
+## Phase 5: Benchmark Drug Gallery
+
+### Objectives & Summary
+Integrated a curated, scientifically verified Benchmark Drug Gallery directly into the existing ROGVEDA molecular workspace across **Draw**, **Molecular Analysis**, **Compare Molecules**, and the **Lead Optimization War Room** without introducing any new top-level tabs, standalone benchmark pages, or duplicate prediction pipelines.
+
+Medicinal chemists can now inspect curated benchmark case studies, load verified chemical structures directly into the workspace, execute genuine live model predictions across bioactivity and toxicity endpoints, compare model estimates side-by-side with documented historical facts (FDA approvals/withdrawals, DrugBank, ChEMBL, peer-reviewed literature), run 1-click comparative case studies, and initiate lead optimization in the War Room using benchmark compounds as parent leads.
+
+### 5 Curated Benchmark Drugs & Verified Scientific Provenance
+1. **Terfenadine (`C32H41NO2`, MW 471.67 g/mol, Canonical SMILES: `CC(C)(C)c1ccc(C(O)CCCN2CCC(C(O)(c3ccccc3)c3ccccc3)CC2)cc1`)**:
+   - **Historical Context:** Approved by FDA in 1985 (Seldane) as a non-sedating H1 antihistamine. Withdrawn worldwide in 1997 due to fatal polymorphic ventricular arrhythmias (torsades de pointes) caused by potent myocardial hERG/Kv11.1 ($I_{Kr}$) potassium channel blockade ($IC_{50} \sim 56\text{ nM}$) under CYP3A4 metabolic inhibition or overdose.
+   - **Provenance:** FDA NDA 018949 / Docket 97N-0021; DrugBank DB00342; ChEMBL CHEMBL655; Roy et al., *Circulation* (1996) 94:817-823.
+   - **Genuine Rogveda Prediction:** $P_{\text{hERG}} = 0.97$ ("High Risk").
+   - **Scientific Alignment:** Strongly Concordant. The 2D Morgan circular fingerprint model detects the diphenylmethyl piperidine pharmacophore and flags high cardiac risk, matching documented in-vitro electrophysiology.
+2. **Fexofenadine (`C32H39NO4`, MW 501.66 g/mol, Canonical SMILES: `CC(C)(C(=O)O)c1ccc(C(O)CCCN2CCC(C(O)(c3ccccc3)c3ccccc3)CC2)cc1`)**:
+   - **Historical Context:** The primary active carboxylic acid metabolite of terfenadine (MDL 16,455A). Approved by FDA in 1996 as Allegra to replace terfenadine. Demonstrates over 400-fold weaker hERG block ($IC_{50} \sim 22\text{--}100\,\mu\text{M}$). Forms a zwitterion at physiological pH (pKa 4.25, 9.53) and acts as a substrate for P-glycoprotein efflux, drastically restricting myocardial intracellular tissue accumulation.
+   - **Provenance:** FDA NDA 020625; DrugBank DB00959; ChEMBL CHEMBL898; Pratt et al., *Am J Cardiol* (1999) 83:145A-154A.
+   - **Genuine Rogveda Prediction:** $P_{\text{hERG}} = 0.94$ ("High Risk").
+   - **Scientific Alignment:** Discordant / Known 2D QSAR Substructure Limitation. In 2D Morgan radius-2 fingerprints, terfenadine and fexofenadine share >90% Tanimoto similarity because the diphenylmethyl piperidine core dominates feature bit hashes. The 2D in-silico model does not simulate physiological ionization or P-gp active transport. This discordance is authentically preserved and highlighted in the UI as an educational demonstration of the limits of 2D QSAR.
+3. **Aspirin (Acetylsalicylic Acid, `C9H8O4`, MW 180.16 g/mol, Canonical SMILES: `CC(=O)Oc1ccccc1C(=O)O`)**:
+   - **Historical Context:** Synthesized by Felix Hoffmann in 1897; 1982 Nobel Prize awarded to Sir John Vane for discovering its inhibition of prostaglandin synthesis. Unique among NSAIDs: acts as an irreversible covalent suicide inhibitor by transferring its acetyl group to Ser530 (COX-1) and Ser516 (COX-2), permanently abolishing cyclooxygenase activity.
+   - **Provenance:** Vane JR, *Nature New Biol* (1971) 231:232-235; DrugBank DB00945; ChEMBL CHEMBL25; PubChem CID 2244.
+   - **Genuine Rogveda Prediction:** $P_{\text{anti-inflam}} = 0.14$ ("Inactive").
+   - **Scientific Alignment:** Discordant / Mechanism Limitation. Bioactivity models trained on ChEMBL/PubChem reversible binding assays expect bulky multi-ring ligands with low equilibrium $K_i$. Aspirin's clinical efficacy is a chemical covalent reaction, which cannot be captured without explicit covalent reactivity modeling.
+4. **Ibuprofen (`C13H18O2`, MW 206.28 g/mol, Canonical SMILES: `CC(C)Cc1ccc(C(C)C(=O)O)cc1`)**:
+   - **Historical Context:** Developed in the 1960s by Boots Group as a safer alternative to aspirin for rheumatoid arthritis (approved UK 1969, US 1974). Reversible competitive inhibitor of COX-1 ($IC_{50} \sim 2.1\,\mu\text{M}$) and COX-2 ($IC_{50} \sim 1.6\,\mu\text{M}$). Clean cardiac liability profile.
+   - **Provenance:** Adams et al., *Lancet* (1969) 2:1118-1121; DrugBank DB01050; ChEMBL CHEMBL521; PubChem CID 3672.
+   - **Genuine Rogveda Prediction:** $P_{\text{anti-inflam}} = 0.32$, $P_{\text{hERG}} = 0.21$ ("Low Risk").
+   - **Scientific Alignment:** Concordant low cardiac risk; moderate activity probability due to simple monocyclic core compared to large synthetic heteroaromatics.
+5. **Celecoxib (`C17H14F3N3O2S`, MW 381.37 g/mol, Canonical SMILES: `Cc1ccc(-c2cc(C(F)(F)F)nn2-c2ccc(S(N)(=O)=O)cc2)cc1`)**:
+   - **Historical Context:** Developed by Searle/Pfizer and approved by FDA in 1998 (Celebrex) as a first-in-class selective COX-2 inhibitor ($IC_{50} \sim 40\text{ nM}$, >30-fold selective over COX-1) to reduce gastrointestinal ulceration.
+   - **Provenance:** Penning et al., *J Med Chem* (1997) 40:1347-1365; FDA NDA 020998; DrugBank DB00482; ChEMBL CHEMBL118; PubChem CID 2662.
+   - **Genuine Rogveda Prediction:** $P_{\text{anti-inflam}} = 0.65$ ("Active"), $P_{\text{hERG}} = 0.13$ ("Low Risk").
+   - **Scientific Alignment:** Strongly Concordant. Classic drug-like diarylpyrazole sulfonamide chemotype aligns with trained non-covalent bioactivity models.
+
+### Required Integration Points (Verified Embedded UX)
+1. **Draw Screen (`MoleculeDraw.jsx`)**:
+   - Contextual "Benchmark Drugs" button in the subtoolbar (alongside New, Open, Save, Get SMILES, History).
+   - "Benchmark Drugs" button beside the bottom SMILES bar.
+   - Opens `BenchmarkSelectorModal`, allowing one-click loading of verified benchmark structures into the Ketcher editor and active workspace state.
+2. **Molecular Analysis (`AnalysisTab.jsx`)**:
+   - Automated benchmark detection: calls `POST /api/benchmarks/identify` on canonical SMILES change.
+   - Contextual "Benchmark Drugs" trigger button in the subtoolbar and bottom SMILES bar.
+   - Displays the dedicated **Benchmark Historical Evidence & Model Alignment Card** (`BenchmarkContextCard.jsx`) directly above the 3-column analysis grid.
+   - Strictly separates documented historical facts (regulatory status, literature citations, mechanism of action) from Rogveda's actual computational model outputs.
+   - Features an explicit Concordance / Disagreement Analysis banner explaining domain applicability and 2D QSAR boundaries.
+   - Provides 1-click handoffs to Compare Molecules ("Compare with Paired Compound") and the War Room ("Optimize Lead in War Room").
+3. **Compare Molecules (`CompareTab.jsx`)**:
+   - Added 1-click **Preset Benchmark Case Studies** banner:
+     - *Terfenadine vs. Fexofenadine* (hERG Liability & Carboxylation)
+     - *Aspirin vs. Celecoxib* (Covalent Salicylate vs. Selective COX-2)
+     - *Aspirin vs. Ibuprofen* (Classic NSAID Scaffolds)
+   - Molecule A Source options include all curated benchmarks.
+   - Molecule B input mode adds **"From Benchmark"** with a direct dropdown picker.
+4. **Lead Optimization War Room (`WarRoomTab.jsx`)**:
+   - Added **"Benchmark Lead"** dropdown selector in top controls, allowing any benchmark to become the parent molecule for multi-parameter lead optimization across 6 dimensions.
+   - Empty state provides 1-click benchmark load buttons when no molecule is currently drawn.
+5. **Architectural Invariant Guarantee**:
+   - **0 new navigation items or top-level tabs** introduced.
+   - **0 duplicate prediction pipelines**: all benchmarks execute through normal chemistry and ML prediction services.
+   - **0 hard-coded probabilities**: actual model outputs are displayed honestly.
+   - **100% offline-first** (`127.0.0.1`), zero external network calls.
+
+### New API Contracts & Schemas
+- `GET /api/benchmarks`: Returns summary catalog and paired case studies.
+- `GET /api/benchmarks/case-studies`: Returns paired comparative case studies with compound metadata.
+- `GET /api/benchmarks/{benchmark_id}`: Returns full historical context, citations, and domain applicability note.
+- `POST /api/benchmarks/identify`: Accepts `{ smiles: str }`, canonicalizes via RDKit, and returns matching benchmark detail or `is_benchmark: false`.
+
+### Files Modified & Created
+- `backend/app/schemas/benchmark_schemas.py` *(New)*: Pydantic schemas for summary items, compound details, provenance sources, and identification requests/responses.
+- `backend/app/services/benchmark_service.py` *(New)*: Curated single source of truth catalog with RDKit canonicalization verification, case study pairings, and SMILES lookup indices.
+- `backend/app/api/benchmarks.py` *(New)*: FastAPI router exposing `/api/benchmarks` endpoints.
+- `backend/app/main.py` *(Modified)*: Registered `benchmarks_router`.
+- `backend/tests/test_benchmarks.py` *(New)*: 16 unit and API integration tests covering chemistry validity, provenance completeness, atom-permutation matching, API contracts, and genuine model pipeline execution.
+- `frontend/src/components/BenchmarkSelectorModal.jsx` *(New)*: Dark charcoal and teal modal with category filters, 2D structure previews, and direct workspace handoffs.
+- `frontend/src/components/BenchmarkContextCard.jsx` *(New)*: Historical evidence card displaying documented facts side-by-side with genuine model outputs and concordance analysis.
+- `frontend/src/pages/MoleculeDraw.jsx` *(Modified)*: Added subtoolbar and SMILES bar benchmark triggers, modal state management, and tab handoff handlers.
+- `frontend/src/components/AnalysisTab.jsx` *(Modified)*: Integrated benchmark identification, contextual trigger, and embedded `BenchmarkContextCard`.
+- `frontend/src/components/CompareTab.jsx` *(Modified)*: Integrated preset case studies banner, benchmark Molecule A options, and "From Benchmark" Molecule B mode.
+- `frontend/src/components/WarRoomTab.jsx` *(Modified)*: Integrated Benchmark Lead selector in top controls and quick buttons in empty state.
+
+### Verification Results
+- `backend/tests/test_benchmarks.py`: 16 passed (100%) in 4.59s.
+- `backend/tests/test_attribution.py`: 15 passed (100%) in 10.39s.
+- `backend/tests/test_dossier.py`: 11 passed (100%) in 2.24s.
+- `backend/tests/test_war_room.py`: 18 passed (100%) in 392.24s.
+- `backend/tests/test_mutation.py`: 15 passed (100%) in 137.48s.
+- Full Backend Validation Suite: 75 passed (100%) with 0 failures.
+- Frontend Production Build (`npm run build`): Built in 4.83s with zero errors (all 1323 modules transformed cleanly).
+- Offline & Security Invariants: 100% loopback-only (`127.0.0.1`), zero external network requests or CDN dependencies.
+
+### Unresolved Issues / Known Limitations
+- Fexofenadine and Aspirin predictions demonstrate genuine 2D QSAR limitations (topological Morgan fingerprints lack physiological zwitterion ionization/P-gp modeling, and reversible binding models lack covalent transacetylation modeling). These are intentionally highlighted as educational case studies.
+
+---
+
+## Global UX Enhancement: Workspace Typography & Readability Overhaul
+
+### Objectives & Summary
+Scaled up text sizes across every tab, feature card, table, input control, modal, and viewer in the ROGVEDA platform to ensure comfortable reading from standard desktop viewing distances (50–70 cm) without eye strain. Eliminated microscopic font sizes (9px–11px), establishing clean, readable proportional hierarchy without altering layout geometry, 2D Ketcher drawing, or 3D WebGL conformed spaces.
+
+### Typography Standards Applied
+- **Base Typography (`index.css`):** Set `html { font-size: 16px; line-height: 1.5; }` with responsive high-contrast legibility.
+- **Micro / Badge / Footnote Text:** Upgraded from 9px–11px to **12.5px–13.5px** with enhanced contrast and pill padding.
+- **Body / Table Cells / Input Controls:** Upgraded from 11px–13px to **14px–15px** with comfortable line height and padding.
+- **Section Headers / Card Titles:** Upgraded from 15px–16px to **18px–20px**.
+- **Page Titles / Major Headings:** Upgraded from 20px–24px to **24px–28px**.
+- **Metric Big Numbers:** Upgraded from 24px–28px to **32px**.
+
+### Files Modified & Components Upgraded
+1. `frontend/src/index.css`: Root font size set to 16px; `.app-nav-link` upgraded to 14px with 0.18em tracking.
+2. `frontend/src/pages/MoleculeDraw.jsx`: Tab switcher buttons upgraded to 15px (with 18px SVG icons); subtoolbar action buttons and 2D/3D toggles to 14px–14.5px; SMILES bar inputs to 14.5px–15.5px; History, Experiments, and Dossier modals headers to 20px, contents to 15.5px–16.5px.
+3. `frontend/src/components/AnalysisTab.jsx`: Descriptors, properties, predictions, and synthesizability headers to 18px, values to 15px–16px, badges to 13px–13.5px.
+4. `frontend/src/components/BenchmarkSelectorModal.jsx`: Modal title to 24px, category filters to 14px, compound cards to 19px, properties and buttons to 14px–14.5px.
+5. `frontend/src/components/BenchmarkContextCard.jsx`: Title to 22px, body narrative to 15px, status badges and citations to 13px.
+6. `frontend/src/components/CompareTab.jsx`: Case study bar to 14px; left/right panel headers to 18px; dropdowns/inputs to 14.5px–15px; stat cards to 14px labels / 17px monospace values; gauges and prediction cards to 14.5px–16px.
+7. `frontend/src/components/WarRoomTab.jsx`: Objective controls to 14px; trade-off panels to 18px; ranked candidate titles to 14.5px, descriptions to 13px; radar chart axis labels to 13px; evaluation table rows to 13px with 12.5px Explain buttons. Removed dead duplicate trailing block.
+8. `frontend/src/components/ModificationTab.jsx`: Original/Modified panels to 18px; mutation filter pills to 13.5px; transform catalog cards to 16px titles / 14px descriptions; property deltas and prediction cards to 14px–14.5px; shortlist cards to 15px.
+9. `frontend/src/components/PredictionTab.jsx`: Viewer panels to 18px; property values to 15px; AI insight text to 14.5px; bioactivity prediction rows to 15px with 14.5px confidence and 13px status badges; chat modal to 14.5px.
+10. `frontend/src/components/SimilarityTab.jsx`: Query & search options headers to 18px; form inputs/selects to 14.5px; search button to 15.5px; matched property table headers to 13px and rows to 14px; similar compound cards to 14px; full results modal to 20px header / 14.5px items.
+11. `frontend/src/components/ChemicalSpaceTab.jsx`: Page title to 24px; map button to 15px; empty state to 18px / 14.5px; scatter chart axis ticks to 12px and labels to 13px; query info to 13.5px / 18px; nearest neighbors to 14px.
+12. `frontend/src/components/MolecularSidebar.jsx`: Width expanded to 340px; card headers to 18px; formula to 17px; MW to 15px; recent activity logs to 14.5px; report generation controls to 14.5px–15px.
+13. `frontend/src/pages/BatchScreening.jsx`: Header to 28px; summary metric numbers to 32px with 13px labels; upload zone to 18px / 14.5px; results table headers to 13px, rows to 14px, full SMILES to 13px; failed rows to 14px.
+14. `frontend/src/components/TopNav.jsx`: Activity History dropdown to 14px header / 15px items; Notifications to 14px header / 15px titles / 13.5px text; user greeting to 14.5px.
+15. `frontend/src/components/AttributionViewer.jsx`: Header to 18px; endpoint tabs to 13.5px; prediction context to 18px / 16px / 13px; atom contribution table headers to 13px and rows to 13.5px; structural alerts to 14px / 13px.
+16. `frontend/src/pages/Home.css` & `frontend/src/pages/Home.jsx`: Stat labels to 12.5px; popover dropdowns to 14px headers / 15px items; AI assistant chat to 14.5px messages / 14px input.
+17. `frontend/src/pages/SavedDocuments.jsx`: Header to 28px; empty state to 20px / 15px; document cards to 17px titles / 13.5px metadata.
+
+### Verification Results
+- `cd frontend && npm run build`: Built cleanly with Vite in 4.28s, 0 errors, all 1323 modules transformed.
+- `backend/tests/test_batch_service.py`: 18 passed (100%) in 58.23s.
+- Full Backend Test Suite: 171 passed.
+- All offline invariants, loopback bindings (`127.0.0.1`), and layout boundaries preserved.
+
+---
+
+## Empty States & Benchmark Dialog Symmetry & Alignment Refinement
+
+### Problem Solved
+- In `WarRoomTab.jsx`, when `!canonicalSmiles`, the inner container stretched to accommodate the benchmark button cluster, but its `<p>` element lacked `margin: '0 auto'` and the container lacked centered flex column alignment, causing the explanatory text to drift far to the left edge.
+- The 5 quick-load benchmark buttons wrapped awkwardly as 4 on line 1 and 1 on line 2 on typical display viewports.
+- In `BenchmarkSelectorModal.jsx`, the metadata string wrapped onto multiple lines for compounds with long molecular formulas (such as Celecoxib), breaking vertical card symmetry and button alignment across the gallery.
+- `CompareTab.jsx` and `ModificationTab.jsx` empty state guards were standardized to match the exact centered layout.
+
+### Fixes Applied
+1. **`WarRoomTab.jsx` Empty State:**
+   - Inner container updated to `display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '860px', width: '100%'`.
+   - Explanatory paragraph centered with `margin: '0 auto', textAlign: 'center'`.
+   - Balanced benchmark buttons container with `maxWidth: '680px', margin: '0 auto', justifyContent: 'center'`. Buttons wrap symmetrically as 3 on row 1 and 2 on row 2.
+   - Cleaned button labels: `DrugName` + badge (e.g., `Terfenadine [Withdrawn (hERG)]`) with hover lift and glowing teal accent border.
+2. **`ModificationTab.jsx` & `CompareTab.jsx` Empty States:**
+   - Standardized to centered flex column with `alignItems: 'center'`, `textAlign: 'center'`, and `margin: '0 auto'` on paragraph copy.
+3. **`BenchmarkSelectorModal.jsx` Gallery:**
+   - Widened modal dialog to `980px` for comfortable horizontal breathing room.
+   - Restructured metadata line using flex spans with non-breaking bullet dividers so formulas, molecular weights, and endpoints stay on a single line without wrapping.
+   - Set button column `minWidth: '175px'` so "View Provenance & Evidence →" buttons maintain identical symmetry.
+
+### Verification Results
+- `cd frontend && npm run build`: Built cleanly with Vite in 4.14s with zero errors.
+- `pytest backend/tests/test_benchmarks.py backend/tests/test_mutation.py backend/tests/test_batch_service.py`: 49 passed (100%) in 65.90s.
+
+---
+
+## Workspace Navigation: Tab Bar Symmetry & Size Normalization
+
+### Problem Solved
+- Bumping tab button typography to 15px with 18px SVG icons and 13px/18px padding caused the 9 top-level workspace tabs (`Draw`, `Molecular Analysis`, `Similarity Search`, `Molecular Modification`, `Compare Molecules`, `War Room`, `Prediction & AI`, `Batch Screening`, `Chemical Space`) to overflow standard desktop viewports and display viewports (~1024px–1280px), pushing `Chemical Space` against the right boundary and skewing horizontal symmetry.
+
+### Fixes Applied
+- **Restored Typography**: Returned tab button text to `fontSize: '14px'`, `fontWeight: 500` (600 when active), matching the original clean, legible standard.
+- **Restored Icon Dimensions**: Standardized tab SVGs to `16x16` pixels with balanced `7px` spacing between icon and text.
+- **Balanced Horizontal Padding**: Adjusted tab padding to `11px 10px` with `gap: '2px'` between buttons and `flex: 1`, allowing all 9 tabs to distribute symmetrically across 100% of the workspace container without truncation or overflow.
+- **Overflow Protection**: Added `overflowX: 'auto'` and `scrollbarWidth: 'none'` to the tab wrapper to guarantee layout integrity on narrow display viewports.
+
+
+
+
+
 
 
 
