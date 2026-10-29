@@ -86,7 +86,7 @@ export default function SavedDocuments() {
     }
   }
 
-  // Download (print) a document
+  // Download a document (direct WeasyPrint PDF download with print preview fallback)
   const handleDownload = async (doc) => {
     try {
       let html = doc.html_content
@@ -95,6 +95,22 @@ export default function SavedDocuments() {
         html = full.html_content
       }
       if (html) {
+        try {
+          const blob = await api.downloadBlob('/api/reports/pdf/render', {
+            html,
+            filename: doc.name || 'Rogveda_Document',
+          })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${(doc.name || 'Rogveda_Document').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
+          a.click()
+          URL.revokeObjectURL(url)
+          return
+        } catch (pdfErr) {
+          console.warn('Direct PDF rendering failed, falling back to print window:', pdfErr)
+        }
+
         const win = window.open('', '', 'width=900,height=700')
         if (win) {
           win.document.write(html)

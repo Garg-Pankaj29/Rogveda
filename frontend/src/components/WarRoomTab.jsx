@@ -80,6 +80,14 @@ const ICONS = {
       <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
     </svg>
   ),
+  dossier: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
 }
 
 /* ── 2D Molecule SVG Renderer (Transparent & Filtered) ────────────────────── */
@@ -189,6 +197,7 @@ export default function WarRoomTab({
   const [selectedAnalogIndex, setSelectedAnalogIndex] = useState(0)
   const [copyFeedback, setCopyFeedback] = useState('')
   const [attributionTarget, setAttributionTarget] = useState(null)
+  const [isExportingDossier, setIsExportingDossier] = useState(false)
 
   const abortControllerRef = useRef(null)
   const debounceTimerRef = useRef(null)
@@ -356,12 +365,68 @@ export default function WarRoomTab({
       .filter(Boolean)
   }, [evaluationData, selectedAnalog])
 
-  // Copy SMILES helper
   const handleCopySmiles = (smilesText, label) => {
     navigator.clipboard.writeText(smilesText)
     setCopyFeedback(label)
     setTimeout(() => setCopyFeedback(''), 1800)
   }
+
+  // Generate Research Dossier for current War Room optimization & candidate
+  const handleGenerateWarRoomDossier = useCallback(async (format = 'Research Dossier (PDF)') => {
+    if (!onGenerateReport) return
+    const candidate = selectedAnalog || evaluationData?.shortlist?.[0]
+    if (!candidate || !evaluationData) return
+
+    setIsExportingDossier(true)
+    try {
+      const radarList = candidate.radar_data || []
+      const dimPayload = radarList.length > 0 ? radarList.map(r => ({
+        name: r.dimension_name || r.name,
+        id: r.dimension_key || r.id,
+        parent_raw: r.parent_raw ?? r.parent_val,
+        analog_raw: r.analog_raw ?? r.analog_val,
+        delta: r.delta,
+        effective_weight: r.weight,
+        score: r.score,
+        is_available: r.is_available ?? r.available ?? true,
+        unavailability_reason: r.unavailability_reason,
+      })) : (Array.isArray(candidate.dimensions) ? candidate.dimensions : Object.entries(candidate.dimensions || {}).map(([k, v]) => ({
+        name: k.replace(/_/g, ' ').toUpperCase(),
+        id: k,
+        ...v,
+      })))
+
+      const warRoomPayload = {
+        is_available: true,
+        profile_id: activeProfile?.id || selectedProfileId,
+        profile_name: activeProfile?.name || 'Lead Optimization Profile',
+        profile_version: activeProfile?.version || 'v1',
+        target_endpoint: activeProfile?.target_endpoint_name || activeProfile?.target_endpoint,
+        description: activeProfile?.description,
+        parent_smiles: canonicalSmiles,
+        candidate_smiles: candidate.product_smiles,
+        candidate_name: candidate.transform_name || `Analog #${(candidate.rank || selectedAnalogIndex + 1)}`,
+        candidate_score: candidate.aggregate_score != null ? Math.round(candidate.aggregate_score * 1000) / 10 : null,
+        hard_constraints_passed: candidate.constraints_passed ?? candidate.hard_constraints_passed ?? true,
+        hard_constraint_flags: candidate.constraint_violations || candidate.hard_constraint_flags || [],
+        dimensions: dimPayload,
+        property_deltas: candidate.property_deltas || {},
+      }
+
+      await onGenerateReport(format, {
+        smiles: candidate.product_smiles,
+        properties: candidate.properties,
+        war_room: warRoomPayload,
+        lineage: {
+          parent_experiment_id: 'Parent Lead',
+          transform_name: candidate.transform_name,
+          modification_chain: [canonicalSmiles, candidate.product_smiles],
+        },
+      })
+    } finally {
+      setIsExportingDossier(false)
+    }
+  }, [onGenerateReport, selectedAnalog, evaluationData, activeProfile, selectedProfileId, canonicalSmiles, selectedAnalogIndex])
 
   /* ── 1. No Molecule Loaded Guard (Identical to CompareTab & ModificationTab) ── */
   if (!canonicalSmiles) {
@@ -480,7 +545,41 @@ export default function WarRoomTab({
               </select>
             </div>
 
-            <div style={{ alignSelf: 'flex-end' }}>
+            <div style={{ alignSelf: 'flex-end', display: 'flex', gap: 8 }}>
+              {evaluationData && (
+                <button
+                  disabled={isExportingDossier}
+                  onClick={() => handleGenerateWarRoomDossier('Research Dossier (PDF)')}
+                  style={{
+                    background: isExportingDossier ? 'rgba(45,212,212,0.2)' : 'rgba(45,212,212,0.12)',
+                    color: accentColor,
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    border: '1px solid rgba(45,212,212,0.3)',
+                    borderRadius: '6px',
+                    padding: '7px 12px',
+                    cursor: isExportingDossier ? 'not-allowed' : 'pointer',
+                    opacity: isExportingDossier ? 0.75 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.2s',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                  }}
+                  title="Export comprehensive Research Dossier for this optimization"
+                >
+                  {isExportingDossier ? (
+                    <>
+                      <div style={{ width: '12px', height: '12px', border: '2px solid rgba(45,212,212,0.3)', borderTopColor: '#2dd4d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      {ICONS.dossier} Export Dossier
+                    </>
+                  )}
+                </button>
+              )}
               <button
                 onClick={handleManualEvaluate}
                 disabled={isLoading}
@@ -698,6 +797,37 @@ export default function WarRoomTab({
                   }}
                 >
                   {ICONS.edit} Load in Editor
+                </button>
+                <button
+                  disabled={isExportingDossier}
+                  onClick={() => handleGenerateWarRoomDossier('Research Dossier (PDF)')}
+                  style={{
+                    background: isExportingDossier ? 'rgba(45,212,212,0.25)' : 'rgba(45,212,212,0.15)',
+                    color: accentColor,
+                    border: '1px solid rgba(45,212,212,0.35)',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: isExportingDossier ? 'not-allowed' : 'pointer',
+                    opacity: isExportingDossier ? 0.75 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                  }}
+                  title="Generate Research Dossier for this candidate and profile"
+                >
+                  {isExportingDossier ? (
+                    <>
+                      <div style={{ width: '10px', height: '10px', border: '1.5px solid rgba(45,212,212,0.3)', borderTopColor: '#2dd4d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      {ICONS.dossier} Research Dossier
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => {

@@ -186,6 +186,15 @@ export default function SimilarityTab({
     }
   }, [effectiveSmiles, threshold, maxResults, searchType, metric, logActivity])
 
+  /* ─── Auto-search on molecule change ─── */
+  useEffect(() => {
+    if (!effectiveSmiles) {
+      setResults(null)
+      return
+    }
+    handleSearch()
+  }, [effectiveSmiles, handleSearch])
+
   /* ─── Compute properties for query and top match ─── */
   const queryProps = useMemo(() => {
     if (!rdkit || !effectiveSmiles) return null

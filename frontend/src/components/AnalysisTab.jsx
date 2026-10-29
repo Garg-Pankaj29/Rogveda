@@ -70,7 +70,18 @@ export default function AnalysisTab({
   const [analysisView, setAnalysisView] = useState('2d') // '2d' or '3d'
   const [predictions, setPredictions] = useState([])
   const [predLoading, setPredLoading] = useState(false)
-  const [reportFormat, setReportFormat] = useState('Comprehensive Report (PDF)')
+  const [reportFormat, setReportFormat] = useState('Research Dossier (PDF)')
+  const [isReportGenerating, setIsReportGenerating] = useState(false)
+
+  const handleTriggerReport = async (fmt) => {
+    if (isReportGenerating) return
+    setIsReportGenerating(true)
+    try {
+      await onGenerateReport?.(fmt)
+    } finally {
+      setIsReportGenerating(false)
+    }
+  }
 
   // Phase 13 Remediation state
   const [remediationLoading, setRemediationLoading] = useState({})
@@ -855,26 +866,40 @@ export default function AnalysisTab({
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
               backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
             }}>
+              <option>Research Dossier (PDF)</option>
+              <option>Research Dossier (HTML)</option>
               <option>Comprehensive Report (PDF)</option>
               <option>Summary Report (PDF)</option>
               <option>Data Export (CSV)</option>
             </select>
             <button
-              onClick={() => onGenerateReport?.(reportFormat)}
+              disabled={isReportGenerating}
+              onClick={() => handleTriggerReport(reportFormat)}
               style={{
-                width: '100%', padding: '12px 0', fontWeight: 700, fontSize: '14px',
-                borderRadius: '8px', border: 'none', cursor: 'pointer',
+                width: '100%', padding: '11px 0', fontWeight: 600, fontSize: '13px',
+                borderRadius: '8px', border: 'none',
+                cursor: isReportGenerating ? 'not-allowed' : 'pointer',
+                opacity: isReportGenerating ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 background: 'linear-gradient(135deg, #2dd4d4 0%, #22b8b8 100%)',
                 color: '#000', fontFamily: 'Inter, system-ui, sans-serif',
                 boxShadow: '0 4px 15px rgba(45,212,212,0.25)',
                 transition: 'all 0.2s ease', letterSpacing: '0.02em',
               }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(45,212,212,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 15px rgba(45,212,212,0.25)'; e.currentTarget.style.transform = 'translateY(0)' }}
+              onMouseEnter={e => { if (!isReportGenerating) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(45,212,212,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)' } }}
+              onMouseLeave={e => { if (!isReportGenerating) { e.currentTarget.style.boxShadow = '0 4px 15px rgba(45,212,212,0.25)'; e.currentTarget.style.transform = 'translateY(0)' } }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Generate Report
+              {isReportGenerating ? (
+                <>
+                  <div style={{ width: '13px', height: '13px', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  Exporting {reportFormat.includes('Dossier') ? 'Dossier' : 'Report'}...
+                </>
+              ) : (
+                <>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export {reportFormat}
+                </>
+              )}
             </button>
           </div>
 
