@@ -492,3 +492,46 @@ Scaled up text sizes across every tab, feature card, table, input control, modal
 
 
 
+
+
+---
+
+## Cross-Phase Regression and Release Audit
+
+**Audit Date:** October 30, 2026  
+**Auditor Role:** Independent Release Engineer  
+**Baseline Commit:** `3526e52` (Pre-Phase 1 baseline)  
+**Tested Commit (HEAD):** `7c6414d` (branch `main`, working tree clean)  
+**Release Readiness Verdict:** **READY FOR RELEASE / DEMONSTRATION** (0 regressions, 0 test failures, 0 outstanding blockers)
+
+### 1. Baseline vs. Final Scope Comparison
+| Metric / Capability | Baseline (`3526e52`) | Final Release (`7c6414d`) | Audit Verification Status |
+|---|---|---|---|
+| **Backend Test Suite** | 96 tests (7 test files) | **171 tests** (12 test files) | **PASSED** (171 passed, 0 failed in 306.60s) |
+| **Frontend Production Build** | Vite build (basic) | **Vite build** (1,323 modules) | **PASSED** (0 errors, 4.42s) |
+| **Active ML Endpoints** | 6 basic endpoints | **8 calibrated endpoints** (hERG, Tox21 MMP, Tox21, ClinTox, Anti-inflammatory, Antioxidant, Antimicrobial, Anticancer) | **VERIFIED** |
+| **Lead Optimization War Room** | None | 6-dimension MPO, dynamic weight renormalization, hard constraints, Recharts radar polygon | **VERIFIED** |
+| **Explainable Attribution** | None | Morgan fingerprint atomic perturbation ($\Delta P$), bond weights, bit collisions, independent PAINS/Brenk/NIH alerts | **VERIFIED** |
+| **Research Dossier** | Basic Markdown export | 12-section research dossier, deterministic fallback, vector WeasyPrint PDF binary compilation | **VERIFIED** |
+| **Live Mutation Workbench** | Static transforms | 12 SMARTS transforms, live mutation, regioisomer pills, signed property deltas, candidate predictions | **VERIFIED** |
+| **Benchmark Drug Gallery** | None | 5 curated clinical benchmarks, 3 paired case studies, dynamic RDKit canonical matching | **VERIFIED** |
+| **Offline & Network Invariant** | Bound to loopback | All servers bound strictly to `127.0.0.1`, zero cloud telemetry, zero remote CDN calls | **VERIFIED** |
+
+### 2. End-to-End Cross-Phase Flows Verified
+1. **Flow 1 (Draw/SMILES -> Descriptors & Predictions):** Verified properties (MW, LogP, TPSA, HBD, HBA) and 8 calibrated model endpoints (`/api/molecule/predict-all` and `/api/molecule/predict`). Probabilities, labels, and versions agree.
+2. **Flow 2 (War Room Analog Optimization & Scoring):** Verified multi-parameter optimization (`POST /api/modification/war-room`) using `anti_inflammatory_exploration_v1`. Raw values, normalized scores, dynamic weight renormalization, and hard constraint gating verified.
+3. **Flow 3 (Explainable Attribution & Alert Separation):** Verified atomic perturbation sensitivity and independent structural alerts (`POST /api/molecule/attribution`). Non-installed models return explicit `is_available: false` with null probabilities, never zeroed or marked safe.
+4. **Flow 4 (12-Section Research Dossier & PDF):** Verified dossier JSON generation and binary PDF compilation (`POST /api/reports/dossier/pdf`, `%PDF` magic bytes, 43.4 KB) with full provenance metadata.
+5. **Flow 5 (Live Mutation, Deltas & Lineage):** Verified 12 SMARTS transforms (`GET /api/modification/transforms`), applicability check (`POST /api/modification/applicable`), and live candidate mutation (`POST /api/modification/mutate`) with signed property deltas and parent-child distinctness (`is_distinct: True`).
+6. **Flow 6 (Benchmark Gallery & Live Execution):** Verified catalog retrieval (`GET /api/benchmarks`), case studies (`GET /api/benchmarks/case-studies`), SMILES identification (`POST /api/benchmarks/identify`), and live pipeline execution without hardcoded probabilities.
+
+### 3. Verification Commands & Execution Logs
+- **Frontend Build:** `cd frontend && npm run build` -> 1323 modules transformed, 0 errors, 4.42s.
+- **Backend Test Suite:** `backend/.venv/bin/pytest backend/tests/ -v` -> 171 passed in 306.60s.
+- **Cross-Phase Integration Script:** Python `TestClient(app)` executing all 6 flows -> 100% passed.
+- **Git Status:** Clean working tree on `main` branch.
+
+### 4. Known Scientific & Product Limitations
+1. **Metabolic Stability:** Offline model bundle does not include a validated local CYP/microsomal clearance model; correctly reported as `is_available: false` and excluded from scoring.
+2. **3D Conformations:** Computed in-silico via RDKit ETKDGv3 and MMFF94 force field; represents computational local energy minima, not experimental X-ray crystallography or Cryo-EM.
+3. **Computational Scope:** All bioactivity and toxicity predictions represent statistical in-silico classification estimates for hypothesis generation, not clinical determinations or FDA IND/NDA regulatory approval.
