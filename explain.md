@@ -68,7 +68,7 @@ Early-stage computational drug discovery and medicinal chemistry workflows in un
 
 ### 1.4 How ROGVEDA Unifies the Loop
 ROGVEDA eliminates this fragmentation by implementing a closed, deterministic, local research loop:
-$$\text{Input (Draw / SMILES)} \longrightarrow \text{Compute Properties} \longrightarrow \text{Predict Multi-Target Risks} \longrightarrow \text{Similarity Search} \longrightarrow \text{Lead Optimization} \longrightarrow \text{Explain & Export}$$
+> **Input (Draw / SMILES)** → **Compute Properties** → **Predict Multi-Target Risks** → **Similarity Search** → **Lead Optimization** → **Explain & Export**
 All six stages run entirely on `127.0.0.1` (localhost). No user molecule, drawn bond, calculated property, or research note ever crosses a network boundary.
 
 ```mermaid
@@ -411,7 +411,7 @@ Below is the exhaustive dissection of each feature.
   3. Toggle the "3D View" switch to embed the molecule into three dimensions.
   4. Rotate, zoom, and inspect steric clash or planarity in the 3D viewer.
 - **6. Internal Execution Flow:**
-  $$\text{Ketcher Canvas} \longrightarrow \text{mol.get_smiles()} \longrightarrow \text{RDKit.js WASM} \longrightarrow \text{POST /api/molecule/3d} \longrightarrow \text{generate_3d_sdf()} \longrightarrow \text{3Dmol.js WebGL}$$
+  `Ketcher Canvas` → `mol.get_smiles()` → `RDKit.js WASM` → `POST /api/molecule/3d` → `generate_3d_sdf()` → `3Dmol.js WebGL`
   - Frontend Component: `frontend/src/pages/MoleculeDraw.jsx` and `frontend/src/components/KetcherEditor.jsx`.
   - Backend Endpoint: `POST /api/molecule/3d` in `backend/app/api/molecule.py`.
   - Service Function: `chemistry_service.py → generate_3d_sdf()`.
@@ -449,8 +449,8 @@ Below is the exhaustive dissection of each feature.
   - Reactive functional group alerts.
 - **5. User Workflow:** Navigate to "Molecular Analysis" tab. All properties update automatically via debounced WebAssembly and backend execution.
 - **6. Internal Execution Flow:**
-  $$\text{SMILES} \longrightarrow \text{RDKit.js WASM (computeProperties)} \longrightarrow \text{Instant 17 Descriptors UI}$$
-  $$\text{SMILES} \longrightarrow \text{POST /api/molecule/synthesizability} \longrightarrow \text{SA_Score + Reactive Flags}$$
+  - `SMILES` → `RDKit.js WASM (computeProperties)` → `Instant 17 Descriptors UI`
+  - `SMILES` → `POST /api/molecule/synthesizability` → `synthesizability_service.py` → `SA Score + Reactive Flags`
   - Frontend Component: `frontend/src/components/AnalysisTab.jsx`.
   - Frontend Logic: `frontend/src/lib/chemistry.js → computeProperties()`.
   - Backend Endpoint: `POST /api/molecule/synthesizability` in `backend/app/api/molecule.py`.
@@ -495,9 +495,9 @@ Below is the exhaustive dissection of each feature.
   - Ranked list of similar reference molecules with compound name, canonical SMILES, and similarity score percentage.
   - 2D vector SVG depictions with highlighted substructure alignments.
   - 1-click action to load any hit into the Compare tab or Ketcher canvas.
-- **5. User Workflow:** Click "Similarity Search" tab $\rightarrow$ select metric (e.g., Tanimoto ECFP4) $\rightarrow$ click "Run Similarity Search" $\rightarrow$ browse ranked hits and click "Compare" to inspect differences.
+- **5. User Workflow:** Click "Similarity Search" tab → select metric (e.g., Tanimoto ECFP4) → click "Run Similarity Search" → browse ranked hits and click "Compare" to inspect differences.
 - **6. Internal Execution Flow:**
-  $$\text{Query SMILES} \longrightarrow \text{POST /api/molecule/similar} \longrightarrow \text{chemistry_service.py: find_similar()} \longrightarrow \text{SQLite SELECT} \longrightarrow \text{Vectorized Tanimoto} \longrightarrow \text{Ranked JSON}$$
+  `Query SMILES` → `POST /api/molecule/similar` → `chemistry_service.py: find_similar()` → `SQLite SELECT` → `Vectorized Tanimoto` → `Ranked JSON`
   - Frontend Component: `frontend/src/components/SimilarityTab.jsx`.
   - Backend Endpoint: `POST /api/molecule/similar` in `backend/app/api/molecule.py`.
   - Service Function: `backend/app/services/chemistry_service.py:141-205`.
@@ -537,9 +537,9 @@ Below is the exhaustive dissection of each feature.
   - Signed property deltas ($\Delta\text{MW}, \Delta\text{LogP}, \Delta\text{TPSA}, \Delta\text{HBD}, \Delta\text{HBA}$).
   - Real-time before-and-after ML prediction updates across all endpoints.
   - 1-click button to send candidate to Ketcher canvas or War Room.
-- **5. User Workflow:** Open Modification tab $\rightarrow$ view available applicable transforms $\rightarrow$ click a transform (e.g. "Replace -OH with -F") $\rightarrow$ inspect signed property deltas and prediction shifts.
+- **5. User Workflow:** Open Modification tab → view available applicable transforms → click a transform (e.g. "Replace -OH with -F") → inspect signed property deltas and prediction shifts.
 - **6. Internal Execution Flow:**
-  $$\text{Parent SMILES} \longrightarrow \text{POST /api/modification/mutate} \longrightarrow \text{modification_service.py: apply_mutation()} \longrightarrow \text{AllChem.ReactionFromSmarts} \longrightarrow \text{Deltas + Predictions JSON}$$
+  `Parent SMILES` → `POST /api/modification/mutate` → `modification_service.py: apply_mutation()` → `AllChem.ReactionFromSmarts` → `Deltas + Predictions JSON`
   - Frontend Component: `frontend/src/components/ModificationTab.jsx`.
   - Backend Endpoint: `POST /api/modification/mutate` in `backend/app/api/modification.py`.
   - Service Function: `backend/app/services/modification_service.py:173-280`.
@@ -589,7 +589,7 @@ Below is the exhaustive dissection of each feature.
   - Matched physicochemical properties table with color-coded difference indicators.
   - Multi-target ML prediction comparison bars.
   - Direct Tanimoto similarity coefficient between Molecule A and Molecule B.
-- **5. User Workflow:** Open Compare tab $\rightarrow$ paste or select Molecule B $\rightarrow$ view highlighted property shifts and target prediction diffs.
+- **5. User Workflow:** Open Compare tab → paste or select Molecule B → view highlighted property shifts and target prediction diffs.
 - **6. Internal Execution Flow:** Frontend state maintains `molA` and `molB`; calls `computeProperties()` on both via RDKit.js, computes pairwise Tanimoto similarity, and renders side-by-side comparison tables.
 - **7. Mathematics & Algorithms:** Pairwise Tanimoto coefficient on 2048-bit Morgan bitvectors; signed relative delta:
   $$\Delta\% = \frac{V_B - V_A}{V_A} \times 100$$
@@ -623,9 +623,9 @@ Below is the exhaustive dissection of each feature.
   - Independent hard constraint violation badges.
   - Dimension score contribution breakdown table.
   - Signed property deltas.
-- **5. User Workflow:** Open War Room tab $\rightarrow$ select profile (e.g. "Safety-First Scrutiny") $\rightarrow$ system automatically mutates parent across 12 transforms, scores all valid analogs, checks constraints, and displays the top-ranked lead with radar visualization.
+- **5. User Workflow:** Open War Room tab → select profile (e.g. "Safety-First Scrutiny") → system automatically mutates parent across 12 transforms, scores all valid analogs, checks constraints, and displays the top-ranked lead with radar visualization.
 - **6. Internal Execution Flow:**
-  $$\text{Parent SMILES} \longrightarrow \text{POST /api/modification/war-room} \longrightarrow \text{war_room_service.py: evaluate_war_room()} \longrightarrow \text{Ranked Shortlist + Radar JSON}$$
+  `Parent SMILES` → `POST /api/modification/war-room` → `war_room_service.py: evaluate_war_room()` → `Ranked Shortlist + Radar JSON`
   - Frontend Component: `frontend/src/components/WarRoomTab.jsx`.
   - Backend Endpoint: `POST /api/modification/war-room` in `backend/app/api/modification.py`.
   - Service Function: `backend/app/services/war_room_service.py:341-477`.
@@ -639,7 +639,7 @@ Below is the exhaustive dissection of each feature.
      $$S_{\text{oral}} = 1.0 - 0.15 \times (\text{Lipinski Violations}) - 0.15 \times (\text{Veber Violations})$$
      (clamped to $[0.0, 1.0]$).
   5. **Synthetic Accessibility:** Transformed Ertl SA_Score (raw 1 to 10):
-     $$S_{\text{synth}} = \frac{10.0 - \text{SA\_Score}}{9.0}$$
+     $$S_{\text{synth}} = \frac{10.0 - \text{SA Score}}{9.0}$$
      (inverted so 1.0 = trivial synthesis, 0.0 = extremely difficult).
   6. **Metabolic Stability:** Explicitly marked unavailable (`available: false`).
 - **8. Dynamic Weight Renormalization:**
@@ -648,7 +648,7 @@ Below is the exhaustive dissection of each feature.
   The aggregate composite score is:
   $$\text{Score} = \sum_{i \in \text{Available}} w_{\text{effective}, i} \times S_i$$
 - **9. Independent Hard Constraints:**
-  Hard constraints (e.g., $P_{\text{herg}} \le 0.20$, $\text{SA\_Score} \le 4.5$) are checked on raw measurements independently of the aggregate score. Violations are flagged with explicit badges, preventing severe toxicity from hiding behind high activity scores.
+  Hard constraints (e.g., $P_{\text{herg}} \le 0.20$, $\text{SA Score} \le 4.5$) are checked on raw measurements independently of the aggregate score. Violations are flagged with explicit badges, preventing severe toxicity from hiding behind high activity scores.
 - **10. Worked Numerical Example:**
   Under the `balanced_lead_optimization_v1` profile:
   - Nominal weights: Activity (0.20), Cardiac Safety (0.25), Mito Safety (0.20), Oral Proxy (0.15), Synthetic Ease (0.20), Metabolic Stability (0.00).
@@ -678,10 +678,10 @@ Below is the exhaustive dissection of each feature.
   - Atom- and bond-level attribution maps via atomic perturbation.
   - Structural alerts (PAINS, Brenk, NIH).
   - Grounded AI insight paragraph with detected contradictions.
-- **5. User Workflow:** Navigate to "Prediction & AI" tab $\rightarrow$ inspect prediction cards $\rightarrow$ click "Explain Prediction" on any endpoint to launch the Attribution Viewer.
+- **5. User Workflow:** Navigate to "Prediction & AI" tab → inspect prediction cards → click "Explain Prediction" on any endpoint to launch the Attribution Viewer.
 - **6. Internal Execution Flow:**
-  $$\text{SMILES} \longrightarrow \text{POST /api/molecule/predict-all} \longrightarrow \text{ml_service.py} \longrightarrow \text{Predictions Cards}$$
-  $$\text{SMILES + Endpoint} \longrightarrow \text{POST /api/molecule/attribution} \longrightarrow \text{attribution_service.py} \longrightarrow \text{SimilarityMaps SVG}$$
+  - `SMILES` → `POST /api/molecule/predict-all` → `ml_service.py` → `Prediction Cards`
+  - `SMILES + Endpoint` → `POST /api/molecule/attribution` → `attribution_service.py` → `SimilarityMaps SVG`
 - **7. Endpoints Covered:**
   1. **hERG Cardiotoxicity:** KCNH2 potassium channel inhibition.
   2. **Tox21 Mitochondrial Membrane Potential (MMP):** Mitochondrial toxicity.
@@ -708,9 +708,9 @@ Below is the exhaustive dissection of each feature.
   - Sortable, searchable results table with computed properties, ML predictions, synthesizability scores, and contradiction flags.
   - CSV export of enriched dataset.
   - Downloadable Batch Screening PDF/HTML Report.
-- **5. User Workflow:** Navigate to Batch tab $\rightarrow$ drag-and-drop CSV $\rightarrow$ watch progress bar advance $\rightarrow$ filter results by confidence or target $\rightarrow$ export CSV or PDF report.
+- **5. User Workflow:** Navigate to Batch tab → drag-and-drop CSV → watch progress bar advance → filter results by confidence or target → export CSV or PDF report.
 - **6. Internal Execution Flow:**
-  $$\text{CSV Upload} \longrightarrow \text{POST /api/batch/screen} \longrightarrow \text{batch_service.py: screen_batch()} \longrightarrow \text{Power-Aware Loop} \longrightarrow \text{Results JSON}$$
+  `CSV Upload` → `POST /api/batch/screen` → `batch_service.py: screen_batch()` → `Power-Aware Loop` → `Results JSON`
 - **7. Power-Aware Throttling:**
   Queries `power_service.py`. If operating on battery or user override is `always_on`, batch screens in chunks of 5 molecules with 0.3-second pauses between chunks to prevent laptop thermal throttling and battery drainage (`batch_service.py:195-245`).
 - **8. Row-Level Error Isolation:** A malformed SMILES in row 42 is captured in an `errors` list with the exact RDKit exception; rows 1–41 and 43–500 continue processing without aborting the batch.
@@ -723,9 +723,9 @@ Below is the exhaustive dissection of each feature.
 - **2. User Problem:** Chemists need to see whether their candidate occupies an unexplored region of chemical space or clusters near existing drug classes.
 - **3. Inputs:** Query SMILES string.
 - **4. Outputs:** 2D scatter plot rendering 10,027 reference compounds in slate-gray with the query molecule plotted as a prominent cyan marker.
-- **5. User Workflow:** Open Chemical Space tab $\rightarrow$ system projects molecule $\rightarrow$ zoom and pan across the manifold $\rightarrow$ hover over points to inspect reference molecule names and SMILES.
+- **5. User Workflow:** Open Chemical Space tab → system projects molecule → zoom and pan across the manifold → hover over points to inspect reference molecule names and SMILES.
 - **6. Internal Execution Flow:**
-  $$\text{Query SMILES} \longrightarrow \text{POST /api/chemical-space/locate} \longrightarrow \text{chemical_space_service.py: project_molecule()}$$
+  `Query SMILES` → `POST /api/chemical-space/locate` → `chemical_space_service.py: project_molecule()`
 - **7. Mathematics & Projection:** Pre-computed UMAP (Uniform Manifold Approximation and Projection) coordinates stored in `data/chemical_space_map.pkl`. Query molecule is embedded via **Weighted $K$-Nearest Neighbors ($K=10$) interpolation**:
   $$x_{\text{query}} = \frac{\sum_{i=1}^{10} w_i x_i}{\sum_{i=1}^{10} w_i}, \quad y_{\text{query}} = \frac{\sum_{i=1}^{10} w_i y_i}{\sum_{i=1}^{10} w_i}$$
   where $w_i = T(FP_{\text{query}}, FP_i) + 10^{-8}$. Runs in ~50ms without importing heavy UMAP libraries at runtime.
@@ -838,7 +838,7 @@ Below is the exhaustive dissection of each feature.
 | **Platt Sigmoid Calibration** | $P(y=1 \mid f) = \frac{1}{1 + e^{A f + B}}$ | $f = \text{raw tree ensemble score}$, $A, B = \text{learned}$ | `scripts/train_model.py:100` | $[0.0, 1.0]$ | Converts uncalibrated decision margins into well-calibrated posterior probabilities. |
 | **Cardiac Safety Display** | $S_{\text{cardiac}} = 1.0 - P_{\text{herg}}$ | $P_{\text{herg}} = \text{calibrated hERG risk probability}$ | `war_room_service.py:151` | $[0.0, 1.0]$ | Display normalization: higher is safer (0.0 = lethal, 1.0 = benign). |
 | **Mito Safety Display** | $S_{\text{mito}} = 1.0 - P_{\text{mmp}}$ | $P_{\text{mmp}} = \text{Tox21 MMP disruption probability}$ | `war_room_service.py:165` | $[0.0, 1.0]$ | Display normalization: higher indicates lower disruption risk. |
-| **Synthetic Ease Score** | $S_{\text{synth}} = \frac{10.0 - \text{SA\_Score}}{9.0}$ | $\text{SA\_Score} \in [1.0, 10.0]$ (Ertl fragment score) | `war_room_service.py:195` | $[0.0, 1.0]$ | Inverted transformation so $1.0 = \text{trivial synthesis}$, $0.0 = \text{difficult}$. |
+| **Synthetic Ease Score** | $S_{\text{synth}} = \frac{10.0 - \text{SA Score}}{9.0}$ | $\text{SA Score} \in [1.0, 10.0]$ (Ertl fragment score) | `war_room_service.py:195` | $[0.0, 1.0]$ | Inverted transformation so $1.0 = \text{trivial synthesis}$, $0.0 = \text{difficult}$. |
 | **Oral Proxy Heuristic** | $S_{\text{oral}} = 1.0 - 0.15 V_{\text{lip}} - 0.15 V_{\text{veb}}$ | $V_{\text{lip}} = \text{Lipinski violations}$, $V_{\text{veb}} = \text{Veber}$ | `war_room_service.py:133` | $[0.0, 1.0]$ | Deductive heuristic penalty proxy for oral bioavailability. |
 | **Effective Weight** | $w_{\text{eff}, i} = \frac{w_{\text{nom}, i}}{\sum_{j \in \text{Avail}} w_{\text{nom}, j}}$ | $w_{\text{nom}} = \text{profile weight}$, $\text{Avail} = \text{active dims}$ | `war_room_service.py:276` | $[0.0, 1.0]$ | Renormalizes weights when an endpoint is missing, ensuring $\sum w_i = 1.0$. |
 | **Composite War Room Score** | $\text{Score} = \sum_{i} w_{\text{eff}, i} \times S_i$ | $w_{\text{eff}} = \text{renormalized weight}$, $S_i = \text{normalized score}$ | `war_room_service.py:284` | $[0.0, 1.0]$ | Multi-parameter optimization candidate score. |
@@ -854,7 +854,7 @@ ROGVEDA featurizes molecules using **Morgan circular fingerprints** (the open-so
 1. **Initial Atom Invariants:** Every heavy atom is assigned an initial integer hash encoding atomic number, number of heavy neighbors, number of attached hydrogens, formal charge, and aromaticity flag.
 2. **Circular Neighborhood Updates:** For radius $r = 1$ to $r = 2$ (capturing paths up to diameter 4 chemical bonds), each atom collects the identifiers of its immediate neighbors and bond types. A hash function computes a new 32-bit integer identifier for the neighborhood.
 3. **Folding via Modulo:** The set of 32-bit identifiers is mapped into a fixed-length bit array of size $N = 2048$ using bitwise modulo arithmetic:
-   $$\text{bit\_index} = \text{identifier} \pmod{2048}$$
+   $$\text{Bit Index} = \text{identifier} \pmod{2048}$$
 4. **Bit Collisions:** When two chemically distinct subgraphs hash to the identical bit index $\pmod{2048}$, a bit collision occurs. ROGVEDA explicitly tracks bit collisions in `attribution_service.py:149-165` using `Chem.FindAtomEnvironmentOfRadiusN`.
 
 ```mermaid
@@ -1025,8 +1025,8 @@ The War Room service (`war_room_service.py`) defines three versioned optimizatio
 | Profile Identifier | Display Name | Target Endpoint | Nominal Dimension Weights | Hard Constraints |
 |---|---|---|---|---|
 | `anti_inflammatory_exploration_v1` | Anti-inflammatory Exploration | `antiinflammatory` | Activity: 0.35<br>Cardiac: 0.20<br>Mito: 0.15<br>Oral: 0.15<br>Synth: 0.15 | $\text{hERG Risk} \le 0.35$<br>$\text{MW} \le 550\text{ Da}$ |
-| `balanced_lead_optimization_v1` | Balanced Lead Optimization | Dynamic | Cardiac: 0.25<br>Activity: 0.20<br>Mito: 0.20<br>Oral: 0.15<br>Synth: 0.20 | $\text{hERG Risk} \le 0.20$<br>$\text{MMP Risk} \le 0.25$<br>$\text{SA\_Score} \le 5.0$ |
-| `safety_first_scrutiny_v1` | Safety-First Scrutiny | Dynamic | Cardiac: 0.35<br>Mito: 0.25<br>Activity: 0.15<br>Synth: 0.15<br>Oral: 0.10 | $\text{hERG Risk} \le 0.20$<br>$\text{MMP Risk} \le 0.15$<br>$\text{SA\_Score} \le 4.5$ |
+| `balanced_lead_optimization_v1` | Balanced Lead Optimization | Dynamic | Cardiac: 0.25<br>Activity: 0.20<br>Mito: 0.20<br>Oral: 0.15<br>Synth: 0.20 | $\text{hERG Risk} \le 0.20$<br>$\text{MMP Risk} \le 0.25$<br>$\text{SA Score} \le 5.0$ |
+| `safety_first_scrutiny_v1` | Safety-First Scrutiny | Dynamic | Cardiac: 0.35<br>Mito: 0.25<br>Activity: 0.15<br>Synth: 0.15<br>Oral: 0.10 | $\text{hERG Risk} \le 0.20$<br>$\text{MMP Risk} \le 0.15$<br>$\text{SA Score} \le 4.5$ |
 
 ### 13.2 Radar Chart Geometry & Orientation
 To make the 6-axis radar polygon immediately interpretable:
@@ -1089,9 +1089,9 @@ Implemented in `backend/app/services/contradiction_service.py:35-95`:
 Implemented in `backend/app/services/synthesizability_service.py`:
 - **Ertl & Schuffenhauer Synthetic Accessibility (SA) Score:**
   Computes molecular complexity by comparing structural fragments against historical synthetic pathways in the PubChem database.
-  - $\text{SA\_Score} \le 3.0 \implies \mathbf{Easy}$
-  - $3.0 < \text{SA\_Score} \le 5.0 \implies \mathbf{Moderate}$
-  - $\text{SA\_Score} > 5.0 \implies \mathbf{Difficult}$
+  - $\text{SA Score} \le 3.0 \implies \mathbf{Easy}$
+  - $3.0 < \text{SA Score} \le 5.0 \implies \mathbf{Moderate}$
+  - $\text{SA Score} > 5.0 \implies \mathbf{Difficult}$
 - **Reactive Functional Group SMARTS Alerts:**
   1. *Acyl Halide* (`[CX3](=[OX1])[F,Cl,Br,I]`): Rapidly hydrolyzes in moisture.
   2. *Epoxide* (`C1OC1`): Strained 3-membered ring; ring-opening side reactions.
@@ -1525,10 +1525,10 @@ Anticancer (Threshold 0.30), Anti-inflammatory (0.50), Antimicrobial (0.15), Ant
 - **Chem Space:** 2D UMAP chemical space manifold projection.
 
 ### 10. The Strongest End-to-End Demo
-1. Load **Aspirin** in Draw $\rightarrow$ show 17 instant descriptors & 3D conformer.
-2. Load **Terfenadine** from Benchmark Gallery $\rightarrow$ show high predicted hERG risk (75.5%).
-3. Switch to **War Room** $\rightarrow$ select "Safety-First Scrutiny" $\rightarrow$ show system selecting carboxylated analog (Fexofenadine metabolite) with hERG dropped to safe levels on the radar chart.
-4. Generate **Research Dossier** $\rightarrow$ download self-contained 12-section PDF report.
+1. Load **Aspirin** in Draw → show 17 instant descriptors & 3D conformer.
+2. Load **Terfenadine** from Benchmark Gallery → show high predicted hERG risk (75.5%).
+3. Switch to **War Room** → select "Safety-First Scrutiny" → show system selecting carboxylated analog (Fexofenadine metabolite) with hERG dropped to safe levels on the radar chart.
+4. Generate **Research Dossier** → download self-contained 12-section PDF report.
 
 ### 11. Top 5 Inflexible Boundaries / Never Overclaim
 1. **Never claim ROGVEDA is a clinical diagnostic tool or proves in-vivo efficacy.**
