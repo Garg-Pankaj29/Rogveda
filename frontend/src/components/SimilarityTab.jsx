@@ -186,14 +186,11 @@ export default function SimilarityTab({
     }
   }, [effectiveSmiles, threshold, maxResults, searchType, metric, logActivity])
 
-  /* ─── Auto-search on molecule change ─── */
+  /* ─── Reset results when query molecule changes (manual search required via button) ─── */
   useEffect(() => {
-    if (!effectiveSmiles) {
-      setResults(null)
-      return
-    }
-    handleSearch()
-  }, [effectiveSmiles, handleSearch])
+    setResults(null)
+    setSearchError('')
+  }, [effectiveSmiles])
 
   /* ─── Compute properties for query and top match ─── */
   const queryProps = useMemo(() => {
