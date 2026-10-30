@@ -241,12 +241,20 @@ export default function CompareTab({
   logActivity,
 }) {
   /* ── Molecule A state ── */
-  const [molASource, setMolASource] = useState(() => localStorage.getItem('rogveda_compare_mola_source') || 'original')
-  const [molASmiles, setMolASmiles] = useState('')
+  const [molASource, setMolASource] = useState('original')
+  const [molASmiles, setMolASmiles] = useState(canonicalSmiles || '')
   const [molAViewMode, setMolAViewMode] = useState('2d')
   const [molASdfBlock, setMolASdfBlock] = useState('')
   const [molASdfLoading, setMolASdfLoading] = useState(false)
   const molASdfRef = useRef('')
+
+  /* ── Sync Molecule A with workspace molecule whenever canonicalSmiles changes ── */
+  useEffect(() => {
+    if (canonicalSmiles) {
+      setMolASource('original')
+      setMolASmiles(canonicalSmiles)
+    }
+  }, [canonicalSmiles])
 
   /* ── Molecule B state ── */
   const [molBSmiles, setMolBSmiles] = useState('')
@@ -288,8 +296,11 @@ export default function CompareTab({
       const targetA = localStorage.getItem('rogveda_compare_mola_source')
       if (targetA) {
         setMolASmiles(targetA)
-        setMolASource(`custom_${targetA.slice(0, 10)}`)
+        const matchingOpt = molAOptions.find(o => o.smiles === targetA)
+        setMolASource(matchingOpt ? matchingOpt.id : `custom_${targetA.slice(0, 10)}`)
         localStorage.removeItem('rogveda_compare_mola_source')
+      } else if (canonicalSmiles && molASource === 'original') {
+        setMolASmiles(canonicalSmiles)
       }
 
       const targetB = localStorage.getItem('rogveda_compare_target_molb')
@@ -321,10 +332,13 @@ export default function CompareTab({
 
   /* ── Build Molecule A source options from real workspace state ── */
   const molAOptions = useMemo(() => {
-    const options = []
-    if (canonicalSmiles) {
-      options.push({ id: 'original', label: 'Original molecule', smiles: canonicalSmiles })
-    }
+    const options = [
+      {
+        id: 'original',
+        label: canonicalSmiles ? 'Original molecule (Drawn)' : 'Original molecule',
+        smiles: canonicalSmiles || '',
+      }
+    ]
     // Pull modification history for this molecule
     try {
       const storedDict = JSON.parse(localStorage.getItem('rogveda_mod_history') || '{}')
@@ -382,17 +396,22 @@ export default function CompareTab({
 
   /* ── Resolve Molecule A SMILES whenever source changes ── */
   useEffect(() => {
+    if (molASource === 'original') {
+      setMolASmiles(canonicalSmiles || '')
+      return
+    }
+
     const opt = molAOptions.find(o => o.id === molASource)
     if (opt) {
       setMolASmiles(opt.smiles)
-    } else if (molASmiles && molAOptions.some(o => o.smiles === molASmiles)) {
-      const match = molAOptions.find(o => o.smiles === molASmiles)
-      setMolASource(match.id)
-    } else if (!molASmiles && molAOptions.length > 0) {
+    } else if (canonicalSmiles) {
+      setMolASource('original')
+      setMolASmiles(canonicalSmiles)
+    } else if (molAOptions.length > 0) {
       setMolASource(molAOptions[0].id)
       setMolASmiles(molAOptions[0].smiles)
     }
-  }, [molASource, molAOptions])
+  }, [molASource, molAOptions, canonicalSmiles])
 
   /* ── Compute properties ── */
   const propsA = useMemo(() => {
