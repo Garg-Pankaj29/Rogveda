@@ -9,7 +9,7 @@
 [![React: 19](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF.svg)](https://vitejs.dev/)
 [![Cheminformatics: RDKit](https://img.shields.io/badge/Cheminformatics-RDKit-green.svg)](https://www.rdkit.org/)
-[![Tests: 96 Passed](https://img.shields.io/badge/Tests-96%20Passed-brightgreen.svg)](backend/tests/)
+[![Tests: 171 Passed](https://img.shields.io/badge/Tests-171%20Passed-brightgreen.svg)](backend/tests/)
 
 ---
 
@@ -54,27 +54,34 @@ $$\text{Input (Draw / SMILES)} \longrightarrow \text{Compute Descriptors} \longr
 - **Interactive 3D Conformer Viewer**: Real-time 3D coordinate embedding using the Distance Geometry algorithm (ETKDGv3) rendered directly in WebGL via `3Dmol.js` and Three.js scenes.
 
 ### Calibrated Machine Learning Predictions
-- **Multi-Endpoint Classification**: Instant parallel inference across 6 critical safety and efficacy targets:
+- **Multi-Endpoint Classification**: Instant parallel inference across 8 critical safety and efficacy targets:
   - **hERG Cardiotoxicity** (KCNH2 channel inhibition / QT prolongation risk).
   - **Tox21_MMP** (Mitochondrial Membrane Potential disruption).
-  - **Anti-microbial Activity**.
-  - **Anti-cancer Activity**.
-  - **Anti-inflammatory Activity**.
-  - **Anti-oxidant Potential**.
+  - **Anti-microbial Activity** (Bacterial MIC & growth inhibition).
+  - **Anti-cancer Activity** (Pan-cancer tumor cell cytotoxicity).
+  - **Anti-inflammatory Activity** (COX-1/2, TNF, 5-LOX, iNOS, p38, JAK targets).
+  - **Anti-oxidant Potential** (Radical scavenging & redox activity).
+  - **Tox21 Full Biological Panel** (12-assay environmental & cellular stress response panel).
+  - **ClinTox** (FDA clinical trial approval & safety failure liability).
 - **Probability Calibration**: Every prediction ships with a calibrated confidence bar derived from `CalibratedClassifierCV(method='sigmoid')`, explicitly communicating probability distance from the decision boundary.
 
+### Lead Optimization & Explainability
+- **Lead Optimization War Room**: Multi-parameter optimization (MPO) decision studio evaluating parent molecules and generated analogs across 6 research-relevant dimensions (activity, cardiac safety, mitochondrial safety, oral property heuristic, synthetic ease, and metabolic stability) with versioned profiles, dynamic weight renormalization, and independent hard constraints.
+- **Explainable Molecular Attribution**: Atom- and bond-level feature attribution maps using atomic environment perturbation (`SimilarityMaps`), bit-collision tracking, and structural alert screening (PAINS, Brenk, NIH).
+- **Benchmark Drug Gallery & Case Studies**: Curated reference library of historical drugs (Terfenadine, Fexofenadine, Aspirin, Celecoxib, Ibuprofen) with comparative case studies and 1-click loading into analysis or the War Room.
+
 ### Virtual Screening & Exploration
-- **Tanimoto Similarity Search**: 2048-bit Morgan Fingerprint (radius=2) nearest-neighbor searches against curated reference libraries to discover structurally related bioactives.
-- **Chemical Space Projection**: 2D projection mapping novel compounds into known chemical space.
-- **High-Throughput Batch Screening**: Process multi-molecule CSV or SDF files in parallel with automated property filters and exportable screening summaries.
+- **Tanimoto Similarity Search**: 2048-bit Morgan Fingerprint (radius=2) nearest-neighbor searches against 10,027 curated reference compounds to discover structurally related bioactives across 5 similarity metrics (ECFP4, ECFP6, MACCS, Dice, Cosine).
+- **Chemical Space Projection**: 2D UMAP projection mapping novel compounds into known chemical space via weighted KNN interpolation.
+- **High-Throughput Batch Screening**: Process multi-molecule CSV files (up to 500 rows) in parallel with power-aware battery throttling, automated property filters, and exportable screening summaries.
 
 ### Local AI Copilot & Contradiction Detection
 - **Trade-Off & Contradiction Detection**: Rule-based heuristic engine flags biochemical paradoxes (e.g., high predicted anti-inflammatory activity coupled with unacceptable hERG cardiotoxicity or poor oral bioavailability).
 - **Offline RAG Summaries**: Formulates strict prompt templates containing computed facts, detected trade-offs, and synthesis flags for local LLM text generation.
 
 ### Experiment Management & Reporting
-- **Versioned Experiment History**: Tracks parent-child molecular modification chains in a local SQLite database.
-- **Document & Report Generation**: Generates comprehensive, self-contained HTML/PDF reports detailing 2D structure, 3D coordinates, computed properties, ML predictions, and AI notes.
+- **Versioned Experiment History**: Tracks parent-child molecular modification chains in a local SQLite database with automated story narration.
+- **Research Dossiers & PDF Generation**: Compiles comprehensive, self-contained 12-section research dossiers and HTML/PDF reports using WeasyPrint detailing 2D structure, 3D conformer status, computed properties, ML predictions, War Room trade-offs, and AI notes.
 
 ---
 
@@ -199,14 +206,16 @@ User Action (Draw structure / Enter SMILES)
 | **Charts & Metrics** | Recharts | 3.10.1 | Radar plots and property comparison charts |
 | **Backend Framework** | FastAPI | 0.115+ | High-performance asynchronous REST API |
 | **ASGI Server** | Uvicorn | Standard | Asynchronous web server bound to `127.0.0.1` |
-| **Cheminformatics Engine**| RDKit (Python) | 2024.03+ | Descriptors, fingerprints, 3D embedding, and SMARTS matching |
-| **Machine Learning** | Scikit-Learn | 1.6+ | Random Forest classifiers and CalibratedClassifierCV |
-| **Model Serialization** | Joblib | 1.4+ | Fast loading and caching of trained ML pipelines |
-| **Local Database** | SQLite / SQLAlchemy | 2.0+ (Async engine) | Local relational storage for experiments, users, and cache |
-| **Authentication** | PyJWT / Passlib | HS256 / Bcrypt | Local user authentication and secure password hashing |
+| **Cheminformatics Engine**| RDKit (Python) | 2026.3.6 | Descriptors, fingerprints, 3D embedding, and SMARTS matching |
+| **Machine Learning** | Scikit-Learn | 1.9.1 | Random Forest classifiers and CalibratedClassifierCV |
+| **Model Serialization** | Joblib | 1.6.0 | Fast loading and caching of trained ML pipelines |
+| **Report Generation** | WeasyPrint | 70.0 | High-fidelity local HTML-to-PDF binary compiler |
+| **Local Database** | SQLite / SQLAlchemy | 2.0+ (SessionLocal) | Local relational storage for experiments, users, and cache |
+| **Authentication** | python-jose / bcrypt | HS256 / Bcrypt (12 rounds) | Local user authentication and salted password hashing |
 | **Local LLM Runtime** | LM Studio / llama.cpp | OpenAI API compatible | Local loopback inference for quantized GGUF models |
 | **HTTP Client** | HTTPX | 0.28+ | High-speed async client for local LLM requests |
-| **Testing** | Pytest / AnyIO | 9.1+ | Test runner for 96 automated backend test assertions |
+| **Hardware Telemetry** | Psutil | 7.2+ | Battery sensing for power-aware batch throttling |
+| **Testing** | Pytest / AnyIO | 9.1+ | Test runner for 171 automated backend tests (100% passing) |
 
 ---
 
@@ -227,40 +236,49 @@ Rogveda/
 │   │   ├── api/                      # REST API endpoint routers
 │   │   │   ├── auth.py               # User registration, login, and password reset
 │   │   │   ├── batch.py              # Batch molecule virtual screening endpoints
+│   │   │   ├── benchmarks.py         # Benchmark catalog and comparative case studies
 │   │   │   ├── chat.py               # Conversational molecular assistant routes
 │   │   │   ├── chemical_space.py     # Chemical space coordinate mapping
 │   │   │   ├── experiments.py        # Experiment CRUD and modification history
-│   │   │   ├── modification.py       # Bioisostere and functional group suggestions
-│   │   │   ├── molecule.py           # Core property, 3D, and prediction endpoints
+│   │   │   ├── modification.py       # War Room, bioisostere, and mutation endpoints
+│   │   │   ├── molecule.py           # Core property, 3D, attribution, and prediction endpoints
 │   │   │   ├── power.py              # System power settings and hardware modes
 │   │   │   ├── remediation.py        # Structural remediation recommendations
-│   │   │   └── reports.py            # PDF/HTML experiment report generation
+│   │   │   └── reports.py            # PDF/HTML dossier and report generation
 │   │   ├── core/                     # Application configuration and security
 │   │   │   ├── config.py             # Environment variable parsing and directory paths
 │   │   │   └── security.py           # Bcrypt hashing and JWT encoding/decoding
 │   │   ├── db/                       # Database layer
 │   │   │   ├── database.py           # SQLAlchemy engine and session factory
-│   │   │   └── models.py             # ORM models (User, Experiment, SavedDocument, Cache)
+│   │   │   └── models.py             # ORM models (User, Experiment, SavedDocument, Cache, AppSetting)
 │   │   ├── schemas/                  # Pydantic validation schemas
+│   │   │   ├── attribution_schemas.py # Atom/bond attribution and alert schemas
 │   │   │   ├── auth_schemas.py       # Auth request/response models
+│   │   │   ├── benchmark_schemas.py  # Benchmark catalog & case study schemas
+│   │   │   ├── dossier_schemas.py    # 12-section research dossier schemas
 │   │   │   ├── experiments.py        # Experiment serialization schemas
-│   │   │   └── molecule_schemas.py   # SMILES, prediction, and 3D response models
+│   │   │   ├── molecule_schemas.py   # SMILES, prediction, and 3D response models
+│   │   │   └── mutation_schemas.py   # Transformation request/response schemas
 │   │   ├── services/                 # Business logic and domain services
 │   │   │   ├── analog_service.py     # Analog searching and structural similarity
+│   │   │   ├── attribution_service.py # Feature attribution (SimilarityMaps) & PAINS/Brenk alerts
 │   │   │   ├── batch_service.py      # High-throughput batch file processing
-│   │   │   ├── cache_service.py      # Result caching with model fingerprinting
-│   │   │   ├── chemical_space_service.py # Chemical space lookup
+│   │   │   ├── benchmark_service.py  # Curated benchmark catalog & historical case studies
+│   │   │   ├── cache_service.py      # Result caching with composite model fingerprinting
+│   │   │   ├── chemical_space_service.py # Chemical space lookup via weighted KNN
 │   │   │   ├── chemistry_service.py  # RDKit descriptor calculation and 3D conformers
 │   │   │   ├── contradiction_service.py # Biochemical trade-off and paradox detection
 │   │   │   ├── llm_service.py        # Local LLM client and prompt construction
 │   │   │   ├── ml_service.py         # Model loading and multi-endpoint inference
-│   │   │   ├── modification_service.py # R-group replacement algorithms
-│   │   │   ├── remediation_service.py# Toxicity mitigation heuristics
-│   │   │   ├── report_service.py     # Document synthesis and HTML/PDF exporting
+│   │   │   ├── modification_service.py # 12 SMARTS transform algorithms & live mutation
+│   │   │   ├── power_service.py      # Psutil hardware power and battery monitoring
+│   │   │   ├── remediation_service.py# Two-depth toxicity mitigation heuristics
+│   │   │   ├── report_service.py     # 12-section research dossier & WeasyPrint PDF compiler
 │   │   │   ├── story_service.py      # Narrative experiment summary generation
-│   │   │   └── synthesizability_service.py # SA_Score and reactive group detection
+│   │   │   ├── synthesizability_service.py # SA_Score and reactive group detection
+│   │   │   └── war_room_service.py   # Multi-parameter optimization & radar chart calculations
 │   │   └── main.py                   # FastAPI initialization, middleware, and lifespan
-│   ├── tests/                        # 96 automated backend unit and integration tests
+│   ├── tests/                        # 171 automated backend unit and integration tests
 │   ├── pyproject.toml                # Python project configuration
 │   ├── requirements.txt              # Pinned Python package dependencies
 │   └── .env.example                  # Backend environment template
@@ -273,14 +291,21 @@ Rogveda/
 │   │   ├── components/               # Reusable UI components
 │   │   │   ├── KetcherEditor.jsx     # Ketcher iframe wrapper and synchronization
 │   │   │   ├── Viewer3D.jsx          # 3Dmol.js conformer visualizer
+│   │   │   ├── WarRoomTab.jsx        # Lead Optimization War Room & radar chart UI
+│   │   │   ├── AttributionViewer.jsx # Atom-level feature attribution visualization
+│   │   │   ├── BenchmarkSelectorModal.jsx # Curated benchmark selector modal
+│   │   │   ├── BenchmarkContextCard.jsx   # Benchmark reference card
 │   │   │   ├── MolecularSidebar.jsx  # Navigation sidebar
 │   │   │   ├── AnalysisTab.jsx       # 17+ properties display panel
 │   │   │   ├── PredictionTab.jsx     # ML prediction cards and confidence bars
+│   │   │   ├── SimilarityTab.jsx     # 5-metric similarity search view
+│   │   │   ├── ModificationTab.jsx   # Live mutation workbench & property deltas
+│   │   │   ├── CompareTab.jsx        # Side-by-side differential analysis studio
 │   │   │   └── ChemicalSpaceTab.jsx  # Chemical space exploration view
 │   │   ├── hooks/                    # Custom React hooks (e.g. debounced analysis)
 │   │   ├── lib/                      # Frontend utilities, API client, and chemistry helpers
 │   │   ├── pages/                    # Application views
-│   │   │   ├── MoleculeDraw.jsx      # Main molecular workspace
+│   │   │   ├── MoleculeDraw.jsx      # Main 9-tab molecular workspace
 │   │   │   ├── BatchScreening.jsx    # Virtual batch screening dashboard
 │   │   │   ├── Experiments.jsx       # Experiment history and version tree
 │   │   │   ├── SavedDocuments.jsx    # Generated reports and documentation library
@@ -291,6 +316,8 @@ Rogveda/
 │   │   └── main.jsx                  # React application entrypoint
 │   ├── package.json                  # Node.js dependencies and build scripts
 │   └── vite.config.js                # Vite build and localhost proxy configuration
+│
+├── models/                           # 8 trained calibrated ML models (*.pkl) & metadata (*.json)
 │
 ├── ml/                               # Machine learning training and calibration pipeline
 │   ├── data_prep/                    # ChEMBL & Tox21 data extraction and scaffold splitting
@@ -307,10 +334,14 @@ Rogveda/
 │   └── sanity_check.py               # Verification script for models and descriptors
 │
 ├── data/                             # Reference data and processed datasets
-│   └── reference/                    # Curated reference drug compounds
+│   ├── chemical_space_map.pkl        # Serialized UMAP projection map
+│   ├── processed/similarity.db       # 10,027 reference compounds with Morgan fingerprints
+│   └── reference/                    # Curated reference drug compounds CSV
 │
 ├── LICENSE                           # Official MIT License file
 ├── LICENSE.md                        # MIT License with research and medical disclaimer
+└── README.md                         # Project documentation
+```
 └── README.md                         # Project documentation
 ```
 
@@ -460,10 +491,11 @@ All backend endpoints are bound to `127.0.0.1:8000`. Detailed interactive docume
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/molecule/predict` | Predict single-endpoint activity for a SMILES string |
-| `POST` | `/api/molecule/predict-all` | Run parallel inference across all 6 calibrated ML models |
+| `POST` | `/api/molecule/predict-all` | Run parallel inference across all 8 calibrated ML models |
+| `POST` | `/api/molecule/attribution` | Atom- and bond-level feature attribution (SimilarityMaps) & structural alerts |
 | `POST` | `/api/molecule/3d` | Generate 3D coordinates via ETKDGv3 and return SDF block |
-| `POST` | `/api/molecule/similar` | Tanimoto nearest-neighbor search against reference database |
-| `POST` | `/api/molecule/substructure` | Substructure search against reference molecules |
+| `POST` | `/api/molecule/similar` | Tanimoto nearest-neighbor search against reference database (5 metrics) |
+| `POST` | `/api/molecule/substructure` | Substructure search against reference molecules with SVG alignment |
 | `POST` | `/api/molecule/synthesizability` | Calculate SA_Score (1–10) and identify reactive functional groups |
 | `POST` | `/api/molecule/insight` | Generate grounded LLM summary combining properties and trade-offs |
 | `POST` | `/api/molecule/ai-summary` | Combined endpoint returning summary and key insights with caching |
@@ -471,19 +503,38 @@ All backend endpoints are bound to `127.0.0.1:8000`. Detailed interactive docume
 | `GET` | `/api/molecule/cache/stats` | View cache hit/miss statistics |
 | `POST` | `/api/molecule/cache/clear` | Clear the analysis cache table |
 
-### Exploration, Screening & Experiments
+### Exploration, Optimization & Benchmarks
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/batch/screen` | Screen multi-molecule CSV/SDF batches against ML models |
-| `POST` | `/api/batch/report` | Generate aggregated batch screening export summary |
-| `POST` | `/api/chemical-space/locate` | Locate a molecule's coordinates in 2D chemical space |
+| `GET` | `/api/modification/profiles` | List versioned Lead Optimization War Room profiles |
+| `POST` | `/api/modification/war-room` | Multi-parameter optimization decision ranking & 6-axis radar metrics |
+| `GET` | `/api/modification/transforms` | List 12 registered medicinal chemistry SMARTS transforms |
+| `POST` | `/api/modification/applicable` | Filter transforms matching target functional groups in query structure |
+| `POST` | `/api/modification/mutate` | Apply specific catalog transform, generate analog, and compute signed deltas |
 | `POST` | `/api/modification/shortlist` | Suggest bioisosteric modifications and R-group variants |
-| `POST` | `/api/remediation/find` | Recommend structural changes to mitigate specific toxicity flags |
+| `POST` | `/api/remediation/find` | Recommend 2-depth structural changes to mitigate specific toxicity flags |
+| `GET` | `/api/benchmarks` | List curated reference benchmark drug catalog (Aspirin, Terfenadine, etc.) |
+| `GET` | `/api/benchmarks/case-studies` | Retrieve paired historical lead optimization case studies |
+| `GET` | `/api/benchmarks/{benchmark_id}` | Detailed pharmacological and clinical provenance for benchmark drug |
+| `POST` | `/api/benchmarks/identify` | Match query SMILES against canonical benchmark records |
+| `POST` | `/api/chemical-space/locate` | Locate a molecule's coordinates in 2D chemical space via weighted KNN |
+
+### Batch Screening, Reports & System
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/batch/screen` | Screen multi-molecule CSV batches (up to 500 rows) with power pacing |
+| `POST` | `/api/batch/report` | Generate aggregated batch screening export summary |
+| `POST` | `/api/reports/generate` | Compile self-contained HTML/PDF experiment report |
+| `POST` | `/api/reports/dossier` | Generate complete 12-section scientific research dossier HTML |
+| `POST` | `/api/reports/dossier/pdf` | Compile 12-section research dossier directly to PDF via WeasyPrint |
+| `POST` | `/api/reports/pdf/render` | Render arbitrary dossier HTML into downloadable binary PDF |
 | `GET` | `/api/experiments/` | List saved user experiments |
 | `POST` | `/api/experiments/` | Save or update an experiment iteration in history |
 | `DELETE`| `/api/experiments/{local_id}` | Remove an experiment record from history |
 | `GET` | `/api/experiments/{db_id}/story` | Generate narrative chronology for a molecule's optimization chain |
-| `POST` | `/api/reports/generate` | Compile self-contained HTML/PDF experiment report |
+| `GET` | `/api/power/status` | Detect laptop AC power vs battery status via psutil |
+| `GET` | `/api/power/setting` | Fetch power-saver mode setting (auto, always_on, always_off) |
+| `POST` | `/api/power/setting` | Persist power-saver mode setting in SQLite |
 | `GET` | `/api/health` | Health probe returning service status |
 
 ---
@@ -595,21 +646,26 @@ source .venv/bin/activate
 pytest
 ```
 
-### Test Suite Coverage (96 Tests Passing)
-- `test_analog_service.py`: Tanimoto similarity queries and fingerprint distance metrics.
+### Test Suite Coverage (171 Tests Passing)
+- `test_analog_service.py`: Tanimoto similarity queries, shortlist ranking, and target endpoint validation.
+- `test_attribution.py`: Atom- and bond-level feature attributions (SimilarityMaps), atomic perturbation, and structural alerts.
 - `test_batch_service.py`: High-throughput screening pipelines, CSV parsing, and error recovery.
-- `test_cache_service.py`: Fingerprint validation, cache hit/miss semantics, and cache invalidation.
-- `test_contradiction_service.py`: Biochemical trade-off and paradox detection heuristics.
-- `test_remediation_service.py`: Structural mitigation rules for toxicity reduction.
-- `test_story_service.py`: Chronological experiment narrative generation.
+- `test_benchmarks.py`: Reference benchmark drug catalog integrity, case study pairing, and canonicalization.
+- `test_cache_service.py`: Composite MD5 model fingerprinting, cache hit/miss semantics, and cache invalidation.
+- `test_contradiction_service.py`: Biochemical trade-off and paradox detection heuristics (Efficacy vs. Cardiotoxicity).
+- `test_dossier.py`: 12-section research dossier generation, WeasyPrint PDF compilation, and fallback narratives.
+- `test_mutation.py`: 12 registered SMARTS transforms, live mutation workbench, and property deltas.
+- `test_remediation_service.py`: Two-depth structural mitigation search for toxicity liability removal.
+- `test_story_service.py`: Chronological experiment lineage walking and delta narrative generation.
 - `test_synthesizability_service.py`: Ertl-Schuffenhauer SA_Score calculations and reactive group matching.
+- `test_war_room.py`: Multi-parameter optimization profiles, dynamic weight renormalization, and hard constraints.
 
 ---
 
 ## 17. Security Considerations
 
 - **Input Sanitization**: All incoming SMILES strings pass through RDKit's strict C++ sanitizer (`Chem.MolFromSmiles`). Invalid valences, malformed strings, or script injection payloads are rejected before processing.
-- **Password Security**: Passwords and security recovery answers are salted and hashed using **Bcrypt** via Passlib before storage.
+- **Password Security**: Passwords and security recovery answers are salted and hashed using **Bcrypt** (`bcrypt` with 12 rounds) before storage.
 - **Session Tokens**: Authentication tokens are signed using **JWT (JSON Web Tokens)** with the `HS256` algorithm and a 24-hour expiration window.
 - **Localhost Boundary**: Servers do not bind to `0.0.0.0` (all interfaces), preventing exposure on local Wi-Fi or local area networks.
 - **Prompt Sandboxing**: Local LLM calls are strictly bounded text-in/text-out transformations. The model runtime is never granted filesystem or shell execution capabilities.
@@ -671,15 +727,18 @@ Contributions from researchers, software engineers, and computational chemists a
 
 ### Completed (v0.1.0 MVP)
 - [x] Full-featured Ketcher 2D molecular drawing interface.
-- [x] WebGL 3D conformer viewer (ETKDGv3 distance geometry).
-- [x] Deterministic calculation of 17+ core physicochemical descriptors.
-- [x] 6 calibrated Random Forest ML models trained on ChEMBL 37 and Tox21 data.
+- [x] WebGL 3D conformer viewer (ETKDGv3 distance geometry with MMFF94 force field).
+- [x] Deterministic calculation of 17+ core physicochemical descriptors via RDKit WebAssembly & Python.
+- [x] 8 calibrated Random Forest ML models trained on ChEMBL 37, Tox21, and ClinTox data.
 - [x] Strict 80/20 Bemis-Murcko scaffold splitting evaluation.
-- [x] High-throughput batch molecule screening dashboard.
-- [x] Tanimoto fingerprint similarity search against reference libraries.
+- [x] Lead Optimization War Room with multi-parameter optimization (MPO) and hard constraint filtering.
+- [x] Explainable AI attribution viewer (atomic environment perturbation & PAINS/Brenk structural alerts).
+- [x] Benchmark Drug Gallery with historical case studies (e.g. Terfenadine vs. Fexofenadine).
+- [x] High-throughput batch molecule screening dashboard with power-aware battery pacing.
+- [x] Tanimoto fingerprint similarity search against 10,027 reference compounds.
 - [x] Offline RAG copilot integration via local loopback LLMs.
-- [x] Local SQLite experiment tracking and PDF/HTML report exports.
-- [x] 96-test automated backend test suite.
+- [x] Local SQLite experiment tracking and 12-section research dossier PDF/HTML exports.
+- [x] 171-test automated backend test suite (100% passing).
 
 ### Planned Enhancements
 - [ ] **Cross-Platform Desktop Shell**: Packaging as a lightweight standalone desktop binary using **Tauri** (Rust backend + Web view) for native OS installation without manual terminal launch.
@@ -714,7 +773,7 @@ This project is open-source software licensed under the **MIT License**. See the
 ## 23. Authors & Team
 
 - **Pankaj Garg** — *Lead Architect & Developer* ([GitHub](https://github.com/Garg-Pankaj29))
-- **Team Zenith** — *byteBuilt 1.0 (byteXL × Chandigarh University)*
+- **Team Zenith**
 
 ---
 

@@ -20,6 +20,9 @@ pandas==3.0.5
 joblib==1.6.0
 pillow==12.3.0
 
+# Report Generation & PDF Compilation
+weasyprint==70.0
+
 # System & Resource Monitoring
 psutil==7.2.2
 
