@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../lib/apiClient'
 
 function SvgMolecule({ rdkit, smiles, width = 140, height = 110 }) {
@@ -129,27 +130,28 @@ export default function BenchmarkSelectorModal({
     return true
   })
 
-  return (
+  return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
+      position: 'fixed', inset: 0, zIndex: 99999,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '24px 20px',
     }}>
       {/* Backdrop */}
       <div
         onClick={onClose}
         style={{
           position: 'absolute', inset: 0,
-          background: 'rgba(5, 11, 13, 0.85)',
-          backdropFilter: 'blur(8px)',
+          background: 'rgba(3, 7, 9, 0.85)',
+          backdropFilter: 'blur(10px)',
         }}
       />
 
       {/* Modal Dialog */}
       <div style={{
-        position: 'relative', width: '980px', maxWidth: '95vw', maxHeight: '88vh',
+        position: 'relative', width: '980px', maxWidth: '95vw', maxHeight: 'calc(100vh - 48px)',
         background: '#0d1a1c', border: '1px solid rgba(45,212,212,0.25)',
         borderRadius: '12px', display: 'flex', flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(45,212,212,0.1)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(45,212,212,0.12)',
         overflow: 'hidden', zIndex: 10,
         fontFamily: 'Inter, system-ui, sans-serif', color: '#fff',
       }}>
@@ -158,6 +160,7 @@ export default function BenchmarkSelectorModal({
           padding: '20px 24px', borderBottom: '1px solid rgba(45,212,212,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'linear-gradient(180deg, rgba(45,212,212,0.06) 0%, rgba(13,26,28,0) 100%)',
+          flexShrink: 0,
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -570,7 +573,8 @@ export default function BenchmarkSelectorModal({
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

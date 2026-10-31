@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../lib/apiClient'
 
 const accentColor = '#2dd4d4'
@@ -98,18 +99,18 @@ export default function AttributionViewer({
 
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 1000,
-        background: 'rgba(5, 11, 13, 0.82)',
-        backdropFilter: 'blur(8px)',
+        zIndex: 99999,
+        background: 'rgba(3, 7, 9, 0.85)',
+        backdropFilter: 'blur(10px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px',
+        padding: '24px 20px',
         animation: 'fadeIn 0.2s ease',
       }}
       onClick={(e) => {
@@ -123,13 +124,14 @@ export default function AttributionViewer({
           borderRadius: '12px',
           width: '100%',
           maxWidth: '1160px',
-          maxHeight: '92vh',
+          maxHeight: 'calc(100vh - 48px)',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.7), 0 0 30px rgba(45,212,212,0.1)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(45,212,212,0.12)',
           overflow: 'hidden',
           fontFamily: 'Inter, system-ui, sans-serif',
           color: '#e2e8f0',
+          position: 'relative',
         }}
       >
         {/* ── MODAL HEADER ── */}
@@ -140,7 +142,8 @@ export default function AttributionViewer({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(13, 26, 28, 0.8)',
+            background: 'rgba(13, 26, 28, 0.95)',
+            flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -206,6 +209,7 @@ export default function AttributionViewer({
             background: '#071214',
             borderBottom: '1px solid rgba(45,212,212,0.08)',
             overflowX: 'auto',
+            flexShrink: 0,
           }}
         >
           {ENDPOINTS.map((ep) => {
@@ -724,6 +728,7 @@ export default function AttributionViewer({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
