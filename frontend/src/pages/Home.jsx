@@ -684,9 +684,13 @@ export default function Home() {
       setChatMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
       addHistory(`Rogveda AI: ${userMsg.content.slice(0, 24)}...`)
     } catch (err) {
+      let errorMsg = err.message || 'Check backend status.'
+      if (errorMsg === 'Failed to fetch' || errorMsg.includes('NetworkError')) {
+        errorMsg = 'Could not connect to the Rogveda backend server (http://127.0.0.1:8000). Please ensure the backend is running.'
+      }
       setChatMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `Error communicating with AI: ${err.message || 'Check backend status.'}` },
+        { role: 'assistant', content: `Error communicating with AI: ${errorMsg}` },
       ])
     } finally {
       setIsChatLoading(false)

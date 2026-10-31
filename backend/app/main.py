@@ -43,10 +43,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — only the local frontend is allowed
+# CORS — allow both localhost and 127.0.0.1 origins on standard dev ports
+cors_origins = [
+    FRONTEND_ORIGIN,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+allowed_origins = list(dict.fromkeys([o.rstrip('/') for o in cors_origins if o]))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

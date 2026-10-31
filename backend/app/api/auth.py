@@ -36,6 +36,7 @@ from app.schemas.auth_schemas import (
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 bearer_scheme = HTTPBearer()
+optional_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 # ── Helpers ────────────────────────────────────────────
@@ -65,6 +66,26 @@ def _get_current_user(
             detail="User not found",
         )
     return user
+
+
+def _get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Dependency: extract and validate the JWT if present, return User row or None if unauthenticated."""
+    if credentials is None or not credentials.credentials:
+        return None
+    payload = decode_access_token(credentials.credentials)
+    if payload is None:
+        return None
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        return None
+    try:
+        user_id = int(user_id_str)
+        return db.query(User).filter(User.id == user_id).first()
+    except (ValueError, TypeError):
+        return None
 
 
 # ── Endpoints ──────────────────────────────────────────
