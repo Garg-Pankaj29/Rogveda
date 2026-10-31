@@ -771,16 +771,20 @@ export default function CompareTab({
         {/* ── LEFT PANEL: Molecule A (From Workspace) ── */}
         <div style={{ flex: 1, ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
-              Molecule A <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '15px' }}>(From Workspace)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '34px', marginBottom: '10px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/>
+              <line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/>
+            </svg>
+            <h3 style={{ margin: 0, fontSize: '16.5px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Molecule A</span>
+              <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '14px' }}>(From Workspace)</span>
             </h3>
             <Tooltip text="Molecule A is sourced from your current workspace molecule or modification history">{Icons.info}</Tooltip>
           </div>
 
           {/* Source dropdown + 2D/3D toggle row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '10px' }}>
             {/* Dropdown */}
             <div style={{ position: 'relative', flex: 1, maxWidth: '340px' }}>
               <select
@@ -866,22 +870,26 @@ export default function CompareTab({
         {/* ── RIGHT PANEL: Molecule B (From your Input) ── */}
         <div style={{ flex: 1, ...cardStyle, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/></svg>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#fff' }}>
-                Molecule B <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '15px' }}>(From your Input)</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '34px', marginBottom: '10px', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/>
+                <line x1="8.7" y1="7.5" x2="15.3" y2="10.5"/><line x1="8.7" y1="16.5" x2="15.3" y2="13.5"/>
+              </svg>
+              <h3 style={{ margin: 0, fontSize: '16.5px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Molecule B</span>
+                <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '14px' }}>(From Input)</span>
               </h3>
               <Tooltip text="Add a second molecule to compare against Molecule A">{Icons.info}</Tooltip>
             </div>
 
             {/* Mode buttons */}
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
               {[
-                { id: 'Draw', icon: Icons.pencil },
-                { id: 'SMILES', icon: Icons.smiles },
-                { id: 'From History', icon: Icons.history },
-                { id: 'From Benchmark', icon: Icons.benchmark },
+                { id: 'Draw', label: 'Draw', icon: Icons.pencil },
+                { id: 'SMILES', label: 'SMILES', icon: Icons.smiles },
+                { id: 'From History', label: 'History', icon: Icons.history },
+                { id: 'From Benchmark', label: 'Benchmark', icon: Icons.benchmark },
               ].map(mode => (
                 <button
                   key={mode.id}
@@ -893,16 +901,17 @@ export default function CompareTab({
                     }
                   }}
                   style={{
-                    padding: '6px 14px', fontSize: '13.5px', fontWeight: 500, borderRadius: '6px',
+                    padding: '5px 9px', fontSize: '12.5px', fontWeight: 500, borderRadius: '6px',
                     border: '1px solid rgba(45,212,212,0.15)', cursor: 'pointer', transition: 'all 0.2s',
-                    display: 'flex', alignItems: 'center', gap: '6px',
+                    display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap',
                     fontFamily: 'Inter, system-ui, sans-serif',
                     ...(molBInputMode === mode.id
-                      ? { background: accentColor, color: '#000', borderColor: accentColor }
+                      ? { background: accentColor, color: '#000', borderColor: accentColor, fontWeight: 600 }
                       : { background: 'transparent', color: '#94a3b8' })
                   }}
                 >
-                  {mode.icon} {mode.id}
+                  <span style={{ display: 'flex', alignItems: 'center', fontSize: '13px' }}>{mode.icon}</span>
+                  <span>{mode.label}</span>
                 </button>
               ))}
             </div>
@@ -974,43 +983,61 @@ export default function CompareTab({
             </div>
           )}
 
-          {/* From History list */}
+          {/* From History dropdown (shown in From History mode) */}
           {molBInputMode === 'From History' && (
-            <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {experimentHistory.length === 0 ? (
-                <span style={{ color: '#475569', fontSize: '14px', fontStyle: 'italic', padding: '8px' }}>No saved experiments found.</span>
-              ) : experimentHistory.map(exp => (
-                <div
-                  key={exp.id}
-                  onClick={() => {
+            <div style={{ marginBottom: '10px' }}>
+              <select
+                value={experimentHistory.find(exp => exp.smiles === molBSmiles)?.id || ''}
+                onChange={(e) => {
+                  const exp = experimentHistory.find(x => String(x.id) === e.target.value)
+                  if (exp) {
                     if (exp.smiles) {
                       setMolBSmiles(exp.smiles)
+                      setMolBSmilesInput(exp.smiles)
                       logActivity?.('Compare: loaded Molecule B from modification history')
                     } else if (exp.molfile && rdkit) {
                       let mol = null
                       try {
                         mol = rdkit.get_mol(exp.molfile)
                         if (mol && mol.is_valid()) {
-                          setMolBSmiles(mol.get_smiles())
+                          const s = mol.get_smiles()
+                          setMolBSmiles(s)
+                          setMolBSmilesInput(s)
                           logActivity?.('Compare: loaded Molecule B from experiment history')
                         }
-                      } catch (e) { /* ignore */ }
+                      } catch (err) { /* ignore */ }
                       finally { if (mol) mol.delete() }
                     }
-                  }}
-                  style={{
-                    padding: '9px 14px', background: 'rgba(45,212,212,0.05)', border: '1px solid rgba(45,212,212,0.12)',
-                    borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,212,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,212,0.05)'}
-                >
-                  <div style={{ fontSize: '14.5px', color: '#e2e8f0', fontWeight: 500 }}>
-                    {exp.name} <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: 400, marginLeft: '6px' }}>({exp.type})</span>
-                  </div>
-                  <div style={{ fontSize: '12.5px', color: '#64748b' }}>Last modified: {new Date(exp.date).toLocaleString()}</div>
-                </div>
-              ))}
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  background: '#081214',
+                  border: '1px solid rgba(45,212,212,0.25)',
+                  color: '#e2e8f0',
+                  borderRadius: '6px',
+                  padding: '9px 34px 9px 12px',
+                  fontSize: '15px',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                <option value="" disabled>Select from experiment history...</option>
+                {experimentHistory.length === 0 ? (
+                  <option value="" disabled>No saved experiments found</option>
+                ) : (
+                  experimentHistory.map(exp => (
+                    <option key={exp.id} value={exp.id}>
+                      {exp.name} ({exp.type}) — {new Date(exp.date).toLocaleDateString()}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           )}
 
