@@ -215,12 +215,6 @@ export default function Home() {
 
     async function loadData() {
       try {
-        const [userData, statsData] = await Promise.all([
-          get('/api/auth/me'),
-          get('/api/auth/stats'),
-        ])
-        setUser(userData)
-
         let exps = []
         try {
           exps = await experimentService.syncExperiments()
@@ -228,9 +222,15 @@ export default function Home() {
           console.warn('Could not sync experiments:', e)
         }
         setExperiments(exps)
+
+        const [userData, statsData] = await Promise.all([
+          get('/api/auth/me'),
+          get('/api/auth/stats'),
+        ])
+        setUser(userData)
         setStats({
           ...statsData,
-          total_experiments: exps.length,
+          total_experiments: Math.max(statsData?.total_experiments || 0, exps.length),
         })
       } catch (err) {
         console.error('Failed to load dashboard data', err)
@@ -680,7 +680,10 @@ export default function Home() {
     setIsChatLoading(true)
 
     try {
-      const data = await post('/api/chat/', { messages: updatedMessages })
+      const payloadMessages = updatedMessages.filter(
+        (m, idx) => !(idx === 0 && m.role === 'assistant')
+      )
+      const data = await post('/api/chat/', { messages: payloadMessages })
       setChatMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
       addHistory(`Rogveda AI: ${userMsg.content.slice(0, 24)}...`)
     } catch (err) {

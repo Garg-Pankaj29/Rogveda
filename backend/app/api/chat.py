@@ -31,6 +31,36 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
 
+def _sanitize_chat_messages(raw_messages: list[ChatMessage]) -> list[dict]:
+    """
+    Sanitizes conversation messages for strict OpenAI / Jinja chat template compliance:
+    - Drops leading assistant greetings (conversation must begin with a user turn).
+    - Collapses consecutive messages of the same role to maintain strict user/assistant alternation.
+    - Strips whitespace and ignores blank messages.
+    """
+    # 1. Skip leading assistant messages
+    start_idx = 0
+    while start_idx < len(raw_messages) and raw_messages[start_idx].role == "assistant":
+        start_idx += 1
+
+    sanitized: list[dict] = []
+    for msg in raw_messages[start_idx:]:
+        content = (msg.content or "").strip()
+        if not content:
+            continue
+        role = msg.role.strip().lower()
+        if role not in ("user", "assistant"):
+            role = "user"
+
+        if sanitized and sanitized[-1]["role"] == role:
+            # Merge consecutive turns of identical role
+            sanitized[-1]["content"] += "\n\n" + content
+        else:
+            sanitized.append({"role": role, "content": content})
+
+    return sanitized
+
+
 @router.post("/", response_model=ChatResponse)
 def chat_with_bot(
     request: ChatRequest,
@@ -85,9 +115,12 @@ def chat_with_bot(
                 logger.warning(f"PubChem lookup failed: {e}")
                 return ChatResponse(reply=f"I couldn't retrieve the SMILES string for '{compound}' due to a database connection error. Please draw it manually.")
 
-    messages = [{"role": "system", "content": system_msg}]
-    for msg in request.messages:
-        messages.append({"role": msg.role, "content": msg.content})
+    # Sanitize turns to ensure strict user/assistant alternation compliant with Jinja / LM Studio templates
+    dialogue_messages = _sanitize_chat_messages(request.messages)
+    if not dialogue_messages:
+        return ChatResponse(reply="Please ask a question or provide a molecule topic to discuss.")
+
+    messages = [{"role": "system", "content": system_msg}] + dialogue_messages
 
     payload = {
         "messages": messages,
@@ -103,12 +136,34 @@ def chat_with_bot(
             data = response.json()
             
             if "choices" in data and len(data["choices"]) > 0:
-                reply = data["choices"][0]["message"]["content"].strip()
-                return ChatResponse(reply=reply)
+                msg = data["choices"][0]["message"]
+                reply = (msg.get("content") or "").strip()
+                if not reply and msg.get("reasoning_content"):
+                    reply = msg.get("reasoning_content").strip()
+                if reply:
+                    return ChatResponse(reply=reply)
+                else:
+                    raise HTTPException(status_code=500, detail="AI returned an empty response.")
             else:
                 raise HTTPException(status_code=500, detail="AI returned an empty or malformed response.")
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail="Local AI not available. Please ensure the local LLM server is running.")
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="AI response timed out. The local model is taking too long to generate a reply.")
+    except httpx.HTTPStatusError as e:
+        error_msg = e.response.text
+        try:
+            err_json = e.response.json()
+            if isinstance(err_json, dict) and "error" in err_json:
+                err_val = err_json["error"]
+                if isinstance(err_val, dict):
+                    error_msg = err_val.get("message") or str(err_val)
+                else:
+                    error_msg = str(err_val)
+        except Exception:
+            pass
+        logger.error(f"LLM API HTTP Error ({e.response.status_code}): {error_msg}")
+        raise HTTPException(status_code=502, detail=f"LLM server error ({e.response.status_code}): {error_msg}")
     except Exception as e:
         logger.error(f"LLM API Error: {e}")
         raise HTTPException(status_code=500, detail=f"AI chat failed: {e}")

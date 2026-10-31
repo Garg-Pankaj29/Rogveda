@@ -240,8 +240,15 @@ export default function MoleculeDraw() {
 
           if (isNew) {
             // Clear autosave and start fresh
-            try { localStorage.removeItem('rogveda_autosave') } catch (err) { }
+            try {
+              localStorage.removeItem('rogveda_autosave')
+              localStorage.removeItem('rogveda_autosave_expId')
+              localStorage.removeItem('rogveda_autosave_dbId')
+            } catch (err) { }
             setActiveExpName(null)
+            setCurrentMolecule({ formula: '-', formulaHtml: '-', mw: '-', lastEdited: '-', thumbnailSvg: '' })
+            setCanonicalSmiles('')
+            setInputSmiles('')
             await ketcherRef.current.setMolecule('')
             window.history.replaceState({}, document.title, '/draw')
             return
@@ -338,6 +345,7 @@ export default function MoleculeDraw() {
 
         // Update the canonical smiles so AnalysisTab refetches predictions
         setCanonicalSmiles(smiles)
+        setInputSmiles(smiles)
 
         // Compute full properties
         const props = computeProperties(rdkit, smiles) || {}
@@ -463,7 +471,7 @@ export default function MoleculeDraw() {
 
   const handleLoadSmiles = async (smilesToLoad) => {
     const targetSmiles = (typeof smilesToLoad === 'string' ? smilesToLoad : inputSmiles).trim()
-    if (!ketcherRef.current || !targetSmiles) return
+    if (!targetSmiles) return
     try {
       if (rdkit) {
         const tempMol = rdkit.get_mol(targetSmiles)
@@ -472,10 +480,30 @@ export default function MoleculeDraw() {
           if (tempMol) tempMol.delete()
           return
         }
+        const canon = tempMol.get_smiles()
+        setCanonicalSmiles(canon)
+        setInputSmiles(canon)
+        setError('')
+
+        // Instantly compute and update currentMolecule details dynamically
+        const props = computeProperties(rdkit, canon) || {}
+        const mw = props.mw || '-'
+        const formula = props.formula || '-'
+        let thumbnailSvg = ''
+        try {
+          thumbnailSvg = tempMol.get_svg(200, 160)
+            .replace(/<rect[^>]*fill=['"]#FFFFFF['"][^>]*>/i, '<rect opacity="0" fill="none" />')
+            .replace(/stroke-width:1\.0px/g, 'stroke-width:2.0px')
+        } catch (e) {
+          try { thumbnailSvg = tempMol.get_svg() } catch (e2) { }
+        }
+        const ts = new Date().toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+        setCurrentMolecule({ formula, mw, ...props, formulaHtml: formulaToHtml(formula), lastEdited: ts, thumbnailSvg })
         tempMol.delete()
       }
-      await loadMoleculeWhenReady(ketcherRef, targetSmiles)
-      setError('')
+      if (ketcherRef.current) {
+        await loadMoleculeWhenReady(ketcherRef, targetSmiles)
+      }
       logActivity('Molecule loaded from SMILES')
     } catch (err) {
       setError('Could not load SMILES: ' + err.message)
@@ -511,34 +539,67 @@ export default function MoleculeDraw() {
     logActivity('Canvas cleared')
   }
 
-  const handleSaveOnly = async (isModification = false) => {
+  const handleSaveOnly = async (isModification = false, customData = null) => {
     try {
-      const molfile = await ketcherRef.current.getMolfile()
-      
-      let currentExpId = expId || localStorage.getItem('rogveda_autosave_expId')
-      let parentDbId = localStorage.getItem('rogveda_autosave_dbId')
-      let newName = `Experiment ${new Date().toLocaleString()}`
-      let nameToSave = activeExpName || newName
+      let molfile = null
+      try {
+        if (ketcherRef.current && typeof ketcherRef.current.getMolfile === 'function') {
+          molfile = await ketcherRef.current.getMolfile()
+        }
+      } catch (err) {
+        console.warn("Could not get molfile from Ketcher:", err)
+      }
 
-      if (isModification) {
-        // Create a new experiment ID, link it to the parent
+      // Fallback: If Ketcher didn't provide molfile, generate it from canonicalSmiles via RDKit
+      const effectiveSmiles = customData?.analog_smiles || canonicalSmiles || inputSmiles || null
+      if ((!molfile || molfile.length < 20) && effectiveSmiles && rdkit) {
+        try {
+          const m = rdkit.get_mol(effectiveSmiles)
+          if (m && m.is_valid()) {
+            molfile = m.get_molblock()
+            m.delete()
+          }
+        } catch (err) {
+          console.warn("Could not generate molfile fallback from smiles:", err)
+        }
+      }
+
+      if (!molfile && !effectiveSmiles) {
+        setError("No molecule structure found to save. Please draw or load a molecule first.")
+        return false
+      }
+
+      // Generate a new ID for each new saved experiment, preserving ID only when editing a pre-existing experiment (?id=...)
+      let currentExpId = expId
+      if (!currentExpId || isModification) {
         currentExpId = Date.now().toString()
+      }
+
+      let newName = customData?.type === 'lead_optimization'
+        ? `Lead Opt: ${customData.analog_smiles ? customData.analog_smiles.slice(0, 16) : 'Analog'}`
+        : `Experiment ${new Date().toLocaleString()}`
+      let nameToSave = customData?.name || activeExpName || newName
+      if (isModification) {
         nameToSave = `${activeExpName ? activeExpName + ' (Mod)' : newName}`
       }
-      
+
+      const propertiesJson = currentMolecule && currentMolecule.formula !== '-'
+        ? JSON.stringify(currentMolecule)
+        : null
+
       const expData = {
-        id: currentExpId || Date.now().toString(),
+        id: currentExpId,
         name: nameToSave,
-        molfile,
-        original_smiles: canonicalSmiles || undefined,
+        molfile: molfile || undefined,
+        original_smiles: effectiveSmiles || undefined,
+        properties_json: propertiesJson,
         date: new Date().toISOString()
       }
 
-      // If it's a modification and we know the parent's DB ID, save it
+      let parentDbId = localStorage.getItem('rogveda_autosave_dbId')
       if (isModification && parentDbId) {
         expData.parent_experiment_id = parseInt(parentDbId, 10)
       } else if (!isModification) {
-        // If not a modification, preserve existing parent_experiment_id if any (handled by backend mostly, but frontend can pass it)
         const allExps = experimentService.getLocalExperiments()
         const existing = allExps.find(e => e.id === currentExpId)
         if (existing && existing.parent_experiment_id) {
@@ -547,13 +608,14 @@ export default function MoleculeDraw() {
       }
 
       await experimentService.saveExperiment(expData)
-      
+
       localStorage.setItem('rogveda_autosave_expId', expData.id)
       setActiveExpName(expData.name)
-      localStorage.setItem('rogveda_autosave', molfile)
-      
-      // Update dbId in local storage after save so future saves overwrite this new one
-      // We don't have the db_id immediately from local save until it syncs, but it'll sync instantly if online
+      if (molfile) {
+        localStorage.setItem('rogveda_autosave', molfile)
+      }
+
+      // Sync and retrieve updated experiments state
       const synced = await experimentService.syncExperiments()
       const savedExp = synced.find(e => e.id === expData.id)
       if (savedExp && savedExp.db_id) {
@@ -562,13 +624,22 @@ export default function MoleculeDraw() {
 
       logActivity(isModification ? 'Saved as modification' : 'Experiment saved')
       addNotification('Experiment Saved', `Saved "${nameToSave}" successfully.`)
+      return true
     } catch (e) {
       console.error("Failed to save experiment:", e)
+      setError("Failed to save experiment: " + (e.message || 'Unknown error'))
+      return false
     }
   }
 
-  const handleSaveExperiment = async () => {
-    await handleSaveOnly()
+  const handleSaveExperiment = async (customData = null) => {
+    await handleSaveOnly(false, customData)
+    // Clear autosave session markers so the next visit starts fresh
+    try {
+      localStorage.removeItem('rogveda_autosave_expId')
+      localStorage.removeItem('rogveda_autosave_dbId')
+      localStorage.removeItem('rogveda_autosave')
+    } catch (e) { }
     navigate('/home')
   }
 

@@ -192,7 +192,11 @@ export default function Tutorial() {
     setIsLoading(true)
 
     try {
-      const data = await post('/api/chat/', { messages: [...messages, userMsg] })
+      const allMsgs = [...messages, userMsg]
+      const payloadMessages = allMsgs.filter(
+        (m, idx) => !(idx === 0 && m.role === 'assistant')
+      )
+      const data = await post('/api/chat/', { messages: payloadMessages })
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: err.message || 'Connection error.' }])
